@@ -1,12 +1,13 @@
-import 'enums.dart';
-
 class SwimClass {
   final String id;
   final String title;
   final String titleAr;
   final String description;
   final String descriptionAr;
-  final List<ClassCategory> categories;
+  // References categories/{id} docs (see Category) — plain strings rather
+  // than a closed enum, so admin can add/rename/remove categories at
+  // runtime without a mobile/admin app release.
+  final List<String> categories;
   final int durationMinutes;
   final double price;
   final String currency;
@@ -43,7 +44,7 @@ class SwimClass {
     String? titleAr,
     String? description,
     String? descriptionAr,
-    List<ClassCategory>? categories,
+    List<String>? categories,
     int? durationMinutes,
     double? price,
     String? currency,
@@ -79,7 +80,7 @@ class SwimClass {
         'titleAr': titleAr,
         'description': description,
         'descriptionAr': descriptionAr,
-        'categories': categories.map((c) => c.name).toList(),
+        'categories': categories,
         'durationMinutes': durationMinutes,
         'price': price,
         'currency': currency,
@@ -97,9 +98,7 @@ class SwimClass {
         titleAr: map['titleAr'] as String,
         description: map['description'] as String? ?? '',
         descriptionAr: map['descriptionAr'] as String? ?? '',
-        categories: ((map['categories'] as List?) ?? [])
-            .map((c) => ClassCategory.fromName(c as String))
-            .toList(),
+        categories: ((map['categories'] as List?) ?? []).cast<String>(),
         durationMinutes: (map['durationMinutes'] as num?)?.toInt() ?? 45,
         price: (map['price'] as num?)?.toDouble() ?? 0,
         currency: map['currency'] as String? ?? 'SAR',

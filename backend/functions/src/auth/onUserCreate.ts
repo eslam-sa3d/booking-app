@@ -26,6 +26,7 @@ export const onUserCreate = functionsV1.auth.user().onCreate(async (user) => {
     preferredLanguage: "en",
     role: "customer",
     suspended: false,
+    notificationPreferences: { reminders: true, promotions: true, announcements: true },
     createdAt: Timestamp.now(),
   };
 

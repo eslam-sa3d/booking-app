@@ -61,6 +61,7 @@ enum PaymentMethod {
 
 enum NotificationType {
   bookingConfirmed,
+  waitlisted,
   reminder,
   cancellation,
   waitlistPromoted,
@@ -70,6 +71,15 @@ enum NotificationType {
 
   static NotificationType fromName(String name) =>
       NotificationType.values.firstWhere((e) => e.name == name, orElse: () => NotificationType.general);
+}
+
+enum RefundRequestStatus {
+  pending,
+  approved,
+  denied;
+
+  static RefundRequestStatus fromName(String name) => RefundRequestStatus.values
+      .firstWhere((e) => e.name == name, orElse: () => RefundRequestStatus.pending);
 }
 
 enum Gender {

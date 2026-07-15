@@ -38,7 +38,12 @@ service cloud.firestore {
       // assignStaffRole callable, which sets the custom claim and mirrors
       // this field with Admin SDK privileges (bypasses rules entirely).
       allow create: if isOwner(uid) && request.resource.data.role == 'customer';
-      allow update: if (isOwner(uid) && unchanged('role')) || isStaff();
+      // A customer editing their own profile can't touch role or suspended
+      // (both are staff/admin-only levers, not self-service). Staff writes
+      // (e.g. suspend/reactivate) must tag `updatedBy` — required for the
+      // auditLog trigger to attribute the change to a real actor.
+      allow update: if (isOwner(uid) && unchanged('role') && unchanged('suspended'))
+        || (isStaff() && request.resource.data.updatedBy == request.auth.uid);
       allow delete: if isOwner(uid) || isAdmin();
 
       match /familyMembers/{memberId} {
@@ -62,10 +67,23 @@ service cloud.firestore {
       }
     }
 
+    // Every staff/admin create+update below must tag `updatedBy` with the
+    // caller's own uid — enforced here, consumed by the matching auditLog
+    // trigger in functions/src/audit/triggers.ts. Deletes are intentionally
+    // *not* required to carry it (a delete has no `request.resource.data`
+    // to check); the admin dashboard routes deletes through the
+    // `adminDelete` callable instead, which logs them with a verified actor.
+    // Direct client deletes stay allowed here only as a defense-in-depth
+    // backstop, not the primary path.
+    function taggedByCaller() {
+      return request.resource.data.updatedBy == request.auth.uid;
+    }
+
     // ---------------- public catalog (guest-readable, staff-writable) ----------------
     match /classes/{classId} {
       allow read: if true;
-      allow write: if isStaff();
+      allow create, update: if isStaff() && taggedByCaller();
+      allow delete: if isStaff();
     }
     match /sessions/{sessionId} {
       allow read: if true;
@@ -73,13 +91,42 @@ service cloud.firestore {
       // only by the onBookingCreate/onBookingCancel Cloud Functions
       // (Admin SDK, bypasses rules) — staff edits here are for
       // schedule/capacity/instructor changes, not manual count edits.
-      allow write: if isStaff();
+      allow create, update: if isStaff() && taggedByCaller();
+      allow delete: if isStaff();
     }
     match /branches/{branchId} { allow read: if true; allow write: if isStaff(); }
-    match /instructors/{instructorId} { allow read: if true; allow write: if isStaff(); }
-    match /packages/{packageId} { allow read: if true; allow write: if isStaff(); }
-    match /banners/{bannerId} { allow read: if true; allow write: if isStaff(); }
-    match /appSettings/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /instructors/{instructorId} {
+      allow read: if true;
+      allow create, update: if isStaff() && taggedByCaller();
+      allow delete: if isStaff();
+    }
+    match /packages/{packageId} {
+      allow read: if true;
+      allow create, update: if isStaff() && taggedByCaller();
+      allow delete: if isStaff();
+    }
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow create, update: if isStaff() && taggedByCaller();
+      allow delete: if isStaff();
+    }
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create, update: if isStaff() && taggedByCaller();
+      allow delete: if isStaff();
+    }
+    match /blockedDates/{blockedDateId} {
+      allow read: if true; // mobile calendar shows these as unavailable
+      allow create, update: if isStaff() && taggedByCaller();
+      allow delete: if isStaff();
+    }
+    // App-wide branding/FAQ/legal content — admin-only per the build spec's
+    // explicit "not payments/reports or staff accounts" staff exclusion
+    // list; App Content & Settings falls in the same admin-only bucket.
+    match /appSettings/{docId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && taggedByCaller();
+    }
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
@@ -100,11 +147,19 @@ service cloud.firestore {
 
     // ---------------- transactions ----------------
     // Real charges are recorded server-side by the payment webhook
-    // function (Admin SDK); this rule only covers admin-issued manual
-    // entries/refunds from the dashboard.
+    // function (Admin SDK). Payments & Reports is admin-only per the build
+    // spec's staff exclusion list — refunds and manual entries require
+    // isAdmin(), not just isStaff(). Customers may self-service *request* a
+    // refund (a narrow field set) on their own transaction; only an admin
+    // can resolve that request.
     match /transactions/{txId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
-      allow write: if isStaff();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['refundRequestStatus', 'refundRequestedAt', 'refundRequestReason'])
+        && request.resource.data.refundRequestStatus == 'pending';
+      allow create, update: if isAdmin() && taggedByCaller();
+      allow delete: if isAdmin();
     }
 
     // ---------------- staff-authored broadcast notifications ----------------
@@ -121,10 +176,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ---------------- package expiry reminder markers ----------------
-    // Written exclusively by the packageExpiryReminders scheduled
-    // function via the Admin SDK — prevents duplicate reminders on reruns.
+    // ---------------- reminder dedupe markers ----------------
+    // Written exclusively by their respective scheduled functions via the
+    // Admin SDK — prevents duplicate reminders on overlapping/rerun.
     match /sentPackageExpiryReminders/{markerId} {
+      allow read: if isStaff();
+      allow write: if false;
+    }
+    match /sentSessionReminders/{markerId} {
       allow read: if isStaff();
       allow write: if false;
     }

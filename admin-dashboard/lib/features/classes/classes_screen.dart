@@ -49,9 +49,17 @@ class _ClassRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesStream = ref.watch(categoriesRepositoryProvider).watchAll();
     return ListTile(
       title: Text(swimClass.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      subtitle: Text('${swimClass.categories.map((c) => c.name).join(', ')} · ${swimClass.durationMinutes} min · ${swimClass.price.toStringAsFixed(0)} SAR'),
+      subtitle: StreamBuilder<List<Category>>(
+        stream: categoriesStream,
+        builder: (context, snap) {
+          final byId = {for (final c in snap.data ?? const <Category>[]) c.id: c.nameEn};
+          final names = swimClass.categories.map((id) => byId[id] ?? id).join(', ');
+          return Text('$names · ${swimClass.durationMinutes} min · ${swimClass.price.toStringAsFixed(0)} SAR');
+        },
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

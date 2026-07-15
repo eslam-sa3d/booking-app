@@ -1,11 +1,11 @@
 {
-    "name": "admin_dashboard",
-    "short_name": "admin_dashboard",
+    "name": "Swim Academy Admin",
+    "short_name": "Swim Admin",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0EA5A4",
+    "theme_color": "#0EA5A4",
+    "description": "Swim Academy staff dashboard.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

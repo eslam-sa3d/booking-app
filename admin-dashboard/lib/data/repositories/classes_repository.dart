@@ -1,9 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared/shared.dart';
 
-class ClassesRepository {
-  ClassesRepository(this._db);
+import 'audited_write.dart';
+
+class ClassesRepository with AuditedWrite {
+  ClassesRepository(this._db, this.auth, this.functions);
   final FirebaseFirestore _db;
+  @override
+  final FirebaseAuth auth;
+  @override
+  final FirebaseFunctions functions;
 
   CollectionReference<Map<String, dynamic>> get _col => _db.collection('classes');
 
@@ -21,11 +29,11 @@ class ClassesRepository {
 
   Future<String> create(SwimClass swimClass) async {
     final ref = swimClass.id.isEmpty ? _col.doc() : _col.doc(swimClass.id);
-    await ref.set(swimClass.copyWith().toMap()..['id'] = ref.id);
+    await ref.set(tagged(swimClass.copyWith().toMap()..['id'] = ref.id));
     return ref.id;
   }
 
-  Future<void> update(SwimClass swimClass) => _col.doc(swimClass.id).set(swimClass.toMap());
+  Future<void> update(SwimClass swimClass) => _col.doc(swimClass.id).set(tagged(swimClass.toMap()));
 
-  Future<void> delete(String id) => _col.doc(id).delete();
+  Future<void> delete(String id) => auditedDelete('classes', id);
 }

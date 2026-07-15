@@ -5,7 +5,14 @@
 //   node scripts/seed.js
 const admin = require("firebase-admin");
 
-admin.initializeApp({ projectId: "demo-swim-academy" });
+// Defaults to the safe "demo-" emulator project (the "demo-" prefix makes
+// the Admin SDK refuse to touch real infrastructure even with no real
+// credentials). Override with FIREBASE_PROJECT_ID=<real-project-id> to seed
+// a real deployed project instead — picks up credentials the normal way,
+// via `gcloud auth application-default login` or a
+// GOOGLE_APPLICATION_CREDENTIALS service-account key.
+const projectId = process.env.FIREBASE_PROJECT_ID || "demo-swim-academy";
+admin.initializeApp({ projectId });
 const db = admin.firestore();
 const auth = admin.auth();
 
@@ -50,14 +57,25 @@ async function ensureAdmin() {
       preferredLanguage: "en",
       role: "admin",
       suspended: false,
+      notificationPreferences: { reminders: true, promotions: true, announcements: true },
       createdAt: admin.firestore.Timestamp.now(),
     },
     { merge: true }
   );
   console.log(`Admin ready: ${email} / ${password} (uid ${user.uid})`);
+  return user.uid;
 }
 
-async function seedContent() {
+async function seedContent(adminUid) {
+  const categories = [
+    { id: "kids", nameEn: "Kids", nameAr: "أطفال", order: 0 },
+    { id: "adults", nameEn: "Adults", nameAr: "بالغون", order: 1 },
+    { id: "beginner", nameEn: "Beginner", nameAr: "مبتدئ", order: 2 },
+    { id: "intermediate", nameEn: "Intermediate", nameAr: "متوسط", order: 3 },
+    { id: "advanced", nameEn: "Advanced", nameAr: "متقدم", order: 4 },
+    { id: "private", nameEn: "Private", nameAr: "خاص", order: 5 },
+    { id: "ladiesOnly", nameEn: "Ladies-only", nameAr: "نسائي فقط", order: 6 },
+  ];
   const branches = [
     { id: "b1", name: "Al Olaya Aquatic Center", nameAr: "نادي العليا المائي", address: "Al Olaya, Riyadh", addressAr: "العليا، الرياض", imageAsset: "" },
     { id: "b2", name: "Jeddah Corniche Pool", nameAr: "مسبح كورنيش جدة", address: "Corniche Road, Jeddah", addressAr: "طريق الكورنيش، جدة", imageAsset: "" },
@@ -89,11 +107,12 @@ async function seedContent() {
   ];
 
   const batch = db.batch();
+  for (const cat of categories) batch.set(db.collection("categories").doc(cat.id), { ...cat, updatedBy: adminUid });
   for (const b of branches) batch.set(db.collection("branches").doc(b.id), b);
-  for (const i of instructors) batch.set(db.collection("instructors").doc(i.id), i);
-  for (const c of classes) batch.set(db.collection("classes").doc(c.id), c);
-  for (const p of packages) batch.set(db.collection("packages").doc(p.id), p);
-  for (const bn of banners) batch.set(db.collection("banners").doc(bn.id), bn);
+  for (const i of instructors) batch.set(db.collection("instructors").doc(i.id), { ...i, updatedBy: adminUid });
+  for (const c of classes) batch.set(db.collection("classes").doc(c.id), { ...c, updatedBy: adminUid });
+  for (const p of packages) batch.set(db.collection("packages").doc(p.id), { ...p, updatedBy: adminUid });
+  for (const bn of banners) batch.set(db.collection("banners").doc(bn.id), { ...bn, updatedBy: adminUid });
   batch.set(db.collection("appSettings").doc("config"), {
     brandPrimaryColorHex: "#0EA5A4",
     logoUrl: null,
@@ -103,6 +122,7 @@ async function seedContent() {
     privacyUrl: null,
     whatsappNumber: "+966500000000",
     contactEmail: "support@swimacademy.test",
+    updatedBy: adminUid,
   });
   await batch.commit();
 
@@ -139,12 +159,12 @@ async function seedContent() {
     }
   }
   await sessionsBatch.commit();
-  console.log("Seeded branches, instructors, classes, sessions, packages, banners, app settings.");
+  console.log("Seeded categories, branches, instructors, classes, sessions, packages, banners, app settings.");
 }
 
 async function main() {
-  await ensureAdmin();
-  await seedContent();
+  const adminUid = await ensureAdmin();
+  await seedContent(adminUid);
 }
 
 main()

@@ -10,21 +10,7 @@ See [docs/architecture.md](docs/architecture.md) for the full system design, dat
 - **`backend/`** — Firebase: Cloud Functions (TypeScript), Firestore security rules and indexes.
 - **`shared/`** — pure-Dart package with the data models used by both `mobile-app` and `admin-dashboard`, kept in sync by hand with `backend/functions/src/models/types.ts`.
 
-Both apps default to the local Firebase emulator suite (no real Firebase project needed) — start the backend first.
-
-## Running the backend
-```
-cd backend/functions
-npm install
-npm run build
-cd ..
-npx firebase-tools emulators:start   # Firestore + Functions + Auth emulators
-```
-Then seed demo data and a first admin account:
-```
-cd backend/functions
-node scripts/seed.js   # admin@swimacademy.test / admin123456
-```
+Both apps point at the real, deployed Firebase project (`booking-app-36b8e`) by default — admin dashboard is live at https://booking-app-36b8e.web.app. See [docs/architecture.md](docs/architecture.md) for running everything against the local emulator suite instead, deployment commands, and the full build status.
 
 ## Running the mobile app
 ```
@@ -40,5 +26,14 @@ flutter pub get
 flutter run -d chrome
 ```
 
-## Pointing at a real Firebase project
-Copy `backend/.firebaserc.example` to `backend/.firebaserc` with your project IDs, run `flutterfire configure` from `mobile-app/` and `admin-dashboard/` to replace their placeholder `firebase_options.dart`, then set `kUseFirebaseEmulators = false` in each app's `lib/core/firebase/firebase_bootstrap.dart`.
+## Running the backend locally (emulator)
+```
+cd backend/functions && npm install && npm run build
+cd backend && npx firebase-tools emulators:start --project demo-swim-academy
+```
+Then seed demo data and a first admin account:
+```
+cd backend/functions
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 node scripts/seed.js   # admin@swimacademy.test / admin123456
+```
+Flip `kUseFirebaseEmulators = true` in each app's `lib/core/firebase/firebase_bootstrap.dart` to point them at the emulator instead of production.

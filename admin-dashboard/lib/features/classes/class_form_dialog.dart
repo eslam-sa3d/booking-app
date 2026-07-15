@@ -27,21 +27,25 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
   late final _descArCtrl = TextEditingController(text: widget.existing?.descriptionAr);
   late final _priceCtrl = TextEditingController(text: widget.existing?.price.toString() ?? '');
   late final _durationCtrl = TextEditingController(text: widget.existing?.durationMinutes.toString() ?? '45');
-  late final _instructorIdCtrl = TextEditingController(text: widget.existing?.instructorId);
-  late final _branchIdCtrl = TextEditingController(text: widget.existing?.branchId);
-  Set<ClassCategory> _categories = {};
+  Set<String> _categories = {};
+  String? _instructorId;
+  String? _branchId;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _categories = widget.existing?.categories.toSet() ?? {};
+    _instructorId = widget.existing?.instructorId;
+    _branchId = widget.existing?.branchId;
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate() || _categories.isEmpty) {
+    if (!_formKey.currentState!.validate() || _categories.isEmpty || _instructorId == null || _branchId == null) {
       if (_categories.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select at least one category')));
+      } else if (_instructorId == null || _branchId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select an instructor and branch')));
       }
       return;
     }
@@ -56,8 +60,8 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
       categories: _categories.toList(),
       durationMinutes: int.tryParse(_durationCtrl.text) ?? 45,
       price: double.tryParse(_priceCtrl.text) ?? 0,
-      instructorId: _instructorIdCtrl.text.trim(),
-      branchId: _branchIdCtrl.text.trim(),
+      instructorId: _instructorId!,
+      branchId: _branchId!,
     );
     if (widget.existing == null) {
       await repo.create(swimClass);
@@ -69,6 +73,10 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final categoriesStream = ref.watch(categoriesRepositoryProvider).watchAll();
+    final instructorsStream = ref.watch(instructorsRepositoryProvider).watchAll();
+    final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
+
     return AlertDialog(
       title: Text(widget.existing == null ? 'Add class' : 'Edit class'),
       content: SizedBox(
@@ -91,16 +99,24 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
                 const SizedBox(height: 12),
                 TextFormField(controller: _descArCtrl, decoration: const InputDecoration(labelText: 'Description (AR)'), maxLines: 2),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  children: ClassCategory.values.map((c) {
-                    final selected = _categories.contains(c);
-                    return FilterChip(
-                      label: Text(c.name),
-                      selected: selected,
-                      onSelected: (v) => setState(() => v ? _categories.add(c) : _categories.remove(c)),
+                const Text('Categories', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                const SizedBox(height: 6),
+                StreamBuilder<List<Category>>(
+                  stream: categoriesStream,
+                  builder: (context, snap) {
+                    final categories = snap.data ?? const [];
+                    return Wrap(
+                      spacing: 8,
+                      children: categories.map((c) {
+                        final selected = _categories.contains(c.id);
+                        return FilterChip(
+                          label: Text(c.nameEn),
+                          selected: selected,
+                          onSelected: (v) => setState(() => v ? _categories.add(c.id) : _categories.remove(c.id)),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
+                  },
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -113,9 +129,39 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: TextFormField(controller: _instructorIdCtrl, decoration: const InputDecoration(labelText: 'Instructor ID'), validator: _req)),
+                    Expanded(
+                      child: StreamBuilder<List<Instructor>>(
+                        stream: instructorsStream,
+                        builder: (context, snap) {
+                          final instructors = snap.data ?? const [];
+                          return DropdownButtonFormField<String>(
+                            initialValue: instructors.any((i) => i.id == _instructorId) ? _instructorId : null,
+                            decoration: const InputDecoration(labelText: 'Instructor'),
+                            items: [
+                              for (final i in instructors) DropdownMenuItem(value: i.id, child: Text(i.name)),
+                            ],
+                            onChanged: (v) => setState(() => _instructorId = v),
+                          );
+                        },
+                      ),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: TextFormField(controller: _branchIdCtrl, decoration: const InputDecoration(labelText: 'Branch ID'), validator: _req)),
+                    Expanded(
+                      child: StreamBuilder<List<Branch>>(
+                        stream: branchesStream,
+                        builder: (context, snap) {
+                          final branches = snap.data ?? const [];
+                          return DropdownButtonFormField<String>(
+                            initialValue: branches.any((b) => b.id == _branchId) ? _branchId : null,
+                            decoration: const InputDecoration(labelText: 'Branch / Pool'),
+                            items: [
+                              for (final b in branches) DropdownMenuItem(value: b.id, child: Text(b.name)),
+                            ],
+                            onChanged: (v) => setState(() => _branchId = v),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ],

@@ -8,7 +8,7 @@ import '../../firebase_options.dart';
 
 /// Flip to false once `flutterfire configure` has been run against a real
 /// Firebase project and `firebase_options.dart` holds real credentials.
-const bool kUseFirebaseEmulators = true;
+const bool kUseFirebaseEmulators = false;
 
 Future<void> bootstrapFirebase() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.web);

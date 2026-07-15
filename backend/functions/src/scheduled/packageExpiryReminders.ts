@@ -2,7 +2,8 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../lib/admin";
-import type { UserPackage, InboxNotification } from "../models/types";
+import { notifyUsers } from "../lib/notify";
+import type { UserPackage } from "../models/types";
 
 const REMINDER_WINDOW_DAYS = 3;
 
@@ -36,20 +37,13 @@ export const packageExpiryReminders = onSchedule("every day 09:00", async () => 
     if (marker.exists) continue;
 
     const daysLeft = Math.ceil((userPackage.expiresAt.toMillis() - now.toMillis()) / (24 * 60 * 60 * 1000));
-    const inboxEntry: InboxNotification = {
-      id: "",
-      sourceNotificationId: null,
+    await notifyUsers([userPackage.userId], {
       type: "packageExpiry",
       title: "Your package is expiring soon",
       titleAr: "باقتك على وشك الانتهاء",
       body: `Your package expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"} — renew to keep booking.`,
       bodyAr: `تنتهي باقتك خلال ${daysLeft} يوم — جدد الآن لمواصلة الحجز.`,
-      createdAt: Timestamp.now(),
-      isRead: false,
-      relatedBookingId: null,
-    };
-    const inboxRef = db.collection("users").doc(userPackage.userId).collection("inbox").doc();
-    await inboxRef.set({ ...inboxEntry, id: inboxRef.id });
+    });
     await markerRef.set({ userPackageId: userPackage.id, sentAt: Timestamp.now() });
     sentCount++;
   }

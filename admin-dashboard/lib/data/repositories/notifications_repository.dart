@@ -10,6 +10,7 @@ class NotificationDefinition {
   final String target; // 'all' | 'segment' | 'user'
   final String? targetUserId;
   final String? targetSegment;
+  final DateTime? scheduledFor;
   final DateTime createdAt;
   final String createdBy;
   final String status; // 'draft' | 'scheduled' | 'sent'
@@ -24,6 +25,7 @@ class NotificationDefinition {
     required this.target,
     this.targetUserId,
     this.targetSegment,
+    this.scheduledFor,
     required this.createdAt,
     required this.createdBy,
     this.status = 'sent',
@@ -39,6 +41,7 @@ class NotificationDefinition {
         'target': target,
         'targetUserId': targetUserId,
         'targetSegment': targetSegment,
+        'scheduledFor': scheduledFor,
         'createdAt': createdAt,
         'createdBy': createdBy,
         'status': status,
@@ -54,14 +57,27 @@ class NotificationDefinition {
         target: map['target'] as String? ?? 'all',
         targetUserId: map['targetUserId'] as String?,
         targetSegment: map['targetSegment'] as String?,
+        scheduledFor: (map['scheduledFor'] as Timestamp?)?.toDate(),
         createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
         createdBy: map['createdBy'] as String? ?? '',
         status: map['status'] as String? ?? 'sent',
       );
 }
 
-/// Writing here fires `dispatchNotification` (backend/functions/src/notifications/dispatch.ts)
-/// — currently a stub logging a warning; full FCM fan-out is a follow-up.
+/// Delivery/read counters for a single broadcast, derived from the
+/// `users/{uid}/inbox/{id}` copies that `notifyUsers` fan-out writes
+/// (each tagged with `sourceNotificationId`).
+class NotificationStats {
+  const NotificationStats({required this.delivered, required this.read});
+  final int delivered;
+  final int read;
+}
+
+/// Writing here fires `onNotificationCreated` / `dispatchScheduledNotifications`
+/// (backend/functions/src/notifications/dispatch.ts). A doc created with
+/// `status: 'sent'` dispatches immediately (real FCM push + inbox fan-out);
+/// a doc created with `status: 'scheduled'` and a `scheduledFor` timestamp is
+/// picked up by the scheduled function once that time arrives.
 class NotificationsRepository {
   NotificationsRepository(this._db);
   final FirebaseFirestore _db;
@@ -77,5 +93,16 @@ class NotificationsRepository {
   Future<void> compose(NotificationDefinition definition) async {
     final ref = definition.id.isEmpty ? _col.doc() : _col.doc(definition.id);
     await ref.set(definition.toMap()..['id'] = ref.id);
+  }
+
+  /// Counts delivered (fanned-out) and read inbox copies for [notificationId]
+  /// across every user's `inbox` subcollection.
+  Future<NotificationStats> getStats(String notificationId) async {
+    final snap = await _db
+        .collectionGroup('inbox')
+        .where('sourceNotificationId', isEqualTo: notificationId)
+        .get();
+    final read = snap.docs.where((d) => d.data()['isRead'] == true).length;
+    return NotificationStats(delivered: snap.docs.length, read: read);
   }
 }

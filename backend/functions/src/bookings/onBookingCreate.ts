@@ -1,7 +1,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../lib/admin";
-import type { Booking, SwimSession, InboxNotification } from "../models/types";
+import { notifyUsers } from "../lib/notify";
+import type { Booking, SwimSession } from "../models/types";
 
 /**
  * The client creates the booking document optimistically, but this
@@ -38,10 +38,8 @@ export const onBookingCreate = onDocumentCreated("bookings/{bookingId}", async (
   });
 
   const isWaitlisted = finalStatus === "waitlisted";
-  const inboxEntry: InboxNotification = {
-    id: "",
-    sourceNotificationId: null,
-    type: isWaitlisted ? "waitlistPromoted" : "bookingConfirmed",
+  await notifyUsers([booking.userId], {
+    type: isWaitlisted ? "waitlisted" : "bookingConfirmed",
     title: isWaitlisted ? "Added to waitlist" : "Booking confirmed",
     titleAr: isWaitlisted ? "تمت الإضافة لقائمة الانتظار" : "تم تأكيد الحجز",
     body: isWaitlisted
@@ -50,10 +48,6 @@ export const onBookingCreate = onDocumentCreated("bookings/{bookingId}", async (
     bodyAr: isWaitlisted
       ? `أنت الآن في قائمة الانتظار لـ ${booking.participantName}.`
       : `تم تأكيد حجزك لـ ${booking.participantName}.`,
-    createdAt: Timestamp.now(),
-    isRead: false,
     relatedBookingId: bookingRef.id,
-  };
-  await db.collection("users").doc(booking.userId).collection("inbox").add(inboxEntry);
-  // TODO(next phase): also send an FCM push via the notification dispatch pipeline.
+  });
 });

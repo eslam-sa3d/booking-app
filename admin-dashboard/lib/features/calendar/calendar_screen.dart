@@ -36,9 +36,17 @@ class CalendarScreen extends ConsumerWidget {
         final classes = classSnap.data ?? [];
         final classesById = {for (final c in classes) c.id: c};
 
+        final blockedDatesStream = ref.watch(blockedDatesRepositoryProvider).watchAll();
+
         return AdminPageScaffold(
           title: 'Calendar & Sessions',
           actions: [
+            OutlinedButton.icon(
+              onPressed: () => showDialog(context: context, builder: (_) => const _BlockedDatesDialog()),
+              icon: const Icon(Icons.block),
+              label: const Text('Manage blocked dates'),
+            ),
+            const SizedBox(width: 12),
             OutlinedButton.icon(
               onPressed: classes.isEmpty ? null : () => showRecurringSessionDialog(context, ref, classes: classes),
               icon: const Icon(Icons.repeat_rounded),
@@ -63,67 +71,95 @@ class CalendarScreen extends ConsumerWidget {
               final daySessions = sessions.where((s) => isSameDay(s.date, selectedDay)).toList()
                 ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: TableCalendar(
-                          firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                          lastDay: DateTime.now().add(const Duration(days: 365)),
-                          focusedDay: focusedMonth,
-                          selectedDayPredicate: (d) => isSameDay(d, selectedDay),
-                          eventLoader: (day) {
-                            final key = DateTime(day.year, day.month, day.day);
-                            final count = eventCounts[key] ?? 0;
-                            return List.filled(count > 3 ? 3 : count, 0);
-                          },
-                          onDaySelected: (selected, focused) {
-                            ref.read(_selectedDayProvider.notifier).state = DateTime(selected.year, selected.month, selected.day);
-                            ref.read(_focusedMonthProvider.notifier).state = DateTime(focused.year, focused.month, 1);
-                          },
-                          onPageChanged: (focused) => ref.read(_focusedMonthProvider.notifier).state = DateTime(focused.year, focused.month, 1),
-                          headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
-                          calendarStyle: const CalendarStyle(
-                            selectedDecoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                            todayDecoration: BoxDecoration(color: AppColors.secondary, shape: BoxShape.circle),
-                            markerDecoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+              return StreamBuilder<List<BlockedDate>>(
+                stream: blockedDatesStream,
+                builder: (context, blockedSnap) {
+                  final blockedDays = <DateTime>{
+                    for (final bd in blockedSnap.data ?? const <BlockedDate>[])
+                      DateTime(bd.date.year, bd.date.month, bd.date.day),
+                  };
+                  final isSelectedDayBlocked = blockedDays.contains(DateTime(selectedDay.year, selectedDay.month, selectedDay.day));
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: TableCalendar(
+                              firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                              lastDay: DateTime.now().add(const Duration(days: 365)),
+                              focusedDay: focusedMonth,
+                              selectedDayPredicate: (d) => isSameDay(d, selectedDay),
+                              holidayPredicate: (day) => blockedDays.contains(DateTime(day.year, day.month, day.day)),
+                              eventLoader: (day) {
+                                final key = DateTime(day.year, day.month, day.day);
+                                final count = eventCounts[key] ?? 0;
+                                return List.filled(count > 3 ? 3 : count, 0);
+                              },
+                              onDaySelected: (selected, focused) {
+                                ref.read(_selectedDayProvider.notifier).state = DateTime(selected.year, selected.month, selected.day);
+                                ref.read(_focusedMonthProvider.notifier).state = DateTime(focused.year, focused.month, 1);
+                              },
+                              onPageChanged: (focused) => ref.read(_focusedMonthProvider.notifier).state = DateTime(focused.year, focused.month, 1),
+                              headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
+                              calendarStyle: CalendarStyle(
+                                selectedDecoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                                todayDecoration: const BoxDecoration(color: AppColors.secondary, shape: BoxShape.circle),
+                                markerDecoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                                holidayTextStyle: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w700),
+                                holidayDecoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.08),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.redAccent),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    flex: 2,
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${selectedDay.year}-${selectedDay.month.toString().padLeft(2, '0')}-${selectedDay.day.toString().padLeft(2, '0')}',
-                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        flex: 2,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${selectedDay.year}-${selectedDay.month.toString().padLeft(2, '0')}-${selectedDay.day.toString().padLeft(2, '0')}',
+                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                ),
+                                if (isSelectedDayBlocked) ...[
+                                  const SizedBox(height: 6),
+                                  const Row(
+                                    children: [
+                                      Icon(Icons.block, size: 14, color: Colors.redAccent),
+                                      SizedBox(width: 4),
+                                      Text('Blocked date', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600, fontSize: 12)),
+                                    ],
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                if (daySessions.isEmpty) const Text('No sessions on this day', style: TextStyle(color: Colors.black54)),
+                                for (final session in daySessions)
+                                  _SessionTile(
+                                    session: session,
+                                    swimClass: classesById[session.classId],
+                                    onTap: () => showSessionFormDialog(context, ref, date: selectedDay, classes: classes, existing: session),
+                                    onDelete: () => ref.read(sessionsRepositoryProvider).delete(session.id),
+                                  ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            if (daySessions.isEmpty) const Text('No sessions on this day', style: TextStyle(color: Colors.black54)),
-                            for (final session in daySessions)
-                              _SessionTile(
-                                session: session,
-                                swimClass: classesById[session.classId],
-                                onTap: () => showSessionFormDialog(context, ref, date: selectedDay, classes: classes, existing: session),
-                                onDelete: () => ref.read(sessionsRepositoryProvider).delete(session.id),
-                              ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               );
             },
           ),
@@ -151,6 +187,139 @@ class _SessionTile extends StatelessWidget {
       onTap: onTap,
       trailing: IconButton(icon: const Icon(Icons.delete_outline, size: 18), onPressed: onDelete),
       dense: true,
+    );
+  }
+}
+
+class _BlockedDatesDialog extends ConsumerStatefulWidget {
+  const _BlockedDatesDialog();
+
+  @override
+  ConsumerState<_BlockedDatesDialog> createState() => _BlockedDatesDialogState();
+}
+
+class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
+  DateTime _date = DateTime.now();
+  final _reasonCtrl = TextEditingController();
+  String? _branchId; // null = all branches
+  bool _isSaving = false;
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _add() async {
+    if (_reasonCtrl.text.trim().isEmpty) return;
+    setState(() => _isSaving = true);
+    await ref.read(blockedDatesRepositoryProvider).create(
+          date: _date,
+          branchId: _branchId,
+          reason: _reasonCtrl.text.trim(),
+        );
+    _reasonCtrl.clear();
+    if (mounted) setState(() => _isSaving = false);
+  }
+
+  String _fmt(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  @override
+  Widget build(BuildContext context) {
+    final blockedStream = ref.watch(blockedDatesRepositoryProvider).watchAll();
+    final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
+
+    return AlertDialog(
+      title: const Text('Manage blocked dates'),
+      content: SizedBox(
+        width: 480,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: OutlinedButton(onPressed: _pickDate, child: Text('Date: ${_fmt(_date)}'))),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StreamBuilder<List<Branch>>(
+                    stream: branchesStream,
+                    builder: (context, snap) {
+                      final branches = snap.data ?? const [];
+                      return DropdownButtonFormField<String?>(
+                        initialValue: _branchId,
+                        decoration: const InputDecoration(labelText: 'Branch'),
+                        items: [
+                          const DropdownMenuItem<String?>(value: null, child: Text('All branches')),
+                          for (final b in branches) DropdownMenuItem<String?>(value: b.id, child: Text(b.name)),
+                        ],
+                        onChanged: (v) => setState(() => _branchId = v),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextFormField(controller: _reasonCtrl, decoration: const InputDecoration(labelText: 'Reason')),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: _isSaving ? null : _add,
+                icon: const Icon(Icons.add),
+                label: Text(_isSaving ? 'Adding…' : 'Add blocked date'),
+              ),
+            ),
+            const Divider(height: 28),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Currently blocked', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 260,
+              child: StreamBuilder<List<BlockedDate>>(
+                stream: blockedStream,
+                builder: (context, snap) {
+                  final blocked = snap.data ?? const [];
+                  if (blocked.isEmpty) {
+                    return const Center(child: Text('No blocked dates', style: TextStyle(color: Colors.black54)));
+                  }
+                  return StreamBuilder<List<Branch>>(
+                    stream: branchesStream,
+                    builder: (context, branchSnap) {
+                      final branchesById = {for (final b in branchSnap.data ?? const <Branch>[]) b.id: b.name};
+                      return ListView(
+                        children: [
+                          for (final bd in blocked)
+                            ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.block, color: Colors.redAccent),
+                              title: Text(_fmt(bd.date)),
+                              subtitle: Text('${bd.branchId == null ? 'All branches' : (branchesById[bd.branchId] ?? bd.branchId!)} · ${bd.reason}'),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () => ref.read(blockedDatesRepositoryProvider).delete(bd.id),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+      ],
     );
   }
 }

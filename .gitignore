@@ -1,0 +1,6 @@
+# Firebase CLI local cache/logs (not source, differs per machine)
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log

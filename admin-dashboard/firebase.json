@@ -1,0 +1,17 @@
+{
+  "flutter": {
+    "platforms": {
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "booking-app-36b8e",
+          "configurations": { "web": "1:691594727534:web:4c1f555219e05bacdad67f" }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": ["firebase.json", "**/.*"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+  }
+}

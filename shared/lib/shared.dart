@@ -18,3 +18,5 @@ export 'src/review.dart';
 export 'src/app_notification.dart';
 export 'src/banner.dart';
 export 'src/app_settings.dart';
+export 'src/category.dart';
+export 'src/blocked_date.dart';

@@ -49,6 +49,10 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
     if (_classId == null || _weekdays.isEmpty) return;
     setState(() => _isSaving = true);
     final swimClass = widget.classes.firstWhere((c) => c.id == _classId);
+    final blockedDates = await ref.read(blockedDatesRepositoryProvider).watchAll().first;
+    final blockedKeys = blockedDates
+        .map((bd) => '${bd.date.year.toString().padLeft(4, '0')}-${bd.date.month.toString().padLeft(2, '0')}-${bd.date.day.toString().padLeft(2, '0')}')
+        .toSet();
     final count = await ref.read(sessionsRepositoryProvider).createRecurring(
           classId: _classId!,
           instructorId: swimClass.instructorId,
@@ -59,6 +63,7 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
           capacity: int.tryParse(_capacityCtrl.text) ?? 10,
           start: _rangeStart,
           end: _rangeEnd,
+          blockedDates: blockedKeys,
         );
     if (mounted) {
       Navigator.of(context).pop();

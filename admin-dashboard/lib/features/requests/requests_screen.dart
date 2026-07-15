@@ -12,12 +12,63 @@ class RequestsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final waitlistStream = ref.watch(bookingsRepositoryProvider).watchByStatus(BookingStatus.waitlisted);
     final cancellationsStream = ref.watch(bookingsRepositoryProvider).watchRecentCancellations();
+    final refundRequestsStream = ref.watch(transactionsRepositoryProvider).watchPendingRefundRequests();
 
     return AdminPageScaffold(
       title: 'Requests',
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text('Refund requests', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          const SizedBox(height: 4),
+          const Text(
+            'Customer-initiated refund requests awaiting a decision.',
+            style: TextStyle(color: Colors.black54, fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          StreamBuilder<List<Payment>>(
+            stream: refundRequestsStream,
+            builder: (context, snapshot) {
+              final items = snapshot.data ?? [];
+              if (items.isEmpty) {
+                return const Padding(padding: EdgeInsets.only(bottom: 28), child: Text('No pending refund requests.'));
+              }
+              return Card(
+                margin: const EdgeInsets.only(bottom: 28),
+                child: Column(
+                  children: [
+                    for (final payment in items)
+                      ListTile(
+                        title: Text('${payment.amount.toStringAsFixed(0)} ${payment.currency} — ${_shortId(payment.userId)}'),
+                        subtitle: Text(
+                          [
+                            if (payment.refundRequestReason?.isNotEmpty == true) payment.refundRequestReason! else 'No reason given',
+                            if (payment.refundRequestedAt != null)
+                              'Requested ${payment.refundRequestedAt.toString().split(' ').first}',
+                          ].join(' · '),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextButton(
+                              onPressed: () =>
+                                  ref.read(transactionsRepositoryProvider).resolveRefundRequest(payment.id, approve: false),
+                              child: const Text('Deny'),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  ref.read(transactionsRepositoryProvider).resolveRefundRequest(payment.id, approve: true),
+                              child: const Text('Approve'),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
           const Text('Waitlisted bookings', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: 4),
           const Text(
@@ -75,3 +126,8 @@ class RequestsScreen extends ConsumerWidget {
     );
   }
 }
+
+/// A user-friendly, truncated form of a userId for display where looking up
+/// the full member record isn't worth an extra query (e.g. a short list of
+/// pending refund requests).
+String _shortId(String userId) => userId.length <= 8 ? userId : '${userId.substring(0, 8)}…';

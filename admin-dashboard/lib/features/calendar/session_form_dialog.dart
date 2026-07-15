@@ -29,6 +29,8 @@ class _SessionFormDialog extends ConsumerStatefulWidget {
 
 class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
   String? _classId;
+  String? _instructorId;
+  String? _branchId;
   TimeOfDay _start = const TimeOfDay(hour: 16, minute: 0);
   TimeOfDay _end = const TimeOfDay(hour: 17, minute: 0);
   late final _capacityCtrl = TextEditingController(text: widget.existing?.capacity.toString() ?? '10');
@@ -41,13 +43,18 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
     if (widget.existing != null) {
       _start = TimeOfDay(hour: widget.existing!.startMinutes ~/ 60, minute: widget.existing!.startMinutes % 60);
       _end = TimeOfDay(hour: widget.existing!.endMinutes ~/ 60, minute: widget.existing!.endMinutes % 60);
+      _instructorId = widget.existing!.instructorId;
+      _branchId = widget.existing!.branchId;
+    } else if (_classId != null) {
+      final swimClass = widget.classes.firstWhere((c) => c.id == _classId);
+      _instructorId = swimClass.instructorId;
+      _branchId = swimClass.branchId;
     }
   }
 
   Future<void> _save() async {
-    if (_classId == null) return;
+    if (_classId == null || _instructorId == null || _branchId == null) return;
     setState(() => _isSaving = true);
-    final swimClass = widget.classes.firstWhere((c) => c.id == _classId);
     final repo = ref.read(sessionsRepositoryProvider);
     final session = SwimSession(
       id: widget.existing?.id ?? '',
@@ -58,8 +65,8 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
       capacity: int.tryParse(_capacityCtrl.text) ?? 10,
       bookedCount: widget.existing?.bookedCount ?? 0,
       waitlistCount: widget.existing?.waitlistCount ?? 0,
-      instructorId: swimClass.instructorId,
-      branchId: swimClass.branchId,
+      instructorId: _instructorId!,
+      branchId: _branchId!,
     );
     if (widget.existing == null) {
       await repo.create(session);
@@ -71,6 +78,9 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final instructorsStream = ref.watch(instructorsRepositoryProvider).watchAll();
+    final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
+
     return AlertDialog(
       title: Text(widget.existing == null ? 'Add session' : 'Edit session'),
       content: SizedBox(
@@ -85,7 +95,56 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
               initialValue: _classId,
               decoration: const InputDecoration(labelText: 'Class'),
               items: widget.classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.title))).toList(),
-              onChanged: (v) => setState(() => _classId = v),
+              onChanged: (v) {
+                setState(() {
+                  _classId = v;
+                  if (v != null && widget.existing == null) {
+                    // Re-default instructor/branch to the newly selected class,
+                    // unless editing an existing session (preserve its override).
+                    final swimClass = widget.classes.firstWhere((c) => c.id == v);
+                    _instructorId = swimClass.instructorId;
+                    _branchId = swimClass.branchId;
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: StreamBuilder<List<Instructor>>(
+                    stream: instructorsStream,
+                    builder: (context, snap) {
+                      final instructors = snap.data ?? const [];
+                      return DropdownButtonFormField<String>(
+                        initialValue: instructors.any((i) => i.id == _instructorId) ? _instructorId : null,
+                        decoration: const InputDecoration(labelText: 'Instructor'),
+                        items: [
+                          for (final i in instructors) DropdownMenuItem(value: i.id, child: Text(i.name)),
+                        ],
+                        onChanged: (v) => setState(() => _instructorId = v),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StreamBuilder<List<Branch>>(
+                    stream: branchesStream,
+                    builder: (context, snap) {
+                      final branches = snap.data ?? const [];
+                      return DropdownButtonFormField<String>(
+                        initialValue: branches.any((b) => b.id == _branchId) ? _branchId : null,
+                        decoration: const InputDecoration(labelText: 'Branch / Pool'),
+                        items: [
+                          for (final b in branches) DropdownMenuItem(value: b.id, child: Text(b.name)),
+                        ],
+                        onChanged: (v) => setState(() => _branchId = v),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Row(
@@ -118,7 +177,10 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _isSaving || _classId == null ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),
+        FilledButton(
+          onPressed: _isSaving || _classId == null || _instructorId == null || _branchId == null ? null : _save,
+          child: Text(_isSaving ? 'Saving…' : 'Save'),
+        ),
       ],
     );
   }

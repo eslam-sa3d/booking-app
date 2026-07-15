@@ -5,6 +5,15 @@ import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../data/repositories/dashboard_repository.dart';
+
+/// One-shot load of the secondary dashboard stats (today's bookings,
+/// revenue, upcoming sessions, capacity, expiring packages) — these don't
+/// need to be live-streamed, so a `FutureProvider` re-fetching on screen
+/// load/refresh is enough.
+final _dashboardStatsProvider = FutureProvider<DashboardStats>((ref) {
+  return ref.watch(dashboardRepositoryProvider).loadStats();
+});
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -14,6 +23,7 @@ class DashboardScreen extends ConsumerWidget {
     final classesAsync = ref.watch(classesRepositoryProvider).watchClasses();
     final membersAsync = ref.watch(membersRepositoryProvider).watchAll();
     final waitlistAsync = ref.read(bookingsRepositoryProvider).watchByStatus(BookingStatus.waitlisted);
+    final statsAsync = ref.watch(_dashboardStatsProvider);
 
     return AdminPageScaffold(
       title: 'Dashboard',
@@ -48,6 +58,53 @@ class DashboardScreen extends ConsumerWidget {
                   value: '${snap.data?.length ?? '—'}',
                   highlight: (snap.data?.length ?? 0) > 0,
                 ),
+              ),
+              _StatCard(
+                icon: Icons.event_available_outlined,
+                label: "Today's bookings",
+                value: statsAsync.when(
+                  data: (s) => '${s.todaysBookings}',
+                  loading: () => '—',
+                  error: (_, _) => '!',
+                ),
+              ),
+              _StatCard(
+                icon: Icons.payments_outlined,
+                label: 'Revenue this month',
+                value: statsAsync.when(
+                  data: (s) => '${s.revenueThisMonth.toStringAsFixed(0)} SAR',
+                  loading: () => '—',
+                  error: (_, _) => '!',
+                ),
+              ),
+              _StatCard(
+                icon: Icons.event_note_outlined,
+                label: 'Upcoming sessions (7d)',
+                value: statsAsync.when(
+                  data: (s) => '${s.upcomingSessions}',
+                  loading: () => '—',
+                  error: (_, _) => '!',
+                ),
+              ),
+              _StatCard(
+                icon: Icons.warning_amber_outlined,
+                label: 'Full / near-full classes',
+                value: statsAsync.when(
+                  data: (s) => '${s.fullOrNearFullSessions}',
+                  loading: () => '—',
+                  error: (_, _) => '!',
+                ),
+                highlight: statsAsync.maybeWhen(data: (s) => s.fullOrNearFullSessions > 0, orElse: () => false),
+              ),
+              _StatCard(
+                icon: Icons.schedule_outlined,
+                label: 'Packages expiring soon',
+                value: statsAsync.when(
+                  data: (s) => '${s.expiringPackages}',
+                  loading: () => '—',
+                  error: (_, _) => '!',
+                ),
+                highlight: statsAsync.maybeWhen(data: (s) => s.expiringPackages > 0, orElse: () => false),
               ),
             ],
           ),

@@ -1,7 +1,7 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../lib/admin";
-import type { Booking, SwimSession, InboxNotification } from "../models/types";
+import { notifyUsers } from "../lib/notify";
+import type { Booking, SwimSession } from "../models/types";
 
 /**
  * Fires on every booking update; only acts on the transition into
@@ -52,20 +52,23 @@ export const onBookingCancel = onDocumentUpdated("bookings/{bookingId}", async (
     return waitlistDocs[0]?.data() as Booking | undefined;
   });
 
+  await notifyUsers([after.userId], {
+    type: "cancellation",
+    title: "Booking cancelled",
+    titleAr: "تم إلغاء الحجز",
+    body: `Your booking for ${after.participantName} has been cancelled.`,
+    bodyAr: `تم إلغاء حجزك لـ ${after.participantName}.`,
+    relatedBookingId: after.id,
+  });
+
   if (promoted) {
-    const inboxEntry: InboxNotification = {
-      id: "",
-      sourceNotificationId: null,
+    await notifyUsers([promoted.userId], {
       type: "waitlistPromoted",
       title: "You're off the waitlist!",
       titleAr: "تم نقلك من قائمة الانتظار!",
       body: `A spot opened up for ${promoted.participantName} — your booking is now confirmed.`,
       bodyAr: `توفر مكان لـ ${promoted.participantName} — تم تأكيد حجزك الآن.`,
-      createdAt: Timestamp.now(),
-      isRead: false,
       relatedBookingId: promoted.id,
-    };
-    await db.collection("users").doc(promoted.userId).collection("inbox").add(inboxEntry);
-    // TODO(next phase): also send an FCM push via the notification dispatch pipeline.
+    });
   }
 });

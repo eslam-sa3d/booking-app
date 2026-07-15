@@ -12,6 +12,12 @@ class Payment {
   final String description;
   final String descriptionAr;
   final String? relatedPackageId;
+  final String? relatedBookingId;
+  final String? receiptNumber;
+  final RefundRequestStatus? refundRequestStatus;
+  final DateTime? refundRequestedAt;
+  final String? refundRequestReason;
+  final String? refundResolvedBy;
 
   const Payment({
     required this.id,
@@ -24,9 +30,41 @@ class Payment {
     required this.description,
     required this.descriptionAr,
     this.relatedPackageId,
+    this.relatedBookingId,
+    this.receiptNumber,
+    this.refundRequestStatus,
+    this.refundRequestedAt,
+    this.refundRequestReason,
+    this.refundResolvedBy,
   });
 
   String localizedDescription(bool isArabic) => isArabic ? descriptionAr : description;
+
+  Payment copyWith({
+    RefundRequestStatus? refundRequestStatus,
+    DateTime? refundRequestedAt,
+    String? refundRequestReason,
+    String? refundResolvedBy,
+    PaymentStatus? status,
+  }) =>
+      Payment(
+        id: id,
+        userId: userId,
+        amount: amount,
+        currency: currency,
+        method: method,
+        status: status ?? this.status,
+        createdAt: createdAt,
+        description: description,
+        descriptionAr: descriptionAr,
+        relatedPackageId: relatedPackageId,
+        relatedBookingId: relatedBookingId,
+        receiptNumber: receiptNumber,
+        refundRequestStatus: refundRequestStatus ?? this.refundRequestStatus,
+        refundRequestedAt: refundRequestedAt ?? this.refundRequestedAt,
+        refundRequestReason: refundRequestReason ?? this.refundRequestReason,
+        refundResolvedBy: refundResolvedBy ?? this.refundResolvedBy,
+      );
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -39,6 +77,12 @@ class Payment {
         'description': description,
         'descriptionAr': descriptionAr,
         'relatedPackageId': relatedPackageId,
+        'relatedBookingId': relatedBookingId,
+        'receiptNumber': receiptNumber,
+        'refundRequestStatus': refundRequestStatus?.name,
+        'refundRequestedAt': refundRequestedAt,
+        'refundRequestReason': refundRequestReason,
+        'refundResolvedBy': refundResolvedBy,
       };
 
   factory Payment.fromMap(Map<String, dynamic> map) => Payment(
@@ -52,5 +96,13 @@ class Payment {
         description: map['description'] as String? ?? '',
         descriptionAr: map['descriptionAr'] as String? ?? '',
         relatedPackageId: map['relatedPackageId'] as String?,
+        relatedBookingId: map['relatedBookingId'] as String?,
+        receiptNumber: map['receiptNumber'] as String?,
+        refundRequestStatus: map['refundRequestStatus'] != null
+            ? RefundRequestStatus.fromName(map['refundRequestStatus'] as String)
+            : null,
+        refundRequestedAt: parseTimestampOrNull(map['refundRequestedAt']),
+        refundRequestReason: map['refundRequestReason'] as String?,
+        refundResolvedBy: map['refundResolvedBy'] as String?,
       );
 }

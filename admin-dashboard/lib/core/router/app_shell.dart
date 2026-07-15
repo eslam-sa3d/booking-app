@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_controller.dart';
 import '../theme/app_theme.dart';
+import 'access.dart';
 
 class _NavItem {
   final IconData icon;
@@ -17,9 +18,11 @@ const _navItems = [
   _NavItem(Icons.inbox_outlined, 'Requests', '/requests'),
   _NavItem(Icons.pool_outlined, 'Classes', '/classes'),
   _NavItem(Icons.calendar_month_outlined, 'Calendar', '/calendar'),
+  _NavItem(Icons.sell_outlined, 'Categories', '/categories'),
   _NavItem(Icons.local_offer_outlined, 'Banners', '/banners'),
   _NavItem(Icons.card_membership_outlined, 'Packages', '/packages'),
-  _NavItem(Icons.payments_outlined, 'Payments & Reports', '/payments'),
+  _NavItem(Icons.payments_outlined, 'Payments', '/payments'),
+  _NavItem(Icons.bar_chart_outlined, 'Reports & Analytics', '/reports'),
   _NavItem(Icons.people_outline, 'Members', '/members'),
   _NavItem(Icons.badge_outlined, 'Instructors', '/instructors'),
   _NavItem(Icons.notifications_outlined, 'Notifications', '/notifications'),
@@ -36,6 +39,8 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).matchedLocation;
     final session = ref.watch(authStateProvider).value;
+    final isAdmin = session?.isAdmin ?? false;
+    final visibleNavItems = isAdmin ? _navItems : _navItems.where((item) => !isPathAdminOnly(item.path));
 
     return Scaffold(
       body: Row(
@@ -66,7 +71,7 @@ class AppShell extends ConsumerWidget {
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
-                        for (final item in _navItems)
+                        for (final item in visibleNavItems)
                           _SidebarTile(
                             icon: item.icon,
                             label: item.label,

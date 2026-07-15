@@ -9,6 +9,12 @@ export type Role = "customer" | "staff" | "admin";
 
 export type Gender = "male" | "female";
 
+export interface NotificationPreferences {
+  reminders: boolean;
+  promotions: boolean;
+  announcements: boolean;
+}
+
 /** users/{uid} */
 export interface AppUser {
   id: string;
@@ -19,6 +25,7 @@ export interface AppUser {
   preferredLanguage: "en" | "ar";
   role: Role;
   suspended: boolean;
+  notificationPreferences?: NotificationPreferences;
   createdAt: FirebaseFirestore.Timestamp;
 }
 
@@ -68,7 +75,11 @@ export interface SwimClass {
   titleAr: string;
   description: string;
   descriptionAr: string;
-  categories: ClassCategory[];
+  // References categories/{id} docs — kept as free-form strings (not the
+  // ClassCategory union) so admin can add/rename/remove categories at
+  // runtime without a code change. The 7 ClassCategory values above are
+  // the seeded starter set, not a closed set going forward.
+  categories: string[];
   durationMinutes: number;
   price: number;
   currency: string;
@@ -144,6 +155,8 @@ export interface UserPackage {
 export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded";
 export type PaymentMethod = "mada" | "applePay" | "stcPay" | "creditCard";
 
+export type RefundRequestStatus = "pending" | "approved" | "denied";
+
 /** transactions/{id} */
 export interface Transaction {
   id: string;
@@ -156,7 +169,13 @@ export interface Transaction {
   description: string;
   descriptionAr: string;
   relatedPackageId?: string | null;
+  relatedBookingId?: string | null;
   gatewayReference?: string | null;
+  receiptNumber?: string | null;
+  refundRequestStatus?: RefundRequestStatus | null;
+  refundRequestedAt?: FirebaseFirestore.Timestamp | null;
+  refundRequestReason?: string | null;
+  refundResolvedBy?: string | null;
 }
 
 /** reviews/{id} */
@@ -199,6 +218,24 @@ export interface Instructor {
   specialties: string[];
 }
 
+/** categories/{id} — admin-managed taxonomy used to tag classes */
+export interface CategoryDef {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  order: number;
+}
+
+/** blockedDates/{id} — a date (optionally scoped to one branch) closed to new sessions/bookings */
+export interface BlockedDate {
+  id: string;
+  date: FirebaseFirestore.Timestamp;
+  branchId?: string | null; // null = all branches
+  reason: string;
+  createdBy: string;
+  createdAt: FirebaseFirestore.Timestamp;
+}
+
 /** branches/{id} */
 export interface Branch {
   id: string;
@@ -211,6 +248,7 @@ export interface Branch {
 
 export type NotificationType =
   | "bookingConfirmed"
+  | "waitlisted"
   | "reminder"
   | "cancellation"
   | "waitlistPromoted"

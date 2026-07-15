@@ -1,5 +1,36 @@
 import 'firestore_codec.dart';
 
+class NotificationPreferences {
+  final bool reminders;
+  final bool promotions;
+  final bool announcements;
+
+  const NotificationPreferences({
+    this.reminders = true,
+    this.promotions = true,
+    this.announcements = true,
+  });
+
+  NotificationPreferences copyWith({bool? reminders, bool? promotions, bool? announcements}) =>
+      NotificationPreferences(
+        reminders: reminders ?? this.reminders,
+        promotions: promotions ?? this.promotions,
+        announcements: announcements ?? this.announcements,
+      );
+
+  Map<String, dynamic> toMap() => {
+        'reminders': reminders,
+        'promotions': promotions,
+        'announcements': announcements,
+      };
+
+  factory NotificationPreferences.fromMap(Map<String, dynamic>? map) => NotificationPreferences(
+        reminders: map?['reminders'] as bool? ?? true,
+        promotions: map?['promotions'] as bool? ?? true,
+        announcements: map?['announcements'] as bool? ?? true,
+      );
+}
+
 class AppUser {
   final String id;
   final String name;
@@ -9,6 +40,7 @@ class AppUser {
   final String preferredLanguage; // 'en' or 'ar'
   final String role; // 'customer' | 'staff' | 'admin' — mirror of the Auth custom claim, not authoritative
   final bool suspended;
+  final NotificationPreferences notificationPreferences;
   final DateTime createdAt;
 
   const AppUser({
@@ -20,6 +52,7 @@ class AppUser {
     this.preferredLanguage = 'en',
     this.role = 'customer',
     this.suspended = false,
+    this.notificationPreferences = const NotificationPreferences(),
     required this.createdAt,
   });
 
@@ -34,6 +67,7 @@ class AppUser {
     String? preferredLanguage,
     String? role,
     bool? suspended,
+    NotificationPreferences? notificationPreferences,
   }) {
     return AppUser(
       id: id,
@@ -44,6 +78,7 @@ class AppUser {
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       role: role ?? this.role,
       suspended: suspended ?? this.suspended,
+      notificationPreferences: notificationPreferences ?? this.notificationPreferences,
       createdAt: createdAt,
     );
   }
@@ -57,6 +92,7 @@ class AppUser {
         'preferredLanguage': preferredLanguage,
         'role': role,
         'suspended': suspended,
+        'notificationPreferences': notificationPreferences.toMap(),
         'createdAt': createdAt,
       };
 
@@ -69,6 +105,8 @@ class AppUser {
         preferredLanguage: map['preferredLanguage'] as String? ?? 'en',
         role: map['role'] as String? ?? 'customer',
         suspended: map['suspended'] as bool? ?? false,
+        notificationPreferences:
+            NotificationPreferences.fromMap(map['notificationPreferences'] as Map<String, dynamic>?),
         createdAt: parseTimestamp(map['createdAt']),
       );
 
