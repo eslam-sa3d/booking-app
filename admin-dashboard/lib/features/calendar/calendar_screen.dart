@@ -5,7 +5,9 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/responsive_dialog.dart';
 import 'recurring_session_dialog.dart';
 import 'session_form_dialog.dart';
 
@@ -80,83 +82,100 @@ class CalendarScreen extends ConsumerWidget {
                   };
                   final isSelectedDayBlocked = blockedDays.contains(DateTime(selectedDay.year, selectedDay.month, selectedDay.day));
 
+                  final calendarCard = Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: TableCalendar(
+                        firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                        lastDay: DateTime.now().add(const Duration(days: 365)),
+                        focusedDay: focusedMonth,
+                        selectedDayPredicate: (d) => isSameDay(d, selectedDay),
+                        holidayPredicate: (day) => blockedDays.contains(DateTime(day.year, day.month, day.day)),
+                        eventLoader: (day) {
+                          final key = DateTime(day.year, day.month, day.day);
+                          final count = eventCounts[key] ?? 0;
+                          return List.filled(count > 3 ? 3 : count, 0);
+                        },
+                        onDaySelected: (selected, focused) {
+                          ref.read(_selectedDayProvider.notifier).state = DateTime(selected.year, selected.month, selected.day);
+                          ref.read(_focusedMonthProvider.notifier).state = DateTime(focused.year, focused.month, 1);
+                        },
+                        onPageChanged: (focused) => ref.read(_focusedMonthProvider.notifier).state = DateTime(focused.year, focused.month, 1),
+                        headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
+                        calendarStyle: CalendarStyle(
+                          selectedDecoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                          todayDecoration: const BoxDecoration(color: AppColors.secondary, shape: BoxShape.circle),
+                          markerDecoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                          holidayTextStyle: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w700),
+                          holidayDecoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.redAccent),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+
+                  final sessionListCard = Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${selectedDay.year}-${selectedDay.month.toString().padLeft(2, '0')}-${selectedDay.day.toString().padLeft(2, '0')}',
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                          ),
+                          if (isSelectedDayBlocked) ...[
+                            const SizedBox(height: 6),
+                            const Row(
+                              children: [
+                                Icon(Icons.block, size: 14, color: Colors.redAccent),
+                                SizedBox(width: 4),
+                                Text('Blocked date', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600, fontSize: 12)),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          if (daySessions.isEmpty) const Text('No sessions on this day', style: TextStyle(color: Colors.black54)),
+                          for (final session in daySessions)
+                            _SessionTile(
+                              session: session,
+                              swimClass: classesById[session.classId],
+                              onTap: () => showSessionFormDialog(context, ref, date: selectedDay, classes: classes, existing: session),
+                              onDelete: () => ref.read(sessionsRepositoryProvider).delete(session.id),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  // The two-pane side-by-side layout assumes a wide screen;
+                  // on mobile the panes stack vertically instead. Expanded
+                  // can't be used in the mobile Column branch — this body
+                  // sits inside AdminPageScaffold's SingleChildScrollView,
+                  // which gives unbounded height, and a flexed child inside
+                  // an unbounded Column throws a layout error. Desktop keeps
+                  // Expanded/flex since Row's cross axis (height) is
+                  // unaffected by the scrollable ancestor.
+                  if (context.isMobile) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        calendarCard,
+                        const SizedBox(height: 20),
+                        sessionListCard,
+                      ],
+                    );
+                  }
+
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        flex: 3,
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: TableCalendar(
-                              firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                              lastDay: DateTime.now().add(const Duration(days: 365)),
-                              focusedDay: focusedMonth,
-                              selectedDayPredicate: (d) => isSameDay(d, selectedDay),
-                              holidayPredicate: (day) => blockedDays.contains(DateTime(day.year, day.month, day.day)),
-                              eventLoader: (day) {
-                                final key = DateTime(day.year, day.month, day.day);
-                                final count = eventCounts[key] ?? 0;
-                                return List.filled(count > 3 ? 3 : count, 0);
-                              },
-                              onDaySelected: (selected, focused) {
-                                ref.read(_selectedDayProvider.notifier).state = DateTime(selected.year, selected.month, selected.day);
-                                ref.read(_focusedMonthProvider.notifier).state = DateTime(focused.year, focused.month, 1);
-                              },
-                              onPageChanged: (focused) => ref.read(_focusedMonthProvider.notifier).state = DateTime(focused.year, focused.month, 1),
-                              headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
-                              calendarStyle: CalendarStyle(
-                                selectedDecoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                todayDecoration: const BoxDecoration(color: AppColors.secondary, shape: BoxShape.circle),
-                                markerDecoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                holidayTextStyle: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w700),
-                                holidayDecoration: BoxDecoration(
-                                  color: Colors.red.withValues(alpha: 0.08),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.redAccent),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      Expanded(flex: 3, child: calendarCard),
                       const SizedBox(width: 20),
-                      Expanded(
-                        flex: 2,
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${selectedDay.year}-${selectedDay.month.toString().padLeft(2, '0')}-${selectedDay.day.toString().padLeft(2, '0')}',
-                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-                                ),
-                                if (isSelectedDayBlocked) ...[
-                                  const SizedBox(height: 6),
-                                  const Row(
-                                    children: [
-                                      Icon(Icons.block, size: 14, color: Colors.redAccent),
-                                      SizedBox(width: 4),
-                                      Text('Blocked date', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600, fontSize: 12)),
-                                    ],
-                                  ),
-                                ],
-                                const SizedBox(height: 12),
-                                if (daySessions.isEmpty) const Text('No sessions on this day', style: TextStyle(color: Colors.black54)),
-                                for (final session in daySessions)
-                                  _SessionTile(
-                                    session: session,
-                                    swimClass: classesById[session.classId],
-                                    onTap: () => showSessionFormDialog(context, ref, date: selectedDay, classes: classes, existing: session),
-                                    onDelete: () => ref.read(sessionsRepositoryProvider).delete(session.id),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      Expanded(flex: 2, child: sessionListCard),
                     ],
                   );
                 },
@@ -233,10 +252,10 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
     final blockedStream = ref.watch(blockedDatesRepositoryProvider).watchAll();
     final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
 
-    return AlertDialog(
-      title: const Text('Manage blocked dates'),
-      content: SizedBox(
-        width: 480,
+    return ResponsiveDialogShell(
+      title: 'Manage blocked dates',
+      desktopWidth: 480,
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -4,6 +4,7 @@ import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/responsive_dialog.dart';
 import '../auth/auth_controller.dart';
 import '../../data/repositories/notifications_repository.dart';
 
@@ -222,15 +223,14 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
   Widget build(BuildContext context) {
     final membersAsync = ref.watch(membersRepositoryProvider).watchAll();
 
-    return AlertDialog(
-      title: const Text('Compose broadcast'),
-      content: SizedBox(
-        width: 480,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return ResponsiveDialogShell(
+      title: 'Compose broadcast',
+      desktopWidth: 480,
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title (EN)')),
               const SizedBox(height: 12),
               TextFormField(controller: _titleArCtrl, decoration: const InputDecoration(labelText: 'Title (AR)')),
@@ -322,7 +322,6 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
             ],
           ),
         ),
-      ),
       actions: [
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
         FilledButton(

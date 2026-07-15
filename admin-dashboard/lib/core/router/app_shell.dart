@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_controller.dart';
 import '../theme/app_theme.dart';
+import '../theme/breakpoints.dart';
 import 'access.dart';
 
 class _NavItem {
@@ -42,60 +43,123 @@ class AppShell extends ConsumerWidget {
     final isAdmin = session?.isAdmin ?? false;
     final visibleNavItems = isAdmin ? _navItems : _navItems.where((item) => !isPathAdminOnly(item.path));
 
+    if (context.isMobile) {
+      String currentLabel = 'Swim Academy';
+      for (final item in visibleNavItems) {
+        if (location.startsWith(item.path)) {
+          currentLabel = item.label;
+          break;
+        }
+      }
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: AppColors.sidebar,
+          foregroundColor: Colors.white,
+          title: Text(currentLabel),
+        ),
+        drawer: Drawer(
+          backgroundColor: AppColors.sidebar,
+          child: _SidebarContent(
+            navItems: visibleNavItems,
+            location: location,
+            session: session,
+            onItemTap: (path) {
+              Navigator.of(context).pop();
+              context.go(path);
+            },
+            onSignOut: () {
+              Navigator.of(context).pop();
+              ref.read(authControllerProvider).logout();
+            },
+          ),
+        ),
+        body: child,
+      );
+    }
+
     return Scaffold(
       body: Row(
         children: [
-          Container(
+          SizedBox(
             width: 240,
-            color: AppColors.sidebar,
-            child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 24, 20, 24),
-                    child: Row(
-                      children: [
-                        Icon(Icons.pool_rounded, color: AppColors.primary, size: 26),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Swim Academy',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView(
-                      padding: EdgeInsets.zero,
-                      children: [
-                        for (final item in visibleNavItems)
-                          _SidebarTile(
-                            icon: item.icon,
-                            label: item.label,
-                            isSelected: location.startsWith(item.path),
-                            onTap: () => context.go(item.path),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const Divider(color: Colors.white24, height: 1),
-                  if (session != null)
-                    _SidebarTile(
-                      icon: Icons.logout_rounded,
-                      label: 'Sign out',
-                      isSelected: false,
-                      onTap: () => ref.read(authControllerProvider).logout(),
-                    ),
-                  const SizedBox(height: 12),
-                ],
-              ),
+            child: _SidebarContent(
+              navItems: visibleNavItems,
+              location: location,
+              session: session,
+              onItemTap: context.go,
+              onSignOut: () => ref.read(authControllerProvider).logout(),
             ),
           ),
           Expanded(child: child),
         ],
+      ),
+    );
+  }
+}
+
+class _SidebarContent extends StatelessWidget {
+  const _SidebarContent({
+    required this.navItems,
+    required this.location,
+    required this.session,
+    required this.onItemTap,
+    required this.onSignOut,
+  });
+
+  final Iterable<_NavItem> navItems;
+  final String location;
+  final Object? session;
+  final ValueChanged<String> onItemTap;
+  final VoidCallback onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.sidebar,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 24, 20, 24),
+              child: Row(
+                children: [
+                  Icon(Icons.pool_rounded, color: AppColors.primary, size: 26),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Swim Academy',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  for (final item in navItems)
+                    _SidebarTile(
+                      icon: item.icon,
+                      label: item.label,
+                      isSelected: location.startsWith(item.path),
+                      onTap: () => onItemTap(item.path),
+                    ),
+                ],
+              ),
+            ),
+            const Divider(color: Colors.white24, height: 1),
+            if (session != null)
+              _SidebarTile(
+                icon: Icons.logout_rounded,
+                label: 'Sign out',
+                isSelected: false,
+                onTap: onSignOut,
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }

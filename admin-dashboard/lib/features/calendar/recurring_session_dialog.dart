@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/widgets/responsive_dialog.dart';
 
 Future<void> showRecurringSessionDialog(BuildContext context, WidgetRef ref, {required List<SwimClass> classes}) {
   return showDialog(context: context, builder: (_) => _RecurringSessionDialog(classes: classes));
@@ -73,10 +74,10 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Bulk-create recurring sessions'),
-      content: SizedBox(
-        width: 460,
+    return ResponsiveDialogShell(
+      title: 'Bulk-create recurring sessions',
+      desktopWidth: 460,
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

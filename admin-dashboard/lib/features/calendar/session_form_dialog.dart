@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/widgets/responsive_dialog.dart';
 
 Future<void> showSessionFormDialog(
   BuildContext context,
@@ -81,10 +82,10 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
     final instructorsStream = ref.watch(instructorsRepositoryProvider).watchAll();
     final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
 
-    return AlertDialog(
-      title: Text(widget.existing == null ? 'Add session' : 'Edit session'),
-      content: SizedBox(
-        width: 420,
+    return ResponsiveDialogShell(
+      title: widget.existing == null ? 'Add session' : 'Edit session',
+      desktopWidth: 420,
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

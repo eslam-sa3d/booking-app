@@ -5,6 +5,7 @@ import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
 
 const _otherClassLabel = 'Other / Unlinked';
@@ -171,7 +172,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             label: const Text('Clear date filter'),
           ),
         SizedBox(
-          width: 240,
+          width: context.isMobile ? double.infinity : 240,
           child: StreamBuilder<List<SwimClass>>(
             stream: ref.watch(classesRepositoryProvider).watchClasses(),
             builder: (context, snapshot) {
@@ -288,12 +289,13 @@ class _RevenueReportView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = context.isMobile;
     return Wrap(
       spacing: 20,
       runSpacing: 20,
       children: [
-        SizedBox(width: 460, child: _MonthlyRevenueCard(report: report)),
-        SizedBox(width: 320, child: _ClassRevenueCard(report: report)),
+        SizedBox(width: isMobile ? double.infinity : 460, child: _MonthlyRevenueCard(report: report)),
+        SizedBox(width: isMobile ? double.infinity : 320, child: _ClassRevenueCard(report: report)),
       ],
     );
   }
@@ -410,7 +412,7 @@ class _ReportStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220,
+      width: context.isMobile ? double.infinity : 220,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.grey.shade200)),
       child: Column(

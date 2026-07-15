@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../data/repositories/dashboard_repository.dart';
 
@@ -131,7 +132,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220,
+      width: context.isMobile ? double.infinity : 220,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,

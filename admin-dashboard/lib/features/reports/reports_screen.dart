@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../data/repositories/reports_repository.dart';
 
@@ -119,8 +120,8 @@ class _ReportsBody extends StatelessWidget {
           spacing: 20,
           runSpacing: 20,
           children: [
-            SizedBox(width: 380, child: _PopularClassesCard(classes: data.popularClasses)),
-            SizedBox(width: 320, child: _PopularTimesCard(times: data.popularTimes)),
+            SizedBox(width: context.isMobile ? double.infinity : 380, child: _PopularClassesCard(classes: data.popularClasses)),
+            SizedBox(width: context.isMobile ? double.infinity : 320, child: _PopularTimesCard(times: data.popularTimes)),
           ],
         ),
         const SizedBox(height: 28),
@@ -156,7 +157,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220,
+      width: context.isMobile ? double.infinity : 220,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,

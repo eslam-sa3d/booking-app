@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/widgets/responsive_dialog.dart';
 
 Future<void> showCategoryFormDialog(BuildContext context, WidgetRef ref, {Category? existing}) {
   return showDialog(context: context, builder: (_) => _CategoryFormDialog(existing: existing));
@@ -42,12 +43,12 @@ class _CategoryFormDialogState extends ConsumerState<_CategoryFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.existing == null ? 'Add category' : 'Edit category'),
-      content: SizedBox(
-        width: 420,
-        child: Form(
-          key: _formKey,
+    return ResponsiveDialogShell(
+      title: widget.existing == null ? 'Add category' : 'Edit category',
+      desktopWidth: 420,
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

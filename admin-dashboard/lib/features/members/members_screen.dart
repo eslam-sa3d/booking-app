@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/responsive_dialog.dart';
 
 final _searchQueryProvider = StateProvider<String>((ref) => '');
 
@@ -22,7 +24,7 @@ class MembersScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 320,
+            width: context.isMobile ? double.infinity : 320,
             child: TextField(
               decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search by name or email'),
               onChanged: (v) => ref.read(_searchQueryProvider.notifier).state = v,
@@ -128,21 +130,11 @@ class _MemberDetailDialogState extends ConsumerState<_MemberDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          Expanded(child: Text(_member.name)),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit profile',
-            onPressed: _editProfile,
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 480,
-        height: 520,
-        child: FutureBuilder(
+    return ResponsiveDialogShell(
+      title: _member.name,
+      desktopWidth: 480,
+      desktopHeight: 520,
+      content: FutureBuilder(
           future: _future,
           builder: (context, snapshot) {
             if (!snapshot.hasData) return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
@@ -172,8 +164,10 @@ class _MemberDetailDialogState extends ConsumerState<_MemberDetailDialog> {
             );
           },
         ),
-      ),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+      actions: [
+        TextButton(onPressed: _editProfile, child: const Text('Edit profile')),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+      ],
     );
   }
 }
@@ -310,10 +304,10 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Edit profile'),
-      content: SizedBox(
-        width: 360,
+    return ResponsiveDialogShell(
+      title: 'Edit profile',
+      desktopWidth: 360,
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -356,10 +350,10 @@ class _AwardBadgeDialogState extends State<_AwardBadgeDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Award badge'),
-      content: SizedBox(
-        width: 360,
+    return ResponsiveDialogShell(
+      title: 'Award badge',
+      desktopWidth: 360,
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -404,10 +398,10 @@ class _AddProgressNoteDialogState extends State<_AddProgressNoteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add progress note'),
-      content: SizedBox(
-        width: 360,
+    return ResponsiveDialogShell(
+      title: 'Add progress note',
+      desktopWidth: 360,
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

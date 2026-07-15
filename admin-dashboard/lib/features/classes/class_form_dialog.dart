@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/widgets/responsive_dialog.dart';
 
 Future<void> showClassFormDialog(BuildContext context, WidgetRef ref, {SwimClass? existing}) {
   return showDialog(
@@ -77,14 +78,13 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
     final instructorsStream = ref.watch(instructorsRepositoryProvider).watchAll();
     final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
 
-    return AlertDialog(
-      title: Text(widget.existing == null ? 'Add class' : 'Edit class'),
-      content: SizedBox(
-        width: 480,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
+    return ResponsiveDialogShell(
+      title: widget.existing == null ? 'Add class' : 'Edit class',
+      desktopWidth: 480,
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -168,7 +168,6 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
             ),
           ),
         ),
-      ),
       actions: [
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
         FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),

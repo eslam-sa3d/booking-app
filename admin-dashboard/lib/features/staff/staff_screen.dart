@@ -4,6 +4,7 @@ import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/responsive_dialog.dart';
 import '../auth/auth_controller.dart';
 
 class StaffScreen extends ConsumerWidget {
@@ -78,10 +79,10 @@ class StaffScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: const Text('Grant dashboard access'),
-          content: SizedBox(
-            width: 400,
+        builder: (ctx, setState) => ResponsiveDialogShell(
+          title: 'Grant dashboard access',
+          desktopWidth: 400,
+          content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

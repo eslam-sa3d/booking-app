@@ -5,6 +5,7 @@ import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/responsive_dialog.dart';
 import '../../data/repositories/instructors_repository.dart';
 import 'instructor_form_dialog.dart';
 
@@ -87,12 +88,11 @@ class _InstructorScheduleDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionsStream = ref.watch(sessionsRepositoryProvider).watchForInstructor(instructor.id);
 
-    return AlertDialog(
-      title: Text('${instructor.name} — upcoming sessions'),
-      content: SizedBox(
-        width: 460,
-        height: 480,
-        child: StreamBuilder<List<SwimSession>>(
+    return ResponsiveDialogShell(
+      title: '${instructor.name} — upcoming sessions',
+      desktopWidth: 460,
+      desktopHeight: 480,
+      content: StreamBuilder<List<SwimSession>>(
           stream: sessionsStream,
           builder: (context, snapshot) {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
@@ -121,7 +121,6 @@ class _InstructorScheduleDialog extends ConsumerWidget {
             );
           },
         ),
-      ),
       actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
     );
   }

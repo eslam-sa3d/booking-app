@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/widgets/responsive_dialog.dart';
 
 Future<void> showPackageFormDialog(BuildContext context, WidgetRef ref, {SwimPackage? existing}) {
   return showDialog(context: context, builder: (_) => _PackageFormDialog(existing: existing));
@@ -53,10 +54,10 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.existing == null ? 'Add package' : 'Edit package'),
-      content: SizedBox(
-        width: 460,
+    return ResponsiveDialogShell(
+      title: widget.existing == null ? 'Add package' : 'Edit package',
+      desktopWidth: 460,
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

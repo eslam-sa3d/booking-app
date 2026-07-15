@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/widgets/responsive_dialog.dart';
 
 Future<void> showBannerFormDialog(BuildContext context, WidgetRef ref, {PromoBanner? existing}) {
   return showDialog(context: context, builder: (_) => _BannerFormDialog(existing: existing));
@@ -120,12 +121,11 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.existing == null ? 'Add banner' : 'Edit banner'),
-      content: SizedBox(
-        width: 460,
-        child: SingleChildScrollView(
-          child: Column(
+    return ResponsiveDialogShell(
+      title: widget.existing == null ? 'Add banner' : 'Edit banner',
+      desktopWidth: 460,
+      content: SingleChildScrollView(
+        child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title (EN)')),
@@ -167,7 +167,6 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
             ],
           ),
         ),
-      ),
       actions: [
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
         FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/providers/repository_providers.dart';
+import '../../core/widgets/responsive_dialog.dart';
 
 Future<void> showInstructorFormDialog(BuildContext context, WidgetRef ref, {Instructor? existing}) {
   return showDialog(context: context, builder: (_) => _InstructorFormDialog(existing: existing));
@@ -45,10 +46,10 @@ class _InstructorFormDialogState extends ConsumerState<_InstructorFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.existing == null ? 'Add instructor' : 'Edit instructor'),
-      content: SizedBox(
-        width: 460,
+    return ResponsiveDialogShell(
+      title: widget.existing == null ? 'Add instructor' : 'Edit instructor',
+      desktopWidth: 460,
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
