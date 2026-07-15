@@ -48,6 +48,12 @@ class PackagesScreen extends ConsumerWidget {
                       if (c.id == up.packageId) pkg = c;
                     }
                     if (pkg == null) return const SizedBox.shrink();
+                    final resolvedPkg = pkg;
+                    final renewablePackageType =
+                        pkg.type == PackageType.sessionPack || pkg.type == PackageType.monthlyUnlimited;
+                    final expiringSoon = up.daysLeft <= 7;
+                    final lowOnSessions = up.sessionsRemaining != null && up.sessionsRemaining! <= 1;
+                    final canRenew = renewablePackageType && (expiringSoon || lowOnSessions);
                     return Card(
                       margin: const EdgeInsets.only(bottom: 10),
                       child: Padding(
@@ -68,6 +74,20 @@ class PackagesScreen extends ConsumerWidget {
                               l10n.packagesExpiresIn(up.daysLeft),
                               style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
                             ),
+                            if (canRenew) ...[
+                              const SizedBox(height: 10),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Semantics(
+                                  button: true,
+                                  label: l10n.packagesRenew,
+                                  child: FilledButton.tonal(
+                                    onPressed: () => context.push('/checkout', extra: resolvedPkg),
+                                    child: Text(l10n.packagesRenew),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),

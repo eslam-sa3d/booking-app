@@ -2,11 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/utils/validators.dart';
-import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/app_button.dart';
 import 'auth_controller.dart';
 import '../../core/widgets/glass_app_bar.dart';
+
+/// Best-effort E.164 normalization for Firebase Phone Auth, which requires
+/// a leading '+' and country code. This app targets Saudi Arabia (SAR
+/// pricing used throughout the booking flow) so a bare local number
+/// defaults to +966; a full country-code picker is out of scope here.
+String _toE164(String rawPhone) {
+  final trimmed = rawPhone.trim();
+  if (trimmed.startsWith('+')) return '+${trimmed.substring(1).replaceAll(RegExp(r'\D'), '')}';
+  final digitsOnly = trimmed.replaceAll(RegExp(r'\D'), '');
+  final national = digitsOnly.startsWith('0') ? digitsOnly.substring(1) : digitsOnly;
+  return '+966$national';
+}
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -23,6 +36,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _obscure = true;
+  bool _googleLoading = false;
 
   @override
   void dispose() {
@@ -46,7 +60,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final state = ref.read(authControllerProvider);
     state.whenOrNull(
       data: (user) {
-        if (user != null) context.push('/otp?destination=${Uri.encodeComponent(user.email)}');
+        // The account was just created with email/password; route to the
+        // OTP screen to verify the phone number as a follow-up step
+        // (real Firebase Phone Auth SMS — see OtpScreen) before letting
+        // the user into the app.
+        if (user != null) {
+          context.push('/otp?destination=${Uri.encodeComponent(_toE164(_phoneController.text))}');
+        }
+      },
+      error: (err, _) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(err.toString().replaceFirst('AuthException: ', ''))),
+      ),
+    );
+  }
+
+  Future<void> _continueWithGoogle() async {
+    setState(() => _googleLoading = true);
+    await ref.read(authControllerProvider.notifier).signInWithGoogle();
+    if (!mounted) return;
+    setState(() => _googleLoading = false);
+    final state = ref.read(authControllerProvider);
+    state.whenOrNull(
+      data: (user) async {
+        // Google already proves the user's identity — no separate phone
+        // OTP step needed, unlike the email/password path above.
+        if (user != null) {
+          await ref.read(analyticsServiceProvider).logLogin(method: 'google');
+          if (mounted) context.go('/home');
+        }
       },
       error: (err, _) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(err.toString().replaceFirst('AuthException: ', ''))),
@@ -73,24 +114,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 8),
                 Text(l10n.authRegisterSubtitle, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 28),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(labelText: l10n.authFullName),
-                  validator: (v) => Validators.required(v, l10n),
+                Semantics(
+                  label: l10n.authFullName,
+                  textField: true,
+                  child: TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(labelText: l10n.authFullName),
+                    validator: (v) => Validators.required(v, l10n),
+                  ),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(labelText: l10n.authEmail),
-                  validator: (v) => Validators.email(v, l10n),
+                Semantics(
+                  label: l10n.authEmail,
+                  textField: true,
+                  child: TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(labelText: l10n.authEmail),
+                    validator: (v) => Validators.email(v, l10n),
+                  ),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: l10n.authPhone),
-                  validator: (v) => Validators.required(v, l10n),
+                Semantics(
+                  label: l10n.authPhone,
+                  textField: true,
+                  child: TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(labelText: l10n.authPhone),
+                    validator: (v) => Validators.required(v, l10n),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -113,12 +166,42 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   validator: (v) => Validators.confirmPassword(v, _passwordController.text, l10n),
                 ),
                 const SizedBox(height: 24),
-                PrimaryButton(label: l10n.authRegister, isLoading: authState.isLoading, onPressed: _submit),
+                Semantics(
+                  button: true,
+                  label: l10n.authRegister,
+                  child: AppButton(label: l10n.authRegister, isLoading: authState.isLoading, onPressed: _submit),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   l10n.authAgreeToTerms,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        l10n.authOrContinueWith,
+                        style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Semantics(
+                  button: true,
+                  label: l10n.authContinueWithGoogle,
+                  child: AppButton(
+                    label: l10n.authContinueWithGoogle,
+                    icon: Icons.g_mobiledata_rounded,
+                    outlined: true,
+                    isLoading: _googleLoading,
+                    onPressed: _continueWithGoogle,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Row(

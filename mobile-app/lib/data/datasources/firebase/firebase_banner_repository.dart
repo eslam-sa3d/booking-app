@@ -12,4 +12,13 @@ class FirebaseBannerRepository implements BannerRepository {
     final snap = await _db.collection('banners').orderBy('order').get();
     return snap.docs.map((d) => PromoBanner.fromMap(d.data())).where((b) => b.isCurrentlyActive).toList();
   }
+
+  @override
+  Stream<List<PromoBanner>> watchActiveBanners() {
+    return _db
+        .collection('banners')
+        .orderBy('order')
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => PromoBanner.fromMap(d.data())).where((b) => b.isCurrentlyActive).toList());
+  }
 }

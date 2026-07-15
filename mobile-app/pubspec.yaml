@@ -46,6 +46,31 @@ dependencies:
   firebase_auth: ^5.3.3
   cloud_firestore: ^5.5.0
   firebase_messaging: ^15.1.5
+  firebase_storage: ^12.3.7
+  firebase_analytics: ^11.3.6
+
+  # Google sign-in
+  google_sign_in: ^6.2.2
+
+  # Profile photo picking
+  image_picker: ^1.1.2
+
+  # Offline cache for last-loaded schedule/bookings
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Add booking to the device calendar
+  add_2_calendar: 3.0.1
+
+  # iOS Liquid Glass chrome. Exact-pinned, not caret: pre-1.0, frequent
+  # behavioral patch releases (see CHANGELOG). Resolved down from the
+  # latest (0.21.6) because that version requires meta ^1.18.0, which
+  # conflicts with this Flutter SDK's own flutter_test (pins meta 1.17.0)
+  # — 0.18.4 is the newest version actually installable here.
+  liquid_glass_widgets: 0.18.4
+
+  # Android 12+ wallpaper-derived Material You color
+  dynamic_color: ^1.8.1
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +78,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   integration_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
@@ -60,3 +86,12 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/icon/
+
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  adaptive_icon_background: "#0EA5A4"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"

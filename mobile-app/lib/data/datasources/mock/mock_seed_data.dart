@@ -8,6 +8,16 @@ import '../../models/models.dart';
 class MockSeedData {
   MockSeedData._();
 
+  static final List<Category> categories = [
+    const Category(id: 'kids', nameEn: 'Kids', nameAr: 'أطفال', order: 0),
+    const Category(id: 'adults', nameEn: 'Adults', nameAr: 'بالغون', order: 1),
+    const Category(id: 'beginner', nameEn: 'Beginner', nameAr: 'مبتدئ', order: 2),
+    const Category(id: 'intermediate', nameEn: 'Intermediate', nameAr: 'متوسط', order: 3),
+    const Category(id: 'advanced', nameEn: 'Advanced', nameAr: 'متقدم', order: 4),
+    const Category(id: 'private', nameEn: 'Private', nameAr: 'خاص', order: 5),
+    const Category(id: 'ladiesOnly', nameEn: 'Ladies-only', nameAr: 'نسائي فقط', order: 6),
+  ];
+
   static final List<Branch> branches = [
     const Branch(
       id: 'b1',
@@ -81,7 +91,7 @@ class MockSeedData {
       description:
           'A gentle introduction to water safety and basic strokes for children ages 4-8, in a fun, encouraging environment.',
       descriptionAr: 'مقدمة لطيفة للسلامة في الماء والحركات الأساسية للأطفال من سن 4-8 سنوات في بيئة ممتعة ومشجعة.',
-      categories: [ClassCategory.kids, ClassCategory.beginner],
+      categories: ['kids', 'beginner'],
       durationMinutes: 45,
       price: 150,
       instructorId: 'i3',
@@ -97,7 +107,7 @@ class MockSeedData {
       titleAr: 'تطوير مهارات الأطفال',
       description: 'For kids who can already float and kick — building toward independent freestyle and backstroke.',
       descriptionAr: 'للأطفال الذين يستطيعون الطفو والركل بالفعل، لتطوير السباحة الحرة والظهر بشكل مستقل.',
-      categories: [ClassCategory.kids, ClassCategory.intermediate],
+      categories: ['kids', 'intermediate'],
       durationMinutes: 45,
       price: 160,
       instructorId: 'i3',
@@ -113,7 +123,7 @@ class MockSeedData {
       titleAr: 'سباحة الكبار للمبتدئين',
       description: 'Never learned to swim? Start here — water confidence, floating, and basic strokes for adults.',
       descriptionAr: 'لم تتعلم السباحة من قبل؟ ابدأ هنا: الثقة في الماء، الطفو، والحركات الأساسية للكبار.',
-      categories: [ClassCategory.adults, ClassCategory.beginner],
+      categories: ['adults', 'beginner'],
       durationMinutes: 60,
       price: 180,
       instructorId: 'i2',
@@ -129,7 +139,7 @@ class MockSeedData {
       titleAr: 'تقنيات متقدمة للكبار',
       description: 'Refine your stroke technique, endurance, and speed with a former national team coach.',
       descriptionAr: 'طوّر تقنية السباحة والتحمل والسرعة مع مدرب سابق في المنتخب الوطني.',
-      categories: [ClassCategory.adults, ClassCategory.advanced],
+      categories: ['adults', 'advanced'],
       durationMinutes: 60,
       price: 220,
       instructorId: 'i2',
@@ -145,7 +155,7 @@ class MockSeedData {
       titleAr: 'سباحة صباحية نسائية',
       description: 'A relaxed, women-only session focused on water confidence and fitness in a private setting.',
       descriptionAr: 'حصة نسائية هادئة تركز على الثقة في الماء واللياقة في بيئة خاصة.',
-      categories: [ClassCategory.ladiesOnly, ClassCategory.beginner],
+      categories: ['ladiesOnly', 'beginner'],
       durationMinutes: 60,
       price: 190,
       instructorId: 'i1',
@@ -161,7 +171,7 @@ class MockSeedData {
       titleAr: 'سباحة لياقة نسائية',
       description: 'High-energy lap swimming for women looking to build fitness and stamina.',
       descriptionAr: 'سباحة عالية الطاقة للنساء الراغبات في بناء اللياقة والتحمل.',
-      categories: [ClassCategory.ladiesOnly, ClassCategory.intermediate],
+      categories: ['ladiesOnly', 'intermediate'],
       durationMinutes: 60,
       price: 200,
       instructorId: 'i5',
@@ -177,7 +187,7 @@ class MockSeedData {
       titleAr: 'تدريب خاص فردي',
       description: 'Fully personalized coaching session tailored to your goals, at your pace.',
       descriptionAr: 'حصة تدريب مخصصة بالكامل تناسب أهدافك وسرعتك الخاصة.',
-      categories: [ClassCategory.private, ClassCategory.advanced],
+      categories: ['private', 'advanced'],
       durationMinutes: 45,
       price: 350,
       instructorId: 'i2',
@@ -193,7 +203,7 @@ class MockSeedData {
       titleAr: 'ورشة تصحيح الحركات',
       description: 'Small-group clinic focused on correcting technique for freestyle, backstroke, and breaststroke.',
       descriptionAr: 'ورشة عمل لمجموعات صغيرة تركز على تصحيح حركات السباحة الحرة والظهر والصدر.',
-      categories: [ClassCategory.intermediate, ClassCategory.adults],
+      categories: ['intermediate', 'adults'],
       durationMinutes: 60,
       price: 200,
       instructorId: 'i4',

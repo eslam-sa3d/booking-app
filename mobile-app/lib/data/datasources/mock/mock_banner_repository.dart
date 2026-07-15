@@ -40,4 +40,12 @@ class MockBannerRepository implements BannerRepository {
     await _delay();
     return _banners.where((b) => b.isCurrentlyActive).toList()..sort((a, b) => a.order.compareTo(b.order));
   }
+
+  @override
+  Stream<List<PromoBanner>> watchActiveBanners() {
+    // No live backend in the mock datasource — emit the same snapshot
+    // getActiveBanners() would resolve, once, so consumers can rely on a
+    // single stream API in both mock and Firebase-backed builds.
+    return Stream.fromFuture(getActiveBanners());
+  }
 }

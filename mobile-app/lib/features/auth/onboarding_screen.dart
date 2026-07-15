@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/shared_preferences_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_button.dart';
 import 'splash_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -18,8 +19,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
 
-  late final List<(IconData, String, String)> _pages;
-
   void _finish() {
     ref.read(sharedPreferencesProvider).setBool(kOnboardingSeenKey, true);
     context.go('/home');
@@ -28,7 +27,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    _pages = [
+    final pages = [
       (Icons.pool_rounded, l10n.onboardTitle1, l10n.onboardSubtitle1),
       (Icons.calendar_month_rounded, l10n.onboardTitle2, l10n.onboardSubtitle2),
       (Icons.emoji_events_rounded, l10n.onboardTitle3, l10n.onboardSubtitle3),
@@ -48,10 +47,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Expanded(
               child: PageView.builder(
                 controller: _controller,
-                itemCount: _pages.length,
+                itemCount: pages.length,
                 onPageChanged: (i) => setState(() => _page = i),
                 itemBuilder: (context, index) {
-                  final (icon, title, subtitle) = _pages[index];
+                  final (icon, title, subtitle) = pages[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Column(
@@ -87,7 +86,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                _pages.length,
+                pages.length,
                 (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -104,15 +103,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.all(24),
               child: SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: AppButton(
+                  label: _page == pages.length - 1 ? l10n.actionGetStarted : l10n.actionNext,
                   onPressed: () {
-                    if (_page == _pages.length - 1) {
+                    if (_page == pages.length - 1) {
                       _finish();
                     } else {
                       _controller.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
                     }
                   },
-                  child: Text(_page == _pages.length - 1 ? l10n.actionGetStarted : l10n.actionNext),
                 ),
               ),
             ),

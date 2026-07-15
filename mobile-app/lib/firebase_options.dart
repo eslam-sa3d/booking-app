@@ -22,27 +22,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions ios = FirebaseOptions(
-    // Firebase's client SDKs validate the API key's shape (must look like
-    // a real Google API key) before any network call even happens, so a
-    // trivially fake value like 'demo-api-key' crashes iOS at startup —
-    // this is a syntactically valid-looking placeholder, never sent
-    // anywhere real since main.dart always targets the emulator suite.
-    apiKey: 'AIzaSyDEMO00000000000000000000000000000',
-    appId: '1:000000000000:ios:0000000000000000000000',
-    messagingSenderId: '000000000000',
-    projectId: 'demo-swim-academy',
+    apiKey: 'AIzaSyD-wNicww3iJWMm5UZ19QB9whZ-ZA5wox8',
+    appId: '1:691594727534:ios:3684339e9244e8c2dad67f',
+    messagingSenderId: '691594727534',
+    projectId: 'booking-app-36b8e',
+    storageBucket: 'booking-app-36b8e.firebasestorage.app',
     iosBundleId: 'com.swimacademy.bookingApp',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    // Firebase's client SDKs validate the API key's shape (must look like
-    // a real Google API key) before any network call even happens, so a
-    // trivially fake value like 'demo-api-key' crashes iOS at startup —
-    // this is a syntactically valid-looking placeholder, never sent
-    // anywhere real since main.dart always targets the emulator suite.
-    apiKey: 'AIzaSyDEMO00000000000000000000000000000',
-    appId: '1:000000000000:android:0000000000000000000000',
-    messagingSenderId: '000000000000',
-    projectId: 'demo-swim-academy',
+    apiKey: 'AIzaSyB8hj4VPuAiJuwPn2eKZNO5SaTAdxS701c',
+    appId: '1:691594727534:android:3aa4a161896947b0dad67f',
+    messagingSenderId: '691594727534',
+    projectId: 'booking-app-36b8e',
+    storageBucket: 'booking-app-36b8e.firebasestorage.app',
   );
 }

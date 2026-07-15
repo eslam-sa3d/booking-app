@@ -9,8 +9,14 @@ class MockClassRepository implements ClassRepository {
   Future<void> _delay() => Future.delayed(const Duration(milliseconds: 400));
 
   @override
+  Future<List<Category>> getCategories() async {
+    await _delay();
+    return MockSeedData.categories;
+  }
+
+  @override
   Future<List<SwimClass>> getClasses({
-    List<ClassCategory>? categories,
+    List<String>? categories,
     String? branchId,
     String? query,
   }) async {
@@ -30,6 +36,41 @@ class MockClassRepository implements ClassRepository {
       }
       return true;
     }).toList();
+  }
+
+  @override
+  Future<ClassesPage> getClassesPage({
+    List<String>? categories,
+    String? branchId,
+    String? query,
+    int limit = 20,
+    String? startAfterId,
+  }) async {
+    await _delay();
+    final filtered = MockSeedData.classes.where((c) {
+      if (branchId != null && c.branchId != branchId) return false;
+      if (categories != null &&
+          categories.isNotEmpty &&
+          !c.categories.any((cat) => categories.contains(cat))) {
+        return false;
+      }
+      if (query != null && query.trim().isNotEmpty) {
+        final q = query.trim().toLowerCase();
+        if (!c.title.toLowerCase().contains(q) && !c.titleAr.contains(q)) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+
+    var startIndex = 0;
+    if (startAfterId != null) {
+      final idx = filtered.indexWhere((c) => c.id == startAfterId);
+      startIndex = idx == -1 ? filtered.length : idx + 1;
+    }
+    final page = filtered.skip(startIndex).take(limit).toList();
+    final hasMore = (startIndex + page.length) < filtered.length;
+    return ClassesPage(items: page, nextCursor: hasMore ? page.lastOrNull?.id : null);
   }
 
   @override

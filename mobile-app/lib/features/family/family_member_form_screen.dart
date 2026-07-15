@@ -6,7 +6,7 @@ import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/utils/date_formatting.dart';
 import '../../core/utils/validators.dart';
-import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/app_button.dart';
 import '../../data/models/models.dart';
 import '../auth/auth_controller.dart';
 import 'family_providers.dart';
@@ -210,7 +210,7 @@ class _FamilyMemberFormScreenState extends ConsumerState<FamilyMemberFormScreen>
                           ),
                         const SizedBox(height: 12),
                       ],
-                      PrimaryButton(label: l10n.actionSave, isLoading: _isSaving, onPressed: _save),
+                      AppButton(label: l10n.actionSave, isLoading: _isSaving, onPressed: _save),
                     ],
                   ),
                 ),

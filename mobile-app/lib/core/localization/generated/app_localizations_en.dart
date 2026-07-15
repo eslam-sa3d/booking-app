@@ -409,6 +409,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Free cancellation up to 24h before the session.';
 
   @override
+  String get myBookingsCancelTooLate =>
+      'Cancellations must be made at least 24 hours before the session starts.';
+
+  @override
   String get myBookingsRateSession => 'Rate this session';
 
   @override
@@ -618,6 +622,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentHistoryDownloadReceipt => 'Download receipt';
 
   @override
+  String get paymentHistoryReceiptTitle => 'Receipt';
+
+  @override
+  String get paymentHistoryRequestRefund => 'Request refund';
+
+  @override
+  String get paymentHistoryRefundDialogTitle => 'Request a refund';
+
+  @override
+  String get paymentHistoryRefundReasonHint =>
+      'Briefly tell us why you\'re requesting a refund';
+
+  @override
+  String get paymentHistoryRefundSubmit => 'Submit request';
+
+  @override
+  String get paymentHistoryRefundSubmitted => 'Refund request submitted';
+
+  @override
+  String get paymentHistoryRefundPending => 'Refund requested — pending review';
+
+  @override
   String get paymentStatusSucceeded => 'Succeeded';
 
   @override
@@ -628,6 +654,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentStatusRefunded => 'Refunded';
+
+  @override
+  String get receiptTransactionId => 'Transaction ID';
+
+  @override
+  String get receiptDate => 'Date';
+
+  @override
+  String get receiptDescription => 'Description';
+
+  @override
+  String get receiptAmount => 'Amount';
+
+  @override
+  String get receiptMethod => 'Payment method';
+
+  @override
+  String get receiptStatus => 'Status';
+
+  @override
+  String get receiptShare => 'Share';
 
   @override
   String get notificationsTitle => 'Notifications';

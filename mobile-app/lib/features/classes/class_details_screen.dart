@@ -4,13 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/utils/date_formatting.dart';
-import '../../core/utils/enum_localizations.dart';
 import '../../core/widgets/avatar_placeholder.dart';
 import '../../core/widgets/class_hero_placeholder.dart';
 import '../../core/widgets/error_view.dart';
 import '../../core/widgets/loading_view.dart';
-import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/app_button.dart';
+import '../../data/models/models.dart';
 import '../booking/booking_sheet.dart';
+import '../home/home_providers.dart';
 import 'class_details_providers.dart';
 import '../../core/widgets/glass_app_bar.dart';
 
@@ -35,6 +36,8 @@ class ClassDetailsScreen extends ConsumerWidget {
           final branchAsync = ref.watch(branchByIdProvider(swimClass.branchId));
           final sessionsAsync = ref.watch(sessionsForClassProvider(classId));
           final reviewsAsync = ref.watch(reviewsForClassProvider(classId));
+          final categoriesMapAsync = ref.watch(categoriesMapProvider);
+          final categoriesMap = categoriesMapAsync.valueOrNull ?? const <String, Category>{};
           final locale = Localizations.localeOf(context).languageCode;
 
           return ListView(
@@ -48,8 +51,12 @@ class ClassDetailsScreen extends ConsumerWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  for (final category in swimClass.categories)
-                    Chip(label: Text(category.label(l10n)), visualDensity: VisualDensity.compact),
+                  for (final categoryId in swimClass.categories)
+                    if (categoriesMap[categoryId] != null)
+                      Chip(
+                        label: Text(categoriesMap[categoryId]!.localizedName(isArabic)),
+                        visualDensity: VisualDensity.compact,
+                      ),
                   Chip(
                     avatar: const Icon(Icons.star_rounded, size: 16, color: Colors.amber),
                     label: Text('${swimClass.rating} (${swimClass.reviewCount})'),
@@ -186,7 +193,7 @@ class ClassDetailsScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: SafeArea(
             top: false,
-            child: PrimaryButton(
+            child: AppButton(
               label: l10n.classDetailsBookClass,
               onPressed: () async {
                 final sessions = await ref.read(sessionsForClassProvider(classId).future);

@@ -39,4 +39,16 @@ class FirebasePaymentRepository implements PaymentRepository {
     await ref.set(created.toMap());
     return created;
   }
+
+  @override
+  Future<void> requestRefund(String transactionId, String reason) async {
+    // Firestore security rules only allow a user to set these three fields
+    // on their own transaction doc (and only to 'pending') — do not add
+    // other fields to this update.
+    await _col.doc(transactionId).update({
+      'refundRequestStatus': RefundRequestStatus.pending.name,
+      'refundRequestedAt': DateTime.now(),
+      'refundRequestReason': reason,
+    });
+  }
 }

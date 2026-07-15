@@ -98,8 +98,21 @@ class FirebaseBookingRepository implements BookingRepository {
     return results;
   }
 
-  @override
-  Future<void> cancelBooking(String bookingId, {String? reason}) async {
+  /// Throws [CancellationNotAllowedException] if [bookingId]'s session
+  /// starts within the 24h free-cancellation window.
+  Future<void> _enforceCancellationPolicy(String bookingId) async {
+    final bookingSnap = await _bookings.doc(bookingId).get();
+    if (!bookingSnap.exists) return;
+    final booking = Booking.fromMap(bookingSnap.data()!);
+    final sessionSnap = await _sessions.doc(booking.sessionId).get();
+    if (!sessionSnap.exists) return;
+    final session = SwimSession.fromMap(sessionSnap.data()!);
+    if (session.startDateTime.difference(DateTime.now()) < const Duration(hours: 24)) {
+      throw const CancellationNotAllowedException();
+    }
+  }
+
+  Future<void> _cancelBookingInternal(String bookingId, {String? reason}) async {
     await _bookings.doc(bookingId).update({
       'status': 'cancelled',
       'cancelledAt': DateTime.now(),
@@ -110,6 +123,12 @@ class FirebaseBookingRepository implements BookingRepository {
   }
 
   @override
+  Future<void> cancelBooking(String bookingId, {String? reason}) async {
+    await _enforceCancellationPolicy(bookingId);
+    await _cancelBookingInternal(bookingId, reason: reason);
+  }
+
+  @override
   Future<Booking> rescheduleBooking(String bookingId, String newSessionId) async {
     final oldSnap = await _bookings.doc(bookingId).get();
     final old = Booking.fromMap(oldSnap.data()!);
@@ -117,7 +136,10 @@ class FirebaseBookingRepository implements BookingRepository {
     // Cancel the old booking (triggers onBookingCancel to free/promote)
     // then create a fresh booking against the new session (triggers
     // onBookingCreate to assign the correct confirmed/waitlisted status).
-    await cancelBooking(bookingId, reason: 'Rescheduled');
+    // Rescheduling intentionally bypasses the 24h cancellation policy
+    // (it's not a cancellation — the user is kept booked, just on a
+    // different session) so it calls the internal helper directly.
+    await _cancelBookingInternal(bookingId, reason: 'Rescheduled');
     final rebooked = await _createAndAwaitFinalization(
       userId: old.userId,
       sessionId: newSessionId,

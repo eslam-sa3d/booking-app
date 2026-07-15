@@ -34,6 +34,18 @@ class MockPaymentRepository implements PaymentRepository {
     _db.payments.add(created);
     return created;
   }
+
+  @override
+  Future<void> requestRefund(String transactionId, String reason) async {
+    await _delay();
+    final index = _db.payments.indexWhere((p) => p.id == transactionId);
+    if (index == -1) throw Exception('Transaction not found');
+    _db.payments[index] = _db.payments[index].copyWith(
+      refundRequestStatus: RefundRequestStatus.pending,
+      refundRequestedAt: DateTime.now(),
+      refundRequestReason: reason,
+    );
+  }
 }
 
 /// Simulated payment gateway. Real integration (Moyasar/HyperPay/Stripe)

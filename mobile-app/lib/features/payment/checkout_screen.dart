@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/enum_localizations.dart';
-import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/app_button.dart';
 import '../../data/models/models.dart';
 import '../auth/auth_controller.dart';
 import '../packages/packages_providers.dart';
@@ -25,9 +26,27 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 }
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
-  PaymentMethod _method = PaymentMethod.mada;
+  // Credit/debit card is intentionally excluded: raw card fields were
+  // removed app-wide since no payment gateway integration exists yet (see
+  // checkout_screen constraints). Mada/Apple Pay/STC Pay don't collect or
+  // display raw card data so they stay available.
+  static final List<PaymentMethod> _availableMethods =
+      PaymentMethod.values.where((m) => m != PaymentMethod.creditCard).toList();
+
+  late PaymentMethod _method = _availableMethods.first;
   _CheckoutStage _stage = _CheckoutStage.form;
   String? _failureReason;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fires for both a fresh purchase and a renewal — both funnel through
+    // this same checkout flow, so this is "when renewal/purchase starts".
+    ref.read(analyticsServiceProvider).logPackagePurchaseStarted(
+          packageId: widget.package.id,
+          amount: widget.package.price,
+        );
+  }
 
   Future<void> _pay() async {
     final user = ref.read(currentUserProvider);
@@ -55,6 +74,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             descriptionAr: 'شراء ${widget.package.nameAr}',
             relatedPackageId: widget.package.id,
           ),
+        );
+
+    await ref.read(analyticsServiceProvider).logPaymentCompleted(
+          packageId: widget.package.id,
+          amount: widget.package.price,
+          success: result.success,
         );
 
     if (result.success) {
@@ -129,7 +154,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: 24),
             Text(l10n.checkoutPaymentMethod, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 8),
-            ...PaymentMethod.values.map(
+            ..._availableMethods.map(
               (method) => RadioListTile<PaymentMethod>(
                 contentPadding: EdgeInsets.zero,
                 title: Text(method.label(l10n)),
@@ -138,18 +163,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 onChanged: (v) => setState(() => _method = v!),
               ),
             ),
-            if (_method == PaymentMethod.creditCard) ...[
-              const SizedBox(height: 8),
-              TextField(decoration: InputDecoration(labelText: l10n.checkoutCardNumber), keyboardType: TextInputType.number),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: TextField(decoration: InputDecoration(labelText: l10n.checkoutCardExpiry))),
-                  const SizedBox(width: 12),
-                  Expanded(child: TextField(decoration: InputDecoration(labelText: l10n.checkoutCardCvv), obscureText: true)),
-                ],
-              ),
-            ],
             const SizedBox(height: 20),
             Row(
               children: [
@@ -164,9 +177,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            PrimaryButton(
+            Semantics(
+              button: true,
               label: l10n.checkoutPayNow('${widget.package.price.toStringAsFixed(0)} ${widget.package.currency}'),
-              onPressed: _pay,
+              child: AppButton(
+                label: l10n.checkoutPayNow('${widget.package.price.toStringAsFixed(0)} ${widget.package.currency}'),
+                onPressed: _pay,
+              ),
             ),
           ],
         );
@@ -205,7 +222,7 @@ class _ResultView extends StatelessWidget {
             const SizedBox(height: 8),
             Text(subtitle, textAlign: TextAlign.center),
             const SizedBox(height: 24),
-            SizedBox(width: double.infinity, child: ElevatedButton(onPressed: onAction, child: Text(actionLabel))),
+            SizedBox(width: double.infinity, child: AppButton(label: actionLabel, onPressed: onAction)),
           ],
         ),
       ),

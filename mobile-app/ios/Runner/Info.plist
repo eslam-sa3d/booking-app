@@ -26,6 +26,14 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Add your booked sessions to your calendar.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Add your booked sessions to your calendar.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a profile photo for you or a family member.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a profile photo for you or a family member.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

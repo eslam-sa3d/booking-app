@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
@@ -11,34 +12,54 @@ class AppTheme {
   static String? get _platformFontFamily =>
       defaultTargetPlatform == TargetPlatform.iOS ? '.SF Pro Text' : null;
 
-  static ThemeData light() {
+  /// [dynamicScheme] is the Android 12+ Material You scheme derived from the
+  /// device wallpaper (via `DynamicColorBuilder`), or null when unavailable
+  /// (iOS, older Android, emulators without a dynamic wallpaper). When
+  /// present, only its neutral/surface tones are adopted — primary/secondary
+  /// /error stay pinned to the fixed brand teal so the app never departs
+  /// from the brand palette shared with the admin dashboard and app icon.
+  static ThemeData light({ColorScheme? dynamicScheme}) {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.light,
-        primary: AppColors.primary,
-        secondary: AppColors.secondary,
-        error: AppColors.error,
-      ),
+      colorScheme: dynamicScheme != null
+          ? dynamicScheme.harmonized().copyWith(
+              brightness: Brightness.light,
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              error: AppColors.error,
+            )
+          : ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              brightness: Brightness.light,
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              error: AppColors.error,
+            ),
       scaffoldBackgroundColor: AppColors.lightBackground,
       fontFamily: _platformFontFamily,
     );
     return _shared(base, isDark: false);
   }
 
-  static ThemeData dark() {
+  static ThemeData dark({ColorScheme? dynamicScheme}) {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.dark,
-        primary: AppColors.primary,
-        secondary: AppColors.secondary,
-        error: AppColors.error,
-      ),
+      colorScheme: dynamicScheme != null
+          ? dynamicScheme.harmonized().copyWith(
+              brightness: Brightness.dark,
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              error: AppColors.error,
+            )
+          : ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              brightness: Brightness.dark,
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              error: AppColors.error,
+            ),
       scaffoldBackgroundColor: AppColors.darkBackground,
       fontFamily: _platformFontFamily,
     );
@@ -99,6 +120,18 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        ),
+      ),
+      // M3 button hierarchy for AppButton: FilledButton (primary actions) and
+      // FilledButton.tonal (secondary actions, replacing OutlinedButton) both
+      // read shape/size/text from this theme; their fill colors come from
+      // colorScheme.primary/onPrimary and secondaryContainer/onSecondaryContainer
+      // respectively, which already resolve to the fixed brand teal above.
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "691594727534",
+    "project_id": "booking-app-36b8e",
+    "storage_bucket": "booking-app-36b8e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:691594727534:android:3aa4a161896947b0dad67f",
+        "android_client_info": {
+          "package_name": "com.swimacademy.booking_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8hj4VPuAiJuwPn2eKZNO5SaTAdxS701c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

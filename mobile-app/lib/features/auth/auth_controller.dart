@@ -38,6 +38,26 @@ class AuthController extends AsyncNotifier<AppUser?> {
     state = AsyncData(updated);
   }
 
+  /// Signs in via Google OAuth. A dismissed account picker resolves to null
+  /// from the repository (not an exception) — restore whatever user was
+  /// signed in before rather than surfacing that as an error.
+  Future<void> signInWithGoogle() async {
+    final previousUser = state.value;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final user = await ref.read(authRepositoryProvider).signInWithGoogle();
+      return user ?? previousUser;
+    });
+  }
+
+  /// Reflects an [AppUser] that was already produced by an out-of-band
+  /// mutation (e.g. phone OTP verification completed by [OtpScreen] calling
+  /// the repository directly) into shared auth state, without a redundant
+  /// repository round-trip.
+  void setUser(AppUser user) {
+    state = AsyncData(user);
+  }
+
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).logout();
     state = const AsyncData(null);

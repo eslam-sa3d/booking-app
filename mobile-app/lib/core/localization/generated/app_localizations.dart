@@ -854,6 +854,12 @@ abstract class AppLocalizations {
   /// **'Free cancellation up to 24h before the session.'**
   String get myBookingsCancellationPolicy;
 
+  /// No description provided for @myBookingsCancelTooLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellations must be made at least 24 hours before the session starts.'**
+  String get myBookingsCancelTooLate;
+
   /// No description provided for @myBookingsRateSession.
   ///
   /// In en, this message translates to:
@@ -1244,6 +1250,48 @@ abstract class AppLocalizations {
   /// **'Download receipt'**
   String get paymentHistoryDownloadReceipt;
 
+  /// No description provided for @paymentHistoryReceiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get paymentHistoryReceiptTitle;
+
+  /// No description provided for @paymentHistoryRequestRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Request refund'**
+  String get paymentHistoryRequestRefund;
+
+  /// No description provided for @paymentHistoryRefundDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a refund'**
+  String get paymentHistoryRefundDialogTitle;
+
+  /// No description provided for @paymentHistoryRefundReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Briefly tell us why you\'re requesting a refund'**
+  String get paymentHistoryRefundReasonHint;
+
+  /// No description provided for @paymentHistoryRefundSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit request'**
+  String get paymentHistoryRefundSubmit;
+
+  /// No description provided for @paymentHistoryRefundSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund request submitted'**
+  String get paymentHistoryRefundSubmitted;
+
+  /// No description provided for @paymentHistoryRefundPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund requested — pending review'**
+  String get paymentHistoryRefundPending;
+
   /// No description provided for @paymentStatusSucceeded.
   ///
   /// In en, this message translates to:
@@ -1267,6 +1315,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refunded'**
   String get paymentStatusRefunded;
+
+  /// No description provided for @receiptTransactionId.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction ID'**
+  String get receiptTransactionId;
+
+  /// No description provided for @receiptDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get receiptDate;
+
+  /// No description provided for @receiptDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get receiptDescription;
+
+  /// No description provided for @receiptAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get receiptAmount;
+
+  /// No description provided for @receiptMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get receiptMethod;
+
+  /// No description provided for @receiptStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get receiptStatus;
+
+  /// No description provided for @receiptShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get receiptShare;
 
   /// No description provided for @notificationsTitle.
   ///

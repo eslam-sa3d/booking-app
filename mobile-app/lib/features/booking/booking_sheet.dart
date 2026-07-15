@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/utils/date_formatting.dart';
-import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/app_button.dart';
 import '../../data/models/models.dart';
 import '../auth/auth_controller.dart';
 import '../family/family_providers.dart';
@@ -19,8 +20,8 @@ Future<void> showBookingSheet(
   required SwimSession session,
   required SwimClass swimClass,
 }) async {
-  await showModalBottomSheet(
-    context: context,
+  await showAppBottomSheet(
+    context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (_) => _BookingSheetContent(session: session, swimClass: swimClass),
@@ -93,7 +94,7 @@ class _BookingSheetContentState extends ConsumerState<_BookingSheetContent> {
             const SizedBox(height: 8),
             Text(l10n.authLoginSubtitle, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            PrimaryButton(
+            AppButton(
               label: l10n.authLogin,
               onPressed: () {
                 Navigator.of(context).pop();
@@ -195,7 +196,7 @@ class _BookingSheetContentState extends ConsumerState<_BookingSheetContent> {
               ),
             ),
           const SizedBox(height: 8),
-          PrimaryButton(
+          AppButton(
             label: isFull ? l10n.calendarJoinWaitlist : l10n.calendarConfirmBooking,
             isLoading: _isSubmitting,
             onPressed: _participantId == null ? null : _confirm,

@@ -6,6 +6,19 @@ class BookingResult {
   const BookingResult({required this.booking, required this.joinedWaitlist});
 }
 
+/// Thrown by [BookingRepository.cancelBooking] when the session starts
+/// within the 24h free-cancellation window. Carries a display-ready
+/// [message]; UI call sites should generally catch this type specifically
+/// and show a localized string rather than [message] itself (which is not
+/// localized), mirroring how other repository errors surface to the UI.
+class CancellationNotAllowedException implements Exception {
+  const CancellationNotAllowedException([this.message = 'Cancellations must be made at least 24 hours before the session starts.']);
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 abstract class BookingRepository {
   Future<List<Booking>> getBookingsForUser(String userId);
 

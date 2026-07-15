@@ -406,6 +406,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'إلغاء مجاني حتى 24 ساعة قبل موعد الحصة.';
 
   @override
+  String get myBookingsCancelTooLate =>
+      'يجب إلغاء الحجز قبل 24 ساعة على الأقل من موعد الحصة.';
+
+  @override
   String get myBookingsRateSession => 'قيّم هذه الحصة';
 
   @override
@@ -615,6 +619,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get paymentHistoryDownloadReceipt => 'تحميل الإيصال';
 
   @override
+  String get paymentHistoryReceiptTitle => 'الإيصال';
+
+  @override
+  String get paymentHistoryRequestRefund => 'طلب استرداد';
+
+  @override
+  String get paymentHistoryRefundDialogTitle => 'طلب استرداد الأموال';
+
+  @override
+  String get paymentHistoryRefundReasonHint =>
+      'أخبرنا باختصار سبب طلب الاسترداد';
+
+  @override
+  String get paymentHistoryRefundSubmit => 'إرسال الطلب';
+
+  @override
+  String get paymentHistoryRefundSubmitted => 'تم إرسال طلب الاسترداد';
+
+  @override
+  String get paymentHistoryRefundPending => 'تم طلب الاسترداد — قيد المراجعة';
+
+  @override
   String get paymentStatusSucceeded => 'ناجحة';
 
   @override
@@ -625,6 +651,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get paymentStatusRefunded => 'مستردة';
+
+  @override
+  String get receiptTransactionId => 'رقم العملية';
+
+  @override
+  String get receiptDate => 'التاريخ';
+
+  @override
+  String get receiptDescription => 'الوصف';
+
+  @override
+  String get receiptAmount => 'المبلغ';
+
+  @override
+  String get receiptMethod => 'طريقة الدفع';
+
+  @override
+  String get receiptStatus => 'الحالة';
+
+  @override
+  String get receiptShare => 'مشاركة';
 
   @override
   String get notificationsTitle => 'الإشعارات';

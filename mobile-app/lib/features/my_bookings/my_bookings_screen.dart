@@ -6,11 +6,15 @@ import '../../core/providers/locale_provider.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/utils/date_formatting.dart';
 import '../../core/utils/enum_localizations.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_view.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/status_chip.dart';
 import '../../data/models/models.dart';
+import '../../data/repositories/booking_repository.dart';
 import '../auth/auth_controller.dart';
 import 'my_bookings_providers.dart';
 import '../../core/widgets/glass_app_bar.dart';
@@ -33,8 +37,8 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> with Single
 
   Future<void> _cancelBooking(BookingViewData data) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
+    final confirmed = await showAppDialog<bool>(
+      context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.myBookingsCancel),
         content: Text(l10n.myBookingsCancelConfirm(l10n.myBookingsCancellationPolicy)),
@@ -45,8 +49,20 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> with Single
       ),
     );
     if (confirmed != true) return;
-    await ref.read(bookingRepositoryProvider).cancelBooking(data.booking.id);
-    ref.invalidate(myBookingsProvider);
+    try {
+      await ref.read(bookingRepositoryProvider).cancelBooking(data.booking.id);
+      ref.invalidate(myBookingsProvider);
+    } on CancellationNotAllowedException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.myBookingsCancelTooLate)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
+      }
+    }
   }
 
   Future<void> _reschedule(BookingViewData data) async {
@@ -54,8 +70,8 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> with Single
     final l10n = AppLocalizations.of(context)!;
     final sessions = await ref.read(classRepositoryProvider).getSessionsForClass(data.swimClass!.id);
     if (!mounted) return;
-    final selected = await showModalBottomSheet<SwimSession>(
-      context: context,
+    final selected = await showAppBottomSheet<SwimSession>(
+      context,
       isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: ListView(
@@ -86,8 +102,8 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> with Single
     if (user == null || data.session == null || data.swimClass == null) return;
     int rating = 5;
     final commentController = TextEditingController();
-    final submitted = await showDialog<bool>(
-      context: context,
+    final submitted = await showAppDialog<bool>(
+      context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
           title: Text(l10n.myBookingsRateSession),
@@ -202,11 +218,30 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> with Single
                             spacing: 8,
                             children: [
                               if (!data.isPast && data.booking.status != BookingStatus.cancelled) ...[
-                                OutlinedButton(onPressed: () => _reschedule(data), child: Text(l10n.myBookingsReschedule)),
-                                OutlinedButton(onPressed: () => _cancelBooking(data), child: Text(l10n.myBookingsCancel)),
+                                AppButton(
+                                  label: l10n.myBookingsReschedule,
+                                  outlined: true,
+                                  compact: true,
+                                  onPressed: () => _reschedule(data),
+                                ),
+                                Semantics(
+                                  button: true,
+                                  label: l10n.myBookingsCancel,
+                                  child: AppButton(
+                                    label: l10n.myBookingsCancel,
+                                    outlined: true,
+                                    compact: true,
+                                    onPressed: () => _cancelBooking(data),
+                                  ),
+                                ),
                               ],
                               if (data.isPast && data.booking.status == BookingStatus.completed && !data.booking.reviewed)
-                                OutlinedButton(onPressed: () => _rate(data), child: Text(l10n.myBookingsRateSession)),
+                                AppButton(
+                                  label: l10n.myBookingsRateSession,
+                                  outlined: true,
+                                  compact: true,
+                                  onPressed: () => _rate(data),
+                                ),
                             ],
                           ),
                         ],

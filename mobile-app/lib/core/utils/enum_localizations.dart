@@ -1,27 +1,6 @@
 import '../localization/generated/app_localizations.dart';
 import '../../data/models/enums.dart';
 
-extension ClassCategoryL10n on ClassCategory {
-  String label(AppLocalizations l10n) {
-    switch (this) {
-      case ClassCategory.kids:
-        return l10n.categoryKids;
-      case ClassCategory.adults:
-        return l10n.categoryAdults;
-      case ClassCategory.beginner:
-        return l10n.categoryBeginner;
-      case ClassCategory.intermediate:
-        return l10n.categoryIntermediate;
-      case ClassCategory.advanced:
-        return l10n.categoryAdvanced;
-      case ClassCategory.private:
-        return l10n.categoryPrivate;
-      case ClassCategory.ladiesOnly:
-        return l10n.categoryLadiesOnly;
-    }
-  }
-}
-
 extension BookingStatusL10n on BookingStatus {
   String label(AppLocalizations l10n) {
     switch (this) {

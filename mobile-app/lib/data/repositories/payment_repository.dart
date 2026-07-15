@@ -4,6 +4,14 @@ abstract class PaymentRepository {
   Future<List<Payment>> getPaymentHistory(String userId);
 
   Future<Payment> recordPayment(Payment payment);
+
+  /// Flags [transactionId] for admin review. Writes only
+  /// `refundRequestStatus` (always 'pending'), `refundRequestedAt`, and
+  /// `refundRequestReason` — matching exactly what the Firestore security
+  /// rules allow a signed-in user to update on their own `transactions/{id}`
+  /// doc. Mirrors the admin dashboard's
+  /// `TransactionsRepository.resolveRefundRequest()` counterpart.
+  Future<void> requestRefund(String transactionId, String reason);
 }
 
 class PaymentChargeResult {

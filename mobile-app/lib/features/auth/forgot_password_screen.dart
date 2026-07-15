@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/utils/validators.dart';
-import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/widgets/glass_app_bar.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -76,7 +76,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     ),
                   )
                 else
-                  PrimaryButton(label: l10n.authSendResetLink, isLoading: _isLoading, onPressed: _submit),
+                  AppButton(label: l10n.authSendResetLink, isLoading: _isLoading, onPressed: _submit),
               ],
             ),
           ),

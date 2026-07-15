@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/utils/validators.dart';
-import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/app_button.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -19,6 +20,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
+  bool _googleLoading = false;
 
   @override
   void dispose() {
@@ -49,6 +51,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _continueWithGoogle() async {
+    setState(() => _googleLoading = true);
+    await ref.read(authControllerProvider.notifier).signInWithGoogle();
+    if (!mounted) return;
+    setState(() => _googleLoading = false);
+    final state = ref.read(authControllerProvider);
+    state.whenOrNull(
+      data: (user) async {
+        if (user != null) {
+          await ref.read(analyticsServiceProvider).logLogin(method: 'google');
+          if (mounted) context.go('/home');
+        }
+      },
+      error: (err, _) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(err.toString().replaceFirst('AuthException: ', ''))),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -69,24 +90,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 8),
                 Text(l10n.authLoginSubtitle, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 32),
-                TextFormField(
-                  controller: _identifierController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(labelText: l10n.authEmailOrPhone),
-                  validator: (v) => Validators.required(v, l10n),
+                Semantics(
+                  label: l10n.authEmailOrPhone,
+                  textField: true,
+                  child: TextFormField(
+                    controller: _identifierController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(labelText: l10n.authEmailOrPhone),
+                    validator: (v) => Validators.required(v, l10n),
+                  ),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscure,
-                  decoration: InputDecoration(
-                    labelText: l10n.authPassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                      onPressed: () => setState(() => _obscure = !_obscure),
+                Semantics(
+                  label: l10n.authPassword,
+                  textField: true,
+                  child: TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscure,
+                    decoration: InputDecoration(
+                      labelText: l10n.authPassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                      ),
                     ),
+                    validator: (v) => Validators.password(v, l10n),
                   ),
-                  validator: (v) => Validators.password(v, l10n),
                 ),
                 Align(
                   alignment: AlignmentDirectional.centerEnd,
@@ -96,13 +125,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                PrimaryButton(label: l10n.authLogin, isLoading: isLoading, onPressed: _submit),
+                Semantics(
+                  button: true,
+                  label: l10n.authLogin,
+                  child: AppButton(label: l10n.authLogin, isLoading: isLoading, onPressed: _submit),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        l10n.authOrContinueWith,
+                        style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Semantics(
+                  button: true,
+                  label: l10n.authContinueWithGoogle,
+                  child: AppButton(
+                    label: l10n.authContinueWithGoogle,
+                    icon: Icons.g_mobiledata_rounded,
+                    outlined: true,
+                    isLoading: _googleLoading,
+                    onPressed: _continueWithGoogle,
+                  ),
+                ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => context.go('/home'),
-                    child: Text(l10n.authGuestBrowse),
+                Semantics(
+                  button: true,
+                  label: l10n.authGuestBrowse,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: l10n.authGuestBrowse,
+                      outlined: true,
+                      onPressed: () => context.go('/home'),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

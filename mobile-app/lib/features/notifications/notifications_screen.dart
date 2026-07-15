@@ -27,6 +27,8 @@ class NotificationsScreen extends ConsumerWidget {
     switch (type) {
       case NotificationType.bookingConfirmed:
         return Icons.check_circle_outline_rounded;
+      case NotificationType.waitlisted:
+        return Icons.hourglass_empty_rounded;
       case NotificationType.reminder:
         return Icons.alarm_rounded;
       case NotificationType.cancellation:

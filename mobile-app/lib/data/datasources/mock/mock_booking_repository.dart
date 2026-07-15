@@ -97,13 +97,21 @@ class MockBookingRepository implements BookingRepository {
     final index = _db.bookings.indexWhere((b) => b.id == bookingId);
     if (index == -1) return;
     final booking = _db.bookings[index];
+
+    final sessionIndex = _db.sessions.indexWhere((s) => s.id == booking.sessionId);
+    if (sessionIndex != -1) {
+      final session = _db.sessions[sessionIndex];
+      if (session.startDateTime.difference(DateTime.now()) < const Duration(hours: 24)) {
+        throw const CancellationNotAllowedException();
+      }
+    }
+
     _db.bookings[index] = booking.copyWith(
       status: BookingStatus.cancelled,
       cancelledAt: DateTime.now(),
       cancellationReason: reason,
     );
 
-    final sessionIndex = _db.sessions.indexWhere((s) => s.id == booking.sessionId);
     if (sessionIndex != -1) {
       final session = _db.sessions[sessionIndex];
       if (booking.status == BookingStatus.confirmed) {

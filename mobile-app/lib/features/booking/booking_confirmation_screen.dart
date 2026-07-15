@@ -1,3 +1,4 @@
+import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,8 +7,10 @@ import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_formatting.dart';
+import '../../core/widgets/app_button.dart';
 import '../../data/repositories/booking_repository.dart';
 import '../../data/models/models.dart';
+import '../classes/class_details_providers.dart';
 
 class BookingConfirmationScreen extends ConsumerWidget {
   const BookingConfirmationScreen({
@@ -20,6 +23,25 @@ class BookingConfirmationScreen extends ConsumerWidget {
   final List<BookingResult> results;
   final SwimSession session;
   final SwimClass swimClass;
+
+  Future<void> _addToCalendar(BuildContext context, WidgetRef ref, bool isArabic) async {
+    String location = '';
+    try {
+      final branch = await ref.read(branchByIdProvider(swimClass.branchId).future);
+      location = branch.localizedName(isArabic);
+    } catch (_) {
+      // Branch lookup is best-effort; the calendar event is still useful without it.
+    }
+    Add2Calendar.addEvent2Cal(
+      Event(
+        title: swimClass.localizedTitle(isArabic),
+        description: swimClass.localizedDescription(isArabic),
+        location: location,
+        startDate: session.startDateTime,
+        endDate: session.endDateTime,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -85,22 +107,23 @@ class BookingConfirmationScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Added to device calendar')),
-                    );
-                  },
-                  icon: const Icon(Icons.calendar_today_outlined),
-                  label: Text(l10n.bookingConfirmationAddToCalendar),
+                child: Semantics(
+                  button: true,
+                  label: l10n.bookingConfirmationAddToCalendar,
+                  child: AppButton(
+                    label: l10n.bookingConfirmationAddToCalendar,
+                    icon: Icons.calendar_today_outlined,
+                    outlined: true,
+                    onPressed: () => _addToCalendar(context, ref, isArabic),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: AppButton(
+                  label: l10n.bookingConfirmationViewBookings,
                   onPressed: () => context.go('/bookings'),
-                  child: Text(l10n.bookingConfirmationViewBookings),
                 ),
               ),
               const SizedBox(height: 8),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../localization/generated/app_localizations.dart';
+import 'app_button.dart';
 
 class ErrorView extends StatelessWidget {
   const ErrorView({super.key, this.message, this.onRetry});
@@ -22,7 +23,7 @@ class ErrorView extends StatelessWidget {
             Text(message ?? l10n.errorGeneric, textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              OutlinedButton(onPressed: onRetry, child: Text(l10n.actionRetry)),
+              AppButton(label: l10n.actionRetry, outlined: true, onPressed: onRetry),
             ],
           ],
         ),

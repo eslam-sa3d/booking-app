@@ -1,4 +1,6 @@
 import 'package:booking_app/core/providers/repository_providers.dart';
+import 'package:booking_app/data/datasources/firebase/firebase_app_settings_repository.dart' show appSettingsRepositoryProvider;
+import 'package:booking_app/data/datasources/mock/mock_app_settings_repository.dart';
 import 'package:booking_app/data/datasources/mock/mock_auth_repository.dart';
 import 'package:booking_app/data/datasources/mock/mock_banner_repository.dart';
 import 'package:booking_app/data/datasources/mock/mock_booking_repository.dart';
@@ -23,4 +25,5 @@ final testRepositoryOverrides = [
   notificationRepositoryProvider.overrideWithValue(MockNotificationRepository()),
   reviewRepositoryProvider.overrideWithValue(MockReviewRepository()),
   bannerRepositoryProvider.overrideWithValue(MockBannerRepository()),
+  appSettingsRepositoryProvider.overrideWithValue(MockAppSettingsRepository()),
 ];

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/localization/generated/app_localizations.dart';
-import '../../../core/utils/enum_localizations.dart';
 import '../../../core/widgets/class_hero_placeholder.dart';
 import '../../../data/models/models.dart';
 
@@ -10,18 +8,19 @@ class ClassCard extends StatelessWidget {
     super.key,
     required this.swimClass,
     required this.instructor,
+    this.primaryCategory,
     required this.isArabic,
     required this.onTap,
   });
 
   final SwimClass swimClass;
   final Instructor? instructor;
+  final Category? primaryCategory;
   final bool isArabic;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: onTap,
@@ -66,7 +65,7 @@ class ClassCard extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 4,
                       children: [
-                        _MiniChip(label: swimClass.categories.first.label(l10n)),
+                        if (primaryCategory != null) _MiniChip(label: primaryCategory!.localizedName(isArabic)),
                         _MiniChip(label: '${swimClass.price.toStringAsFixed(0)} ${swimClass.currency}'),
                       ],
                     ),

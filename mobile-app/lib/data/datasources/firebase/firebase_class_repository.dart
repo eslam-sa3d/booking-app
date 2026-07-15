@@ -8,8 +8,14 @@ class FirebaseClassRepository implements ClassRepository {
   final FirebaseFirestore _db;
 
   @override
+  Future<List<Category>> getCategories() async {
+    final snap = await _db.collection('categories').orderBy('order').get();
+    return snap.docs.map((d) => Category.fromMap(d.data())).toList();
+  }
+
+  @override
   Future<List<SwimClass>> getClasses({
-    List<ClassCategory>? categories,
+    List<String>? categories,
     String? branchId,
     String? query,
   }) async {
@@ -25,6 +31,37 @@ class FirebaseClassRepository implements ClassRepository {
       classes = classes.where((c) => c.title.toLowerCase().contains(needle) || c.titleAr.contains(needle)).toList();
     }
     return classes;
+  }
+
+  @override
+  Future<ClassesPage> getClassesPage({
+    List<String>? categories,
+    String? branchId,
+    String? query,
+    int limit = 20,
+    String? startAfterId,
+  }) async {
+    // Ordered by document id so the cursor (`startAfterId`) is stable across
+    // pages. Category/query filtering still happens client-side (as in
+    // [getClasses]), so a page may come back smaller than [limit] even when
+    // more matching classes exist further down the collection — acceptable
+    // for a "load more" list, not used for exact counts.
+    Query<Map<String, dynamic>> q = _db.collection('classes').orderBy(FieldPath.documentId);
+    if (branchId != null) q = q.where('branchId', isEqualTo: branchId);
+    if (startAfterId != null) q = q.startAfter([startAfterId]);
+    q = q.limit(limit);
+
+    final snap = await q.get();
+    var classes = snap.docs.map((d) => SwimClass.fromMap(d.data())).toList();
+    if (categories != null && categories.isNotEmpty) {
+      classes = classes.where((c) => c.categories.any(categories.contains)).toList();
+    }
+    if (query != null && query.trim().isNotEmpty) {
+      final needle = query.trim().toLowerCase();
+      classes = classes.where((c) => c.title.toLowerCase().contains(needle) || c.titleAr.contains(needle)).toList();
+    }
+    final nextCursor = snap.docs.length == limit ? snap.docs.last.id : null;
+    return ClassesPage(items: classes, nextCursor: nextCursor);
   }
 
   @override
