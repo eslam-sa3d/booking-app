@@ -1,0 +1,13 @@
+name: shared
+description: Data models shared between the Swim Academy mobile app and admin dashboard.
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ^3.11.4
+
+dependencies: {}
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.25.0

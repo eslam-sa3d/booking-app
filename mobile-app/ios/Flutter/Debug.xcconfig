@@ -1,0 +1,8 @@
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
+#include "Generated.xcconfig"
+
+// Avoids a late-build-phase codesign failure ("resource fork, Finder
+// information, or similar detritus not allowed") caused by App Intents
+// metadata extraction re-touching framework bundles after cleanup scripts
+// have already run. This app declares no App Intents.
+ENABLE_APPINTENTS_METADATA_EXTRACTION = NO

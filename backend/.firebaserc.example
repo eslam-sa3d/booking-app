@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "swim-academy-dev",
+    "staging": "swim-academy-staging",
+    "production": "swim-academy-prod"
+  }
+}

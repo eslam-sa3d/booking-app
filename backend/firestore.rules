@@ -1,0 +1,124 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Role lives in the Auth custom claim (set server-side by onUserCreate /
+    // assignStaffRole), never trusted from a client-writable Firestore
+    // field. This is the single source of truth every rule below checks.
+    function role() {
+      return isSignedIn() ? request.auth.token.role : null;
+    }
+
+    function isStaff() {
+      return role() == 'staff' || role() == 'admin';
+    }
+
+    function isAdmin() {
+      return role() == 'admin';
+    }
+
+    function unchanged(field) {
+      return !(field in request.resource.data.diff(resource.data).affectedKeys());
+    }
+
+    // ---------------- users ----------------
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isStaff();
+      // Clients may only ever create their own profile as 'customer' — role
+      // escalation to staff/admin happens exclusively via the
+      // assignStaffRole callable, which sets the custom claim and mirrors
+      // this field with Admin SDK privileges (bypasses rules entirely).
+      allow create: if isOwner(uid) && request.resource.data.role == 'customer';
+      allow update: if (isOwner(uid) && unchanged('role')) || isStaff();
+      allow delete: if isOwner(uid) || isAdmin();
+
+      match /familyMembers/{memberId} {
+        allow read, write: if isOwner(uid) || isStaff();
+      }
+
+      // Owned package instances are only ever written by the purchase
+      // Cloud Function / staff tooling, never directly by the client.
+      match /packages/{userPackageId} {
+        allow read: if isOwner(uid) || isStaff();
+        allow write: if isStaff();
+      }
+
+      // Per-user notification inbox: the owner may only toggle isRead;
+      // delivery (create) is always server-side.
+      match /inbox/{notificationId} {
+        allow read: if isOwner(uid);
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+        allow create, delete: if isStaff();
+      }
+    }
+
+    // ---------------- public catalog (guest-readable, staff-writable) ----------------
+    match /classes/{classId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+    match /sessions/{sessionId} {
+      allow read: if true;
+      // bookedCount/waitlistCount are business-critical counters mutated
+      // only by the onBookingCreate/onBookingCancel Cloud Functions
+      // (Admin SDK, bypasses rules) — staff edits here are for
+      // schedule/capacity/instructor changes, not manual count edits.
+      allow write: if isStaff();
+    }
+    match /branches/{branchId} { allow read: if true; allow write: if isStaff(); }
+    match /instructors/{instructorId} { allow read: if true; allow write: if isStaff(); }
+    match /packages/{packageId} { allow read: if true; allow write: if isStaff(); }
+    match /banners/{bannerId} { allow read: if true; allow write: if isStaff(); }
+    match /appSettings/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isStaff();
+    }
+
+    // ---------------- bookings ----------------
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Customers may only cancel their own booking (status/cancellation
+      // fields), never touch session assignment or other users' bookings.
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'cancelledAt', 'cancellationReason']);
+      allow update, delete: if isStaff();
+    }
+
+    // ---------------- transactions ----------------
+    // Real charges are recorded server-side by the payment webhook
+    // function (Admin SDK); this rule only covers admin-issued manual
+    // entries/refunds from the dashboard.
+    match /transactions/{txId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
+      allow write: if isStaff();
+    }
+
+    // ---------------- staff-authored broadcast notifications ----------------
+    match /notifications/{notificationId} {
+      allow read, write: if isStaff();
+    }
+
+    // ---------------- audit log ----------------
+    // Written exclusively by Cloud Functions via the Admin SDK, which
+    // bypasses security rules — no client, including admins, writes here
+    // directly.
+    match /auditLog/{entryId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+  }
+}
