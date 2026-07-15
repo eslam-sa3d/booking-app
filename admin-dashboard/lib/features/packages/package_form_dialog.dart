@@ -69,7 +69,7 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
             TextFormField(controller: _descArCtrl, decoration: const InputDecoration(labelText: 'Description (AR)'), maxLines: 2),
             const SizedBox(height: 12),
             DropdownButtonFormField<PackageType>(
-              value: _type,
+              initialValue: _type,
               decoration: const InputDecoration(labelText: 'Type'),
               items: PackageType.values.map((t) => DropdownMenuItem(value: t, child: Text(t.name))).toList(),
               onChanged: (v) => setState(() => _type = v!),

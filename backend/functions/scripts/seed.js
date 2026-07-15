@@ -9,15 +9,37 @@ admin.initializeApp({ projectId: "demo-swim-academy" });
 const db = admin.firestore();
 const auth = admin.auth();
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function ensureAdmin() {
   const email = "admin@swimacademy.test";
   const password = "admin123456";
   let user;
+  let isNewUser = false;
   try {
     user = await auth.getUserByEmail(email);
   } catch {
     user = await auth.createUser({ email, password, displayName: "Admin" });
+    isNewUser = true;
   }
+
+  if (isNewUser) {
+    // Creating a user fires the onUserCreate Cloud Function trigger
+    // asynchronously, which sets role: 'customer' and writes the
+    // Firestore profile — it isn't awaited by createUser() above, so
+    // setting our admin claim immediately would race it and could get
+    // silently overwritten back to 'customer'. Wait for the trigger's
+    // Firestore write to land (proof it already ran its claim write)
+    // before setting the real admin claim, so ours applies last.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const doc = await db.collection("users").doc(user.uid).get();
+      if (doc.exists) break;
+      await sleep(300);
+    }
+  }
+
   await auth.setCustomUserClaims(user.uid, { role: "admin" });
   await db.collection("users").doc(user.uid).set(
     {

@@ -77,7 +77,7 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<String>(
-              value: _classId,
+              initialValue: _classId,
               decoration: const InputDecoration(labelText: 'Class'),
               items: widget.classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.title))).toList(),
               onChanged: (v) => setState(() => _classId = v),

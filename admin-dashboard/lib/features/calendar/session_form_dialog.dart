@@ -82,7 +82,7 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
             Text('${widget.date.year}-${widget.date.month.toString().padLeft(2, '0')}-${widget.date.day.toString().padLeft(2, '0')}'),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _classId,
+              initialValue: _classId,
               decoration: const InputDecoration(labelText: 'Class'),
               items: widget.classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.title))).toList(),
               onChanged: (v) => setState(() => _classId = v),

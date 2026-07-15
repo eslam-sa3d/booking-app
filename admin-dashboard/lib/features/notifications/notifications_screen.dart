@@ -119,7 +119,7 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
             TextFormField(controller: _bodyArCtrl, decoration: const InputDecoration(labelText: 'Message (AR)'), maxLines: 2),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _target,
+              initialValue: _target,
               decoration: const InputDecoration(labelText: 'Target'),
               items: const [
                 DropdownMenuItem(value: 'all', child: Text('All users')),

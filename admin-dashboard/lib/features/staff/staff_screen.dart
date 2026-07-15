@@ -88,7 +88,7 @@ class StaffScreen extends ConsumerWidget {
                 TextField(controller: uidCtrl, decoration: const InputDecoration(labelText: 'User UID (from Members screen / Auth)')),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: role,
+                  initialValue: role,
                   decoration: const InputDecoration(labelText: 'Role'),
                   items: const [
                     DropdownMenuItem(value: 'staff', child: Text('Staff')),
