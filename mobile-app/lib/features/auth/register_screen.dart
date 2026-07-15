@@ -9,18 +9,6 @@ import '../../core/widgets/app_button.dart';
 import 'auth_controller.dart';
 import '../../core/widgets/glass_app_bar.dart';
 
-/// Best-effort E.164 normalization for Firebase Phone Auth, which requires
-/// a leading '+' and country code. This app targets Saudi Arabia (SAR
-/// pricing used throughout the booking flow) so a bare local number
-/// defaults to +966; a full country-code picker is out of scope here.
-String _toE164(String rawPhone) {
-  final trimmed = rawPhone.trim();
-  if (trimmed.startsWith('+')) return '+${trimmed.substring(1).replaceAll(RegExp(r'\D'), '')}';
-  final digitsOnly = trimmed.replaceAll(RegExp(r'\D'), '');
-  final national = digitsOnly.startsWith('0') ? digitsOnly.substring(1) : digitsOnly;
-  return '+966$national';
-}
-
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
@@ -59,13 +47,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!mounted) return;
     final state = ref.read(authControllerProvider);
     state.whenOrNull(
-      data: (user) {
-        // The account was just created with email/password; route to the
-        // OTP screen to verify the phone number as a follow-up step
-        // (real Firebase Phone Auth SMS — see OtpScreen) before letting
-        // the user into the app.
+      data: (user) async {
+        // The phone OTP step (previously routed to via /otp) is disabled —
+        // go straight into the app after registration, same as the Google
+        // sign-in path below. OtpScreen/the /otp route/sendOtp+verifyOtp
+        // stay in the codebase unused, in case this needs to come back.
         if (user != null) {
-          context.push('/otp?destination=${Uri.encodeComponent(_toE164(_phoneController.text))}');
+          await ref.read(analyticsServiceProvider).logRegistration(method: 'password');
+          if (mounted) context.go('/home');
         }
       },
       error: (err, _) => ScaffoldMessenger.of(context).showSnackBar(

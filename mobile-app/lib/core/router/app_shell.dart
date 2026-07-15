@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart' as glass;
 
 import '../localization/generated/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -38,16 +39,21 @@ class AppShell extends StatelessWidget {
     }
 
     // A deliberate dark floating pill (matching Instagram/Claude-style
-    // floating tab bars) rather than a theme-tinted translucent surface —
-    // the liquid_glass_widgets shader path was tried extensively here and
-    // kept rendering as an inconsistent pale smudge regardless of settings,
-    // since GlassContainer always paints a visible surface across its full
-    // bounds and blurring the mostly-flat page background behind it just
-    // produces a washed-out rectangle, not a clean intentional look. This
-    // is hand-rolled instead: a real BackdropFilter blur (so the edge still
-    // softens whatever's behind it) plus a solid dark tint for a
-    // consistent, predictable resting appearance, with a per-tab
-    // AnimatedContainer as the selected-tab indicator pill.
+    // floating tab bars) for the bar itself — the liquid_glass_widgets
+    // shader path was tried extensively for the OUTER surface and kept
+    // rendering as an inconsistent pale smudge, since GlassContainer always
+    // paints a visible surface across its full bounds and blurring the
+    // mostly-flat page background behind it just produces a washed-out
+    // rectangle. The bar shell below is hand-rolled: real BackdropFilter
+    // blur plus a solid tint for a predictable resting look.
+    //
+    // The SELECTED-TAB indicator is different: a single real liquid-glass
+    // blob (glass.GlassContainer, GlassQuality.premium) that physically
+    // slides between tab positions via AnimatedPositioned in a Stack,
+    // instead of each tab having its own independent fade-in/fade-out
+    // highlight — this is what actually produces the "floating lens"
+    // look (refraction + specular sheen) real iOS 26 tab bars have, rather
+    // than a flat opacity highlight.
     return Scaffold(
       extendBody: true,
       body: navigationShell,
@@ -78,18 +84,10 @@ class AppShell extends StatelessWidget {
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 0.6),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    for (int i = 0; i < destinations.length; i++)
-                      _GlassTabIcon(
-                        outlineIcon: destinations[i].$1,
-                        filledIcon: destinations[i].$2,
-                        label: destinations[i].$3,
-                        isSelected: navigationShell.currentIndex == i,
-                        onTap: () => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
-                      ),
-                  ],
+                child: _SlidingTabBar(
+                  destinations: destinations,
+                  currentIndex: navigationShell.currentIndex,
+                  onTap: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
                 ),
               ),
             ),
@@ -100,8 +98,81 @@ class AppShell extends StatelessWidget {
   }
 }
 
-class _GlassTabIcon extends StatefulWidget {
-  const _GlassTabIcon({
+class _SlidingTabBar extends StatelessWidget {
+  const _SlidingTabBar({required this.destinations, required this.currentIndex, required this.onTap});
+
+  final List<(IconData, IconData, String)> destinations;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final slotWidth = constraints.maxWidth / destinations.length;
+        const blobMargin = 6.0;
+        const blobHeight = 48.0;
+
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 380),
+              curve: Curves.easeOutCubic,
+              left: currentIndex * slotWidth + blobMargin,
+              top: (60 - blobHeight) / 2,
+              width: slotWidth - blobMargin * 2,
+              height: blobHeight,
+              child: glass.GlassContainer(
+                // Premium quality is what actually runs the refraction/
+                // specular shader — without it this would just be a flat
+                // tinted blob. useOwnLayer is required since this sits
+                // outside any AdaptiveLiquidGlassLayer ancestor.
+                quality: glass.GlassQuality.premium,
+                useOwnLayer: true,
+                // A subtle shader effect over a flat, unvaried teal bar
+                // background was previously invisible (nothing to refract,
+                // low-alpha tint blends straight in) — this shape needs to
+                // be unmistakably visible on its own merits first via a
+                // strong white fill + crisp border, with the shader/
+                // chromatic settings layered on top rather than relied on
+                // for the shape's basic legibility.
+                settings: glass.LiquidGlassSettings(
+                  glassColor: Colors.white.withValues(alpha: 0.5),
+                  thickness: 34,
+                  lightIntensity: 0.75,
+                  chromaticAberration: 0.06,
+                  saturation: 1.8,
+                  specularSharpness: glass.GlassSpecularSharpness.sharp,
+                ),
+                shape: const glass.LiquidRoundedSuperellipse(
+                  borderRadius: 22,
+                  side: BorderSide(color: Colors.white, width: 1.2),
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                for (int i = 0; i < destinations.length; i++)
+                  _TabIcon(
+                    outlineIcon: destinations[i].$1,
+                    filledIcon: destinations[i].$2,
+                    label: destinations[i].$3,
+                    isSelected: currentIndex == i,
+                    onTap: () => onTap(i),
+                  ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _TabIcon extends StatefulWidget {
+  const _TabIcon({
     required this.outlineIcon,
     required this.filledIcon,
     required this.label,
@@ -116,10 +187,10 @@ class _GlassTabIcon extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<_GlassTabIcon> createState() => _GlassTabIconState();
+  State<_TabIcon> createState() => _TabIconState();
 }
 
-class _GlassTabIconState extends State<_GlassTabIcon> {
+class _TabIconState extends State<_TabIcon> {
   bool _pressed = false;
 
   void _setPressed(bool value) {
@@ -129,11 +200,6 @@ class _GlassTabIconState extends State<_GlassTabIcon> {
   @override
   Widget build(BuildContext context) {
     final foreground = Colors.white.withValues(alpha: widget.isSelected ? 1 : 0.65);
-    // Selected tabs always show their capsule; any tab additionally
-    // brightens further while actively pressed — a quick touch-glow, closer
-    // to how iOS system controls visually respond, instead of a flat
-    // Material ripple.
-    final backgroundAlpha = widget.isSelected ? (_pressed ? 0.28 : 0.18) : (_pressed ? 0.12 : 0.0);
 
     return Expanded(
       child: GestureDetector(
@@ -142,31 +208,19 @@ class _GlassTabIconState extends State<_GlassTabIcon> {
         onTapDown: (_) => _setPressed(true),
         onTapUp: (_) => _setPressed(false),
         onTapCancel: () => _setPressed(false),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedScale(
-              scale: _pressed ? 0.92 : 1.0,
-              duration: const Duration(milliseconds: 120),
-              curve: Curves.easeOut,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  // A moderate rounded-square hugging just the icon — not a
-                  // full stadium stretched around the whole icon+label
-                  // column — matching a standard tab-bar touch highlight.
-                  color: Colors.white.withValues(alpha: backgroundAlpha),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(widget.isSelected ? widget.filledIcon : widget.outlineIcon, color: foreground, size: 22),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(widget.label, style: TextStyle(color: foreground, fontSize: 10, fontWeight: FontWeight.w600)),
-          ],
+        child: AnimatedScale(
+          scale: _pressed ? 0.92 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(widget.isSelected ? widget.filledIcon : widget.outlineIcon, color: foreground, size: 22),
+              const SizedBox(height: 2),
+              Text(widget.label, style: TextStyle(color: foreground, fontSize: 10, fontWeight: FontWeight.w600)),
+            ],
+          ),
         ),
       ),
     );
