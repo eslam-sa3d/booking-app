@@ -18,6 +18,7 @@ export interface AppUser {
   photoUrl?: string | null;
   preferredLanguage: "en" | "ar";
   role: Role;
+  suspended: boolean;
   createdAt: FirebaseFirestore.Timestamp;
 }
 

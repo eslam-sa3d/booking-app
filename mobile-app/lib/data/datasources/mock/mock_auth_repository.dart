@@ -5,6 +5,11 @@ import 'mock_database.dart';
 class MockAuthRepository implements AuthRepository {
   final _db = MockDatabase.instance;
 
+  // In-memory only — unlike Firebase Auth, the mock has no real persisted
+  // session, so this resets on every app restart (acceptable: it's a dev
+  // stand-in, not used once the Firebase repositories are wired in).
+  String? _currentUserId;
+
   Future<void> _delay() => Future.delayed(const Duration(milliseconds: 500));
 
   @override
@@ -15,7 +20,9 @@ class MockAuthRepository implements AuthRepository {
     if (storedPassword == null || storedPassword != password) {
       throw AuthException('Invalid email/phone or password.');
     }
-    return _db.users.values.firstWhere((u) => u.email.toLowerCase() == email);
+    final user = _db.users.values.firstWhere((u) => u.email.toLowerCase() == email);
+    _currentUserId = user.id;
+    return user;
   }
 
   @override
@@ -40,6 +47,7 @@ class MockAuthRepository implements AuthRepository {
     );
     _db.users[id] = user;
     _db.passwordsByEmail[normalizedEmail] = password;
+    _currentUserId = id;
     return user;
   }
 
@@ -75,12 +83,14 @@ class MockAuthRepository implements AuthRepository {
   @override
   Future<void> logout() async {
     await _delay();
+    _currentUserId = null;
   }
 
   @override
-  Future<AppUser?> restoreSession(String userId) async {
+  Future<AppUser?> currentUser() async {
     await _delay();
-    return _db.users[userId];
+    final id = _currentUserId;
+    return id == null ? null : _db.users[id];
   }
 
   @override
@@ -97,6 +107,7 @@ class MockAuthRepository implements AuthRepository {
     if (user != null) {
       _db.passwordsByEmail.remove(user.email);
     }
+    if (_currentUserId == userId) _currentUserId = null;
   }
 }
 

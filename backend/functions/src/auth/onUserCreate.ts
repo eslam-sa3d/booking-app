@@ -25,6 +25,7 @@ export const onUserCreate = functionsV1.auth.user().onCreate(async (user) => {
     photoUrl: user.photoURL ?? null,
     preferredLanguage: "en",
     role: "customer",
+    suspended: false,
     createdAt: Timestamp.now(),
   };
 

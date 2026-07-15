@@ -1,4 +1,5 @@
 import 'enums.dart';
+import 'firestore_codec.dart';
 
 class SwimBadge {
   final String id;
@@ -16,6 +17,22 @@ class SwimBadge {
   });
 
   String localizedTitle(bool isArabic) => isArabic ? titleAr : title;
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'titleAr': titleAr,
+        'iconName': iconName,
+        'earnedAt': earnedAt,
+      };
+
+  factory SwimBadge.fromMap(Map<String, dynamic> map) => SwimBadge(
+        id: map['id'] as String,
+        title: map['title'] as String,
+        titleAr: map['titleAr'] as String,
+        iconName: map['iconName'] as String? ?? 'emoji_events',
+        earnedAt: parseTimestamp(map['earnedAt']),
+      );
 }
 
 class ProgressNote {
@@ -34,6 +51,22 @@ class ProgressNote {
   });
 
   String localizedNote(bool isArabic) => isArabic ? noteAr : note;
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'note': note,
+        'noteAr': noteAr,
+        'instructorName': instructorName,
+        'date': date,
+      };
+
+  factory ProgressNote.fromMap(Map<String, dynamic> map) => ProgressNote(
+        id: map['id'] as String,
+        note: map['note'] as String,
+        noteAr: map['noteAr'] as String? ?? '',
+        instructorName: map['instructorName'] as String? ?? '',
+        date: parseTimestamp(map['date']),
+      );
 }
 
 class FamilyMember {
@@ -78,6 +111,8 @@ class FamilyMember {
     String? medicalNotes,
     int? swimmingLevel,
     String? photoUrl,
+    List<SwimBadge>? badges,
+    List<ProgressNote>? progressNotes,
   }) {
     return FamilyMember(
       id: id,
@@ -88,8 +123,38 @@ class FamilyMember {
       medicalNotes: medicalNotes ?? this.medicalNotes,
       swimmingLevel: swimmingLevel ?? this.swimmingLevel,
       photoUrl: photoUrl ?? this.photoUrl,
-      badges: badges,
-      progressNotes: progressNotes,
+      badges: badges ?? this.badges,
+      progressNotes: progressNotes ?? this.progressNotes,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'userId': userId,
+        'name': name,
+        'dateOfBirth': dateOfBirth,
+        'gender': gender.name,
+        'medicalNotes': medicalNotes,
+        'swimmingLevel': swimmingLevel,
+        'photoUrl': photoUrl,
+        'badges': badges.map((b) => b.toMap()).toList(),
+        'progressNotes': progressNotes.map((n) => n.toMap()).toList(),
+      };
+
+  factory FamilyMember.fromMap(Map<String, dynamic> map) => FamilyMember(
+        id: map['id'] as String,
+        userId: map['userId'] as String,
+        name: map['name'] as String,
+        dateOfBirth: parseTimestamp(map['dateOfBirth']),
+        gender: Gender.fromName(map['gender'] as String? ?? 'male'),
+        medicalNotes: map['medicalNotes'] as String? ?? '',
+        swimmingLevel: (map['swimmingLevel'] as num?)?.toInt() ?? 1,
+        photoUrl: map['photoUrl'] as String?,
+        badges: ((map['badges'] as List?) ?? [])
+            .map((b) => SwimBadge.fromMap(Map<String, dynamic>.from(b as Map)))
+            .toList(),
+        progressNotes: ((map['progressNotes'] as List?) ?? [])
+            .map((n) => ProgressNote.fromMap(Map<String, dynamic>.from(n as Map)))
+            .toList(),
+      );
 }

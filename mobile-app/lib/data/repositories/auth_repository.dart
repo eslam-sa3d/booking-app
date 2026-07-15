@@ -22,7 +22,10 @@ abstract class AuthRepository {
 
   Future<void> logout();
 
-  Future<AppUser?> restoreSession(String userId);
+  /// Resolves the already-signed-in user on app launch, or null if signed
+  /// out. Firebase Auth persists sessions natively (keychain/IndexedDB) —
+  /// this never needs a stored token from the caller.
+  Future<AppUser?> currentUser();
 
   Future<AppUser> updateProfile(AppUser user);
 

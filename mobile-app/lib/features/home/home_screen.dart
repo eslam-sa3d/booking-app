@@ -25,6 +25,7 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final classesAsync = ref.watch(classesProvider);
     final instructorsAsync = ref.watch(instructorsMapProvider);
+    final bannersAsync = ref.watch(bannersProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -64,7 +65,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              BannerCarousel(isArabic: isArabic),
+              BannerCarousel(isArabic: isArabic, banners: bannersAsync.value ?? const []),
               const SizedBox(height: 24),
               Text(l10n.homeCategories, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),

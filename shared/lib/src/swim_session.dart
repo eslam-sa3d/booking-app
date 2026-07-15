@@ -1,3 +1,5 @@
+import 'firestore_codec.dart';
+
 class SwimSession {
   final String id;
   final String classId;
@@ -44,18 +46,53 @@ class SwimSession {
     return '${fmt(startMinutes)} - ${fmt(endMinutes)}';
   }
 
-  SwimSession copyWith({int? bookedCount, int? waitlistCount}) {
+  SwimSession copyWith({
+    DateTime? date,
+    int? startMinutes,
+    int? endMinutes,
+    int? capacity,
+    int? bookedCount,
+    int? waitlistCount,
+    String? instructorId,
+    String? branchId,
+  }) {
     return SwimSession(
       id: id,
       classId: classId,
-      date: date,
-      startMinutes: startMinutes,
-      endMinutes: endMinutes,
-      capacity: capacity,
+      date: date ?? this.date,
+      startMinutes: startMinutes ?? this.startMinutes,
+      endMinutes: endMinutes ?? this.endMinutes,
+      capacity: capacity ?? this.capacity,
       bookedCount: bookedCount ?? this.bookedCount,
       waitlistCount: waitlistCount ?? this.waitlistCount,
-      instructorId: instructorId,
-      branchId: branchId,
+      instructorId: instructorId ?? this.instructorId,
+      branchId: branchId ?? this.branchId,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'classId': classId,
+        'date': date,
+        'startMinutes': startMinutes,
+        'endMinutes': endMinutes,
+        'capacity': capacity,
+        'bookedCount': bookedCount,
+        'waitlistCount': waitlistCount,
+        'instructorId': instructorId,
+        'branchId': branchId,
+      };
+
+  factory SwimSession.fromMap(Map<String, dynamic> map) => SwimSession(
+        id: map['id'] as String,
+        classId: map['classId'] as String,
+        date: parseTimestamp(map['date']),
+        startMinutes: (map['startMinutes'] as num).toInt(),
+        endMinutes: (map['endMinutes'] as num).toInt(),
+        capacity: (map['capacity'] as num).toInt(),
+        bookedCount: (map['bookedCount'] as num?)?.toInt() ?? 0,
+        waitlistCount: (map['waitlistCount'] as num?)?.toInt() ?? 0,
+        instructorId: map['instructorId'] as String? ?? '',
+        branchId: map['branchId'] as String? ?? '',
+      );
 }

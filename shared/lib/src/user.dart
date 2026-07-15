@@ -1,3 +1,5 @@
+import 'firestore_codec.dart';
+
 class AppUser {
   final String id;
   final String name;
@@ -5,6 +7,8 @@ class AppUser {
   final String phone;
   final String? photoUrl;
   final String preferredLanguage; // 'en' or 'ar'
+  final String role; // 'customer' | 'staff' | 'admin' — mirror of the Auth custom claim, not authoritative
+  final bool suspended;
   final DateTime createdAt;
 
   const AppUser({
@@ -14,8 +18,13 @@ class AppUser {
     required this.phone,
     this.photoUrl,
     this.preferredLanguage = 'en',
+    this.role = 'customer',
+    this.suspended = false,
     required this.createdAt,
   });
+
+  bool get isStaffOrAdmin => role == 'staff' || role == 'admin';
+  bool get isAdmin => role == 'admin';
 
   AppUser copyWith({
     String? name,
@@ -23,6 +32,8 @@ class AppUser {
     String? phone,
     String? photoUrl,
     String? preferredLanguage,
+    String? role,
+    bool? suspended,
   }) {
     return AppUser(
       id: id,
@@ -31,6 +42,8 @@ class AppUser {
       phone: phone ?? this.phone,
       photoUrl: photoUrl ?? this.photoUrl,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      role: role ?? this.role,
+      suspended: suspended ?? this.suspended,
       createdAt: createdAt,
     );
   }
@@ -42,7 +55,9 @@ class AppUser {
         'phone': phone,
         'photoUrl': photoUrl,
         'preferredLanguage': preferredLanguage,
-        'createdAt': createdAt.toIso8601String(),
+        'role': role,
+        'suspended': suspended,
+        'createdAt': createdAt,
       };
 
   factory AppUser.fromMap(Map<String, dynamic> map) => AppUser(
@@ -52,7 +67,9 @@ class AppUser {
         phone: map['phone'] as String,
         photoUrl: map['photoUrl'] as String?,
         preferredLanguage: map['preferredLanguage'] as String? ?? 'en',
-        createdAt: DateTime.parse(map['createdAt'] as String),
+        role: map['role'] as String? ?? 'customer',
+        suspended: map['suspended'] as bool? ?? false,
+        createdAt: parseTimestamp(map['createdAt']),
       );
 
   String get initials {

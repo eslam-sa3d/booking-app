@@ -85,7 +85,7 @@ class NotificationsScreen extends ConsumerWidget {
                   subtitle: Text(n.localizedBody(isArabic)),
                   trailing: Text(AppDateFormat.dayMonth(n.createdAt, locale), style: const TextStyle(fontSize: 11)),
                   onTap: () async {
-                    await ref.read(notificationRepositoryProvider).markAsRead(n.id);
+                    await ref.read(notificationRepositoryProvider).markAsRead(n.userId, n.id);
                     ref.invalidate(notificationsProvider);
                     if (n.relatedBookingId != null && context.mounted) context.push('/bookings');
                   },

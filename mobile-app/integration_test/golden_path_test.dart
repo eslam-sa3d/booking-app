@@ -7,12 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:booking_app/app.dart';
 import 'package:booking_app/core/providers/shared_preferences_provider.dart';
 
+import '../test/test_overrides.dart';
+
 Future<void> _boot(WidgetTester tester) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs), ...testRepositoryOverrides],
       child: const SwimAcademyApp(),
     ),
   );

@@ -19,3 +19,7 @@ final instructorsMapProvider = FutureProvider<Map<String, Instructor>>((ref) asy
   final instructors = await ref.watch(classRepositoryProvider).getInstructors();
   return {for (final i in instructors) i.id: i};
 });
+
+final bannersProvider = FutureProvider<List<PromoBanner>>((ref) {
+  return ref.watch(bannerRepositoryProvider).getActiveBanners();
+});

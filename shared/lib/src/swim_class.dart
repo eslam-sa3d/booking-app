@@ -37,4 +37,77 @@ class SwimClass {
 
   String localizedTitle(bool isArabic) => isArabic ? titleAr : title;
   String localizedDescription(bool isArabic) => isArabic ? descriptionAr : description;
+
+  SwimClass copyWith({
+    String? title,
+    String? titleAr,
+    String? description,
+    String? descriptionAr,
+    List<ClassCategory>? categories,
+    int? durationMinutes,
+    double? price,
+    String? currency,
+    String? instructorId,
+    String? branchId,
+    double? rating,
+    int? reviewCount,
+    String? heroColorHex,
+    String? heroIcon,
+  }) {
+    return SwimClass(
+      id: id,
+      title: title ?? this.title,
+      titleAr: titleAr ?? this.titleAr,
+      description: description ?? this.description,
+      descriptionAr: descriptionAr ?? this.descriptionAr,
+      categories: categories ?? this.categories,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      price: price ?? this.price,
+      currency: currency ?? this.currency,
+      instructorId: instructorId ?? this.instructorId,
+      branchId: branchId ?? this.branchId,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      heroColorHex: heroColorHex ?? this.heroColorHex,
+      heroIcon: heroIcon ?? this.heroIcon,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'titleAr': titleAr,
+        'description': description,
+        'descriptionAr': descriptionAr,
+        'categories': categories.map((c) => c.name).toList(),
+        'durationMinutes': durationMinutes,
+        'price': price,
+        'currency': currency,
+        'instructorId': instructorId,
+        'branchId': branchId,
+        'rating': rating,
+        'reviewCount': reviewCount,
+        'heroColorHex': heroColorHex,
+        'heroIcon': heroIcon,
+      };
+
+  factory SwimClass.fromMap(Map<String, dynamic> map) => SwimClass(
+        id: map['id'] as String,
+        title: map['title'] as String,
+        titleAr: map['titleAr'] as String,
+        description: map['description'] as String? ?? '',
+        descriptionAr: map['descriptionAr'] as String? ?? '',
+        categories: ((map['categories'] as List?) ?? [])
+            .map((c) => ClassCategory.fromName(c as String))
+            .toList(),
+        durationMinutes: (map['durationMinutes'] as num?)?.toInt() ?? 45,
+        price: (map['price'] as num?)?.toDouble() ?? 0,
+        currency: map['currency'] as String? ?? 'SAR',
+        instructorId: map['instructorId'] as String? ?? '',
+        branchId: map['branchId'] as String? ?? '',
+        rating: (map['rating'] as num?)?.toDouble() ?? 4.7,
+        reviewCount: (map['reviewCount'] as num?)?.toInt() ?? 0,
+        heroColorHex: map['heroColorHex'] as String? ?? '#0EA5A4',
+        heroIcon: map['heroIcon'] as String? ?? 'pool',
+      );
 }

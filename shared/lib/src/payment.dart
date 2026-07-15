@@ -1,4 +1,5 @@
 import 'enums.dart';
+import 'firestore_codec.dart';
 
 class Payment {
   final String id;
@@ -26,4 +27,30 @@ class Payment {
   });
 
   String localizedDescription(bool isArabic) => isArabic ? descriptionAr : description;
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'userId': userId,
+        'amount': amount,
+        'currency': currency,
+        'method': method.name,
+        'status': status.name,
+        'createdAt': createdAt,
+        'description': description,
+        'descriptionAr': descriptionAr,
+        'relatedPackageId': relatedPackageId,
+      };
+
+  factory Payment.fromMap(Map<String, dynamic> map) => Payment(
+        id: map['id'] as String,
+        userId: map['userId'] as String,
+        amount: (map['amount'] as num).toDouble(),
+        currency: map['currency'] as String? ?? 'SAR',
+        method: PaymentMethod.fromName(map['method'] as String? ?? 'creditCard'),
+        status: PaymentStatus.fromName(map['status'] as String? ?? 'pending'),
+        createdAt: parseTimestamp(map['createdAt']),
+        description: map['description'] as String? ?? '',
+        descriptionAr: map['descriptionAr'] as String? ?? '',
+        relatedPackageId: map['relatedPackageId'] as String?,
+      );
 }

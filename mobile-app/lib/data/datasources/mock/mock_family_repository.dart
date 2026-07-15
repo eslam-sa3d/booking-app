@@ -40,8 +40,8 @@ class MockFamilyRepository implements FamilyRepository {
   }
 
   @override
-  Future<void> deleteFamilyMember(String id) async {
+  Future<void> deleteFamilyMember(String userId, String id) async {
     await _delay();
-    _db.familyMembers.removeWhere((f) => f.id == id);
+    _db.familyMembers.removeWhere((f) => f.id == id && f.userId == userId);
   }
 }

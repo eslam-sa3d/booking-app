@@ -61,7 +61,7 @@ class FamilyMembersScreen extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.delete_outline_rounded),
                         onPressed: () async {
-                          await ref.read(familyRepositoryProvider).deleteFamilyMember(member.id);
+                          await ref.read(familyRepositoryProvider).deleteFamilyMember(member.userId, member.id);
                           ref.invalidate(familyMembersProvider);
                         },
                       ),

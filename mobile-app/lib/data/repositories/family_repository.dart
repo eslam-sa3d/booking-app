@@ -7,5 +7,5 @@ abstract class FamilyRepository {
 
   Future<FamilyMember> updateFamilyMember(FamilyMember member);
 
-  Future<void> deleteFamilyMember(String id);
+  Future<void> deleteFamilyMember(String userId, String id);
 }

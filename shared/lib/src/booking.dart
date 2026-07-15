@@ -1,4 +1,5 @@
 import 'enums.dart';
+import 'firestore_codec.dart';
 
 class Booking {
   final String id;
@@ -50,4 +51,34 @@ class Booking {
       reviewed: reviewed ?? this.reviewed,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'userId': userId,
+        'sessionId': sessionId,
+        'participantId': participantId,
+        'participantName': participantName,
+        'status': status.name,
+        'createdAt': createdAt,
+        'isRecurring': isRecurring,
+        'recurrenceGroupId': recurrenceGroupId,
+        'cancelledAt': cancelledAt,
+        'cancellationReason': cancellationReason,
+        'reviewed': reviewed,
+      };
+
+  factory Booking.fromMap(Map<String, dynamic> map) => Booking(
+        id: map['id'] as String,
+        userId: map['userId'] as String,
+        sessionId: map['sessionId'] as String,
+        participantId: map['participantId'] as String,
+        participantName: map['participantName'] as String,
+        status: BookingStatus.fromName(map['status'] as String? ?? 'confirmed'),
+        createdAt: parseTimestamp(map['createdAt']),
+        isRecurring: map['isRecurring'] as bool? ?? false,
+        recurrenceGroupId: map['recurrenceGroupId'] as String?,
+        cancelledAt: parseTimestampOrNull(map['cancelledAt']),
+        cancellationReason: map['cancellationReason'] as String?,
+        reviewed: map['reviewed'] as bool? ?? false,
+      );
 }

@@ -14,7 +14,8 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "lint": "eslint src --ext .ts",
-    "smoke-test": "node scripts/smoke-test.js"
+    "smoke-test": "node scripts/smoke-test.js",
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "firebase-admin": "^12.7.0",

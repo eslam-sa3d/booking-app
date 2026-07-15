@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/firebase/firebase_bootstrap.dart';
 import 'core/providers/shared_preferences_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await bootstrapFirebase();
   final prefs = await SharedPreferences.getInstance();
 
   runApp(

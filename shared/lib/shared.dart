@@ -16,3 +16,5 @@ export 'src/package.dart';
 export 'src/payment.dart';
 export 'src/review.dart';
 export 'src/app_notification.dart';
+export 'src/banner.dart';
+export 'src/app_settings.dart';

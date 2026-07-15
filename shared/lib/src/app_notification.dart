@@ -1,4 +1,5 @@
 import 'enums.dart';
+import 'firestore_codec.dart';
 
 class AppNotification {
   final String id;
@@ -42,4 +43,30 @@ class AppNotification {
       relatedBookingId: relatedBookingId,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'userId': userId,
+        'type': type.name,
+        'title': title,
+        'titleAr': titleAr,
+        'body': body,
+        'bodyAr': bodyAr,
+        'createdAt': createdAt,
+        'isRead': isRead,
+        'relatedBookingId': relatedBookingId,
+      };
+
+  factory AppNotification.fromMap(Map<String, dynamic> map) => AppNotification(
+        id: map['id'] as String,
+        userId: map['userId'] as String,
+        type: NotificationType.fromName(map['type'] as String? ?? 'general'),
+        title: map['title'] as String,
+        titleAr: map['titleAr'] as String? ?? '',
+        body: map['body'] as String? ?? '',
+        bodyAr: map['bodyAr'] as String? ?? '',
+        createdAt: parseTimestamp(map['createdAt']),
+        isRead: map['isRead'] as bool? ?? false,
+        relatedBookingId: map['relatedBookingId'] as String?,
+      );
 }

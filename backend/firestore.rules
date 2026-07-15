@@ -120,5 +120,13 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if false;
     }
+
+    // ---------------- package expiry reminder markers ----------------
+    // Written exclusively by the packageExpiryReminders scheduled
+    // function via the Admin SDK — prevents duplicate reminders on reruns.
+    match /sentPackageExpiryReminders/{markerId} {
+      allow read: if isStaff();
+      allow write: if false;
+    }
   }
 }
