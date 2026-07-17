@@ -25,8 +25,14 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
+      // logout() mutates authControllerProvider, which _AuthRefreshNotifier
+      // (app_router.dart) also reacts to by notifying go_router's
+      // refreshListenable — an explicit context.go() call right after races
+      // that reaction and can crash the Navigator with a duplicate-page-key
+      // assertion (the same class of bug fixed for the splash screen). This
+      // screen already renders a "please log in" UI for a null user, so no
+      // explicit navigation is needed — the state change alone rebuilds it.
       await ref.read(authControllerProvider.notifier).logout();
-      if (context.mounted) context.go('/home');
     }
   }
 

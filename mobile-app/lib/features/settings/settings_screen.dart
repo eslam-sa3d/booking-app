@@ -39,8 +39,14 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
+      // deleteAccount() mutates authControllerProvider, which
+      // _AuthRefreshNotifier (app_router.dart) also reacts to by notifying
+      // go_router's refreshListenable — an explicit context.go() call right
+      // after races that reaction and can crash the Navigator with a
+      // duplicate-page-key assertion (the same class of bug fixed for the
+      // splash screen). This screen already hides its account-only sections
+      // for a null user, so no explicit navigation is needed.
       await ref.read(authControllerProvider.notifier).deleteAccount();
-      if (context.mounted) context.go('/home');
     }
   }
 
