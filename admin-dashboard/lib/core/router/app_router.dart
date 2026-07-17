@@ -13,6 +13,7 @@ import '../../features/instructors/instructors_screen.dart';
 import '../../features/members/members_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/packages/packages_screen.dart';
+import '../../features/payment_methods/payment_methods_screen.dart';
 import '../../features/payments/payments_screen.dart';
 import '../../features/reports/reports_screen.dart';
 import '../../features/requests/requests_screen.dart';
@@ -61,6 +62,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/banners', builder: (context, state) => const BannersScreen()),
           GoRoute(path: '/packages', builder: (context, state) => const PackagesScreen()),
           GoRoute(path: '/payments', builder: (context, state) => const PaymentsScreen()),
+          GoRoute(path: '/payment-methods', builder: (context, state) => const PaymentMethodsScreen()),
           GoRoute(path: '/reports', builder: (context, state) => const ReportsScreen()),
           GoRoute(path: '/members', builder: (context, state) => const MembersScreen()),
           GoRoute(path: '/instructors', builder: (context, state) => const InstructorsScreen()),

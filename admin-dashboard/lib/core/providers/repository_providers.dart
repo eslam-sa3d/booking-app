@@ -15,6 +15,7 @@ import '../../data/repositories/instructors_repository.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../data/repositories/notifications_repository.dart';
 import '../../data/repositories/packages_repository.dart';
+import '../../data/repositories/payment_methods_repository.dart';
 import '../../data/repositories/reports_repository.dart';
 import '../../data/repositories/sessions_repository.dart';
 import '../../data/repositories/staff_repository.dart';
@@ -56,6 +57,10 @@ final staffRepositoryProvider =
     Provider((ref) => StaffRepository(ref.watch(firestoreProvider), ref.watch(functionsProvider)));
 final categoriesRepositoryProvider = Provider(
   (ref) => CategoriesRepository(ref.watch(firestoreProvider), ref.watch(authProvider), ref.watch(functionsProvider)),
+);
+final paymentMethodsRepositoryProvider = Provider(
+  (ref) =>
+      PaymentMethodsRepository(ref.watch(firestoreProvider), ref.watch(authProvider), ref.watch(functionsProvider)),
 );
 final blockedDatesRepositoryProvider = Provider(
   (ref) =>

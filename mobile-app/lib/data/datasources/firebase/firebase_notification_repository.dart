@@ -13,7 +13,12 @@ class FirebaseNotificationRepository implements NotificationRepository {
   @override
   Future<List<AppNotification>> getNotifications(String userId) async {
     final snap = await _col(userId).get();
-    final notifications = snap.docs.map((d) => AppNotification.fromMap(d.data())).toList()
+    // The Cloud Function fan-out (backend/functions/src/lib/notify.ts) never
+    // writes a `userId` field into these docs — it's already implicit in the
+    // `users/{userId}/inbox` path they live at. AppNotification.fromMap
+    // requires one, so it's injected here from the query parameter rather
+    // than expecting the backend to duplicate it into every document.
+    final notifications = snap.docs.map((d) => AppNotification.fromMap({...d.data(), 'userId': userId})).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return notifications;
   }

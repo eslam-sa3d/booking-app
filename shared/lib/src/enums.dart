@@ -49,16 +49,6 @@ enum PaymentStatus {
       PaymentStatus.values.firstWhere((e) => e.name == name, orElse: () => PaymentStatus.pending);
 }
 
-enum PaymentMethod {
-  mada,
-  applePay,
-  stcPay,
-  creditCard;
-
-  static PaymentMethod fromName(String name) =>
-      PaymentMethod.values.firstWhere((e) => e.name == name, orElse: () => PaymentMethod.creditCard);
-}
-
 enum NotificationType {
   bookingConfirmed,
   waitlisted,

@@ -254,7 +254,7 @@ class _PaymentsList extends ConsumerWidget {
           for (final payment in payments)
             ListTile(
               title: Text(payment.description),
-              subtitle: Text('${payment.method.name} · ${payment.createdAt.toString().split(' ').first}'),
+              subtitle: Text('${payment.method} · ${payment.createdAt.toString().split(' ').first}'),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

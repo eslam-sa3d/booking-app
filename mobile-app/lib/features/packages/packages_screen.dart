@@ -155,9 +155,11 @@ class _PackageCard extends StatelessWidget {
                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                 ),
                 const Spacer(),
-                FilledButton(
-                  onPressed: () => context.push('/checkout', extra: pkg),
-                  child: Text(l10n.packagesPurchase),
+                IntrinsicWidth(
+                  child: FilledButton(
+                    onPressed: () => context.push('/checkout', extra: pkg),
+                    child: Text(l10n.packagesPurchase),
+                  ),
                 ),
               ],
             ),

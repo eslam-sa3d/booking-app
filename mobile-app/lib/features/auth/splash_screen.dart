@@ -1,42 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/providers/shared_preferences_provider.dart';
 import '../../core/theme/app_colors.dart';
-import 'auth_controller.dart';
 
 const kOnboardingSeenKey = 'onboarding_seen';
 
-class SplashScreen extends ConsumerStatefulWidget {
+/// Pure loading UI — where to go next is decided entirely by the router's
+/// `redirect` callback once auth state resolves (see app_router.dart), so
+/// this screen has no navigation logic of its own.
+class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
-
-  @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends ConsumerState<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _resolveDestination());
-  }
-
-  Future<void> _resolveDestination() async {
-    final SharedPreferences prefs = ref.read(sharedPreferencesProvider);
-    await ref.read(authControllerProvider.future);
-    if (!mounted) return;
-
-    final seenOnboarding = prefs.getBool(kOnboardingSeenKey) ?? false;
-    if (!seenOnboarding) {
-      context.go('/onboarding');
-      return;
-    }
-
-    // Guests can browse Home freely; booking/profile actions gate on login individually.
-    context.go('/home');
-  }
 
   @override
   Widget build(BuildContext context) {

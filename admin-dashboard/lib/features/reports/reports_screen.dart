@@ -12,6 +12,20 @@ const _monthNames = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', //
 ];
 
+// Each stat card scrolls to its matching chart section further down this
+// same page — the detail behind these numbers already lives here, so
+// "clickable" means scroll-to rather than a route change.
+final _bookingsTrendSectionKey = GlobalKey();
+final _attendanceSectionKey = GlobalKey();
+final _revenueTrendSectionKey = GlobalKey();
+final _memberGrowthSectionKey = GlobalKey();
+
+void _scrollToSection(GlobalKey key) {
+  final ctx = key.currentContext;
+  if (ctx == null) return;
+  Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
+}
+
 /// One-shot load of everything the Reports & Analytics screen shows — same
 /// re-fetch-on-load-or-refresh approach as the Dashboard's stats provider,
 /// since none of these figures need to be live.
@@ -71,26 +85,30 @@ class _ReportsBody extends StatelessWidget {
               icon: Icons.event_available_outlined,
               label: 'Bookings (30d)',
               value: '${data.bookingsTrend.fold<int>(0, (sum, p) => sum + p.count)}',
+              onTap: () => _scrollToSection(_bookingsTrendSectionKey),
             ),
             _StatCard(
               icon: Icons.fact_check_outlined,
               label: 'Attendance rate',
               value: '${attendance.rate.toStringAsFixed(0)}%',
+              onTap: () => _scrollToSection(_attendanceSectionKey),
             ),
             _StatCard(
               icon: Icons.payments_outlined,
               label: 'Revenue (6mo)',
               value: '${totalRevenue.toStringAsFixed(0)} SAR',
+              onTap: () => _scrollToSection(_revenueTrendSectionKey),
             ),
             _StatCard(
               icon: Icons.person_add_alt_1_outlined,
               label: 'New members (6mo)',
               value: '$newMembers',
+              onTap: () => _scrollToSection(_memberGrowthSectionKey),
             ),
           ],
         ),
         const SizedBox(height: 28),
-        const Text('Bookings trend (last 30 days)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text('Bookings trend (last 30 days)', key: _bookingsTrendSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
         const Text(
           'Count of bookings created per day.',
@@ -99,7 +117,7 @@ class _ReportsBody extends StatelessWidget {
         const SizedBox(height: 12),
         _BookingsTrendCard(points: data.bookingsTrend),
         const SizedBox(height: 28),
-        const Text('Attendance rate', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text('Attendance rate', key: _attendanceSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
         const Text(
           'Completed vs. cancelled bookings (all time). Cancellations are treated as non-attendance — this app '
@@ -125,7 +143,7 @@ class _ReportsBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 28),
-        const Text('Revenue trend (last 6 months)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text('Revenue trend (last 6 months)', key: _revenueTrendSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
         const Text(
           'Sum of succeeded transactions, by month.',
@@ -134,7 +152,7 @@ class _ReportsBody extends StatelessWidget {
         const SizedBox(height: 12),
         _RevenueTrendCard(points: data.revenueTrend),
         const SizedBox(height: 28),
-        const Text('Member growth (last 6 months)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text('Member growth (last 6 months)', key: _memberGrowthSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
         const Text(
           'New customer signups, by month.',
@@ -149,30 +167,41 @@ class _ReportsBody extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.icon, required this.label, required this.value});
+  const _StatCard({required this.icon, required this.label, required this.value, required this.onTap});
   final IconData icon;
   final String label;
   final String value;
 
+  /// Scrolls to the chart section further down this same page that shows
+  /// the full detail behind this stat.
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: context.isMobile ? double.infinity : 220,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: AppColors.primary),
-          const SizedBox(height: 12),
-          Text(value, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13)),
-        ],
+        onTap: onTap,
+        child: Container(
+          width: context.isMobile ? double.infinity : 220,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: AppColors.primary),
+              const SizedBox(height: 12),
+              Text(value, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+            ],
+          ),
+        ),
       ),
     );
   }

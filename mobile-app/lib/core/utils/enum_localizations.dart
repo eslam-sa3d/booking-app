@@ -30,18 +30,3 @@ extension PaymentStatusL10n on PaymentStatus {
     }
   }
 }
-
-extension PaymentMethodL10n on PaymentMethod {
-  String label(AppLocalizations l10n) {
-    switch (this) {
-      case PaymentMethod.mada:
-        return l10n.checkoutMethodMada;
-      case PaymentMethod.applePay:
-        return l10n.checkoutMethodApplePay;
-      case PaymentMethod.stcPay:
-        return l10n.checkoutMethodStcPay;
-      case PaymentMethod.creditCard:
-        return l10n.checkoutMethodCreditCard;
-    }
-  }
-}

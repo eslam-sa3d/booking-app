@@ -6,7 +6,7 @@ class Payment {
   final String userId;
   final double amount;
   final String currency;
-  final PaymentMethod method;
+  final String method;
   final PaymentStatus status;
   final DateTime createdAt;
   final String description;
@@ -71,7 +71,7 @@ class Payment {
         'userId': userId,
         'amount': amount,
         'currency': currency,
-        'method': method.name,
+        'method': method,
         'status': status.name,
         'createdAt': createdAt,
         'description': description,
@@ -90,7 +90,7 @@ class Payment {
         userId: map['userId'] as String,
         amount: (map['amount'] as num).toDouble(),
         currency: map['currency'] as String? ?? 'SAR',
-        method: PaymentMethod.fromName(map['method'] as String? ?? 'creditCard'),
+        method: map['method'] as String? ?? 'creditCard',
         status: PaymentStatus.fromName(map['status'] as String? ?? 'pending'),
         createdAt: parseTimestamp(map['createdAt']),
         description: map['description'] as String? ?? '',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:shared/shared.dart';
 
@@ -41,6 +42,7 @@ class DashboardScreen extends ConsumerWidget {
                   icon: Icons.pool_outlined,
                   label: 'Active classes',
                   value: '${snap.data?.length ?? '—'}',
+                  route: '/classes',
                 ),
               ),
               StreamBuilder(
@@ -49,6 +51,7 @@ class DashboardScreen extends ConsumerWidget {
                   icon: Icons.people_outline,
                   label: 'Total members',
                   value: '${snap.data?.length ?? '—'}',
+                  route: '/members',
                 ),
               ),
               StreamBuilder(
@@ -58,6 +61,7 @@ class DashboardScreen extends ConsumerWidget {
                   label: 'Waitlisted bookings',
                   value: '${snap.data?.length ?? '—'}',
                   highlight: (snap.data?.length ?? 0) > 0,
+                  route: '/requests',
                 ),
               ),
               _StatCard(
@@ -68,6 +72,7 @@ class DashboardScreen extends ConsumerWidget {
                   loading: () => '—',
                   error: (_, _) => '!',
                 ),
+                route: '/calendar',
               ),
               _StatCard(
                 icon: Icons.payments_outlined,
@@ -77,6 +82,7 @@ class DashboardScreen extends ConsumerWidget {
                   loading: () => '—',
                   error: (_, _) => '!',
                 ),
+                route: '/reports',
               ),
               _StatCard(
                 icon: Icons.event_note_outlined,
@@ -86,6 +92,7 @@ class DashboardScreen extends ConsumerWidget {
                   loading: () => '—',
                   error: (_, _) => '!',
                 ),
+                route: '/calendar',
               ),
               _StatCard(
                 icon: Icons.warning_amber_outlined,
@@ -96,6 +103,7 @@ class DashboardScreen extends ConsumerWidget {
                   error: (_, _) => '!',
                 ),
                 highlight: statsAsync.maybeWhen(data: (s) => s.fullOrNearFullSessions > 0, orElse: () => false),
+                route: '/calendar',
               ),
               _StatCard(
                 icon: Icons.schedule_outlined,
@@ -106,6 +114,7 @@ class DashboardScreen extends ConsumerWidget {
                   error: (_, _) => '!',
                 ),
                 highlight: statsAsync.maybeWhen(data: (s) => s.expiringPackages > 0, orElse: () => false),
+                route: '/members',
               ),
             ],
           ),
@@ -122,32 +131,43 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.icon, required this.label, required this.value, this.highlight = false});
+  const _StatCard({required this.icon, required this.label, required this.value, this.highlight = false, required this.route});
 
   final IconData icon;
   final String label;
   final String value;
   final bool highlight;
 
+  /// Route showing the full detail behind this stat — the whole card
+  /// navigates there on tap.
+  final String route;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: context.isMobile ? double.infinity : 220,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: highlight ? Colors.orange.shade200 : Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: highlight ? Colors.orange : Colors.teal),
-          const SizedBox(height: 12),
-          Text(value, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13)),
-        ],
+        onTap: () => context.go(route),
+        child: Container(
+          width: context.isMobile ? double.infinity : 220,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: highlight ? Colors.orange.shade200 : Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: highlight ? Colors.orange : Colors.teal),
+              const SizedBox(height: 12),
+              Text(value, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+            ],
+          ),
+        ),
       ),
     );
   }

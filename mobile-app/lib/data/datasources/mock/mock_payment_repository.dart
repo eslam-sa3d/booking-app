@@ -10,6 +10,16 @@ class MockPaymentRepository implements PaymentRepository {
   Future<void> _delay() => Future.delayed(const Duration(milliseconds: 400));
 
   @override
+  Future<List<PaymentMethodConfig>> getActivePaymentMethods() async {
+    await _delay();
+    return const [
+      PaymentMethodConfig(id: 'mada', nameEn: 'Mada', nameAr: 'مدى', order: 0),
+      PaymentMethodConfig(id: 'applePay', nameEn: 'Apple Pay', nameAr: 'أبل باي', order: 1),
+      PaymentMethodConfig(id: 'stcPay', nameEn: 'STC Pay', nameAr: 'إس تي سي باي', order: 2),
+    ];
+  }
+
+  @override
   Future<List<Payment>> getPaymentHistory(String userId) async {
     await _delay();
     return _db.payments.where((p) => p.userId == userId).toList()
@@ -58,7 +68,7 @@ class MockPaymentService implements PaymentService {
   Future<PaymentChargeResult> charge({
     required double amount,
     required String currency,
-    required PaymentMethod method,
+    required String method,
   }) async {
     await Future.delayed(const Duration(seconds: 1, milliseconds: 200));
     // 92% simulated success rate so the checkout failure state is reachable in demos.

@@ -92,7 +92,7 @@ class MockDatabase {
         id: 'pay1',
         userId: demoUserId,
         amount: 1100,
-        method: PaymentMethod.mada,
+        method: 'mada',
         status: PaymentStatus.succeeded,
         createdAt: DateTime.now().subtract(const Duration(days: 10)),
         description: '8-Session Pack purchase',

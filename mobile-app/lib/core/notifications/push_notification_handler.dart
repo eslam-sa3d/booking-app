@@ -51,7 +51,18 @@ class PushNotificationHandler {
       // state (as opposed to bringing an already-running app to the
       // foreground, which onMessageOpenedApp handles).
       final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-      if (initialMessage != null) _navigateForMessage(initialMessage);
+      if (initialMessage != null) {
+        // Navigating this early in the app's lifecycle races go_router's
+        // redirect/refreshListenable machinery, which is still settling
+        // auth state right after a cold start — hitting that window
+        // reliably crashes with a duplicate GlobalKey assertion in
+        // NavigatorState (a known class of go_router timing bug). A push
+        // that launched the app from terminated is inherently the riskiest
+        // case for this, since it navigates as early as possible; a short
+        // delay lets initial redirect/auth resolution finish first.
+        await Future.delayed(const Duration(seconds: 3));
+        _navigateForMessage(initialMessage);
+      }
     } catch (error, stackTrace) {
       // Push is best-effort everywhere else in this app (see
       // FcmTokenRegistrar) — a setup failure here shouldn't block startup.
@@ -93,7 +104,12 @@ class PushNotificationHandler {
     // a reasonable default: the bookings list for booking-related pushes,
     // otherwise the notifications inbox.
     if (data['bookingId'] != null) {
-      router.push('/bookings');
+      // /bookings is a StatefulShellBranch destination, not a standalone
+      // route — push()ing it from outside the shell stacks a second,
+      // independently-keyed page instance on top of the shell's own cached
+      // branch page, which go_router's Navigator rejects with a duplicate
+      // page-key assertion. go() switches the shell to that branch instead.
+      router.go('/bookings');
     } else {
       router.push('/notifications');
     }

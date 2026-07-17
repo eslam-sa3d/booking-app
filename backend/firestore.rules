@@ -115,6 +115,13 @@ service cloud.firestore {
       allow create, update: if isStaff() && taggedByCaller();
       allow delete: if isStaff();
     }
+    match /paymentMethods/{methodId} {
+      allow read: if true; // mobile checkout reads these unauthenticated-friendly
+      // Payments-adjacent config — admin-only, unlike most other content
+      // collections (which are isStaff()), matching /transactions.
+      allow create, update: if isAdmin() && taggedByCaller();
+      allow delete: if isAdmin();
+    }
     match /blockedDates/{blockedDateId} {
       allow read: if true; // mobile calendar shows these as unavailable
       allow create, update: if isStaff() && taggedByCaller();

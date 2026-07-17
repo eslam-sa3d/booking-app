@@ -564,16 +564,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkoutPaymentMethod => 'Payment method';
 
   @override
-  String get checkoutMethodMada => 'Mada';
-
-  @override
-  String get checkoutMethodApplePay => 'Apple Pay';
-
-  @override
-  String get checkoutMethodStcPay => 'STC Pay';
-
-  @override
-  String get checkoutMethodCreditCard => 'Credit / debit card';
+  String get checkoutNoPaymentMethods =>
+      'No payment methods are available right now — please try again later.';
 
   @override
   String get checkoutCardNumber => 'Card number';

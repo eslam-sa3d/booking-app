@@ -119,14 +119,31 @@ class _BookingCalendarScreenState extends ConsumerState<BookingCalendarScreen> {
                     final swimClass = classesMap[session.classId];
                     if (swimClass == null) return const SizedBox.shrink();
                     return Card(
-                      child: ListTile(
-                        title: Text(swimClass.localizedTitle(isArabic)),
-                        subtitle: Text(
-                          '${session.formattedTimeRange()} · ${session.isFull ? l10n.calendarFull : l10n.calendarSpotsLeft(session.spotsLeft, session.capacity)}',
-                        ),
-                        trailing: FilledButton(
-                          onPressed: () => showBookingSheet(context, session: session, swimClass: swimClass),
-                          child: Text(session.isFull ? l10n.calendarJoinWaitlist : l10n.homeBookNow),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(swimClass.localizedTitle(isArabic)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${session.formattedTimeRange()} · ${session.isFull ? l10n.calendarFull : l10n.calendarSpotsLeft(session.spotsLeft, session.capacity)}',
+                                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            IntrinsicWidth(
+                              child: FilledButton(
+                                onPressed: () => showBookingSheet(context, session: session, swimClass: swimClass),
+                                child: Text(session.isFull ? l10n.calendarJoinWaitlist : l10n.homeBookNow),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );

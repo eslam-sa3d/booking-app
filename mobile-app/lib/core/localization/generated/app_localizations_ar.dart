@@ -561,16 +561,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkoutPaymentMethod => 'طريقة الدفع';
 
   @override
-  String get checkoutMethodMada => 'مدى';
-
-  @override
-  String get checkoutMethodApplePay => 'Apple Pay';
-
-  @override
-  String get checkoutMethodStcPay => 'STC Pay';
-
-  @override
-  String get checkoutMethodCreditCard => 'بطاقة ائتمان / خصم';
+  String get checkoutNoPaymentMethods =>
+      'لا تتوفر طرق دفع حالياً — يرجى المحاولة لاحقاً.';
 
   @override
   String get checkoutCardNumber => 'رقم البطاقة';

@@ -89,7 +89,13 @@ class NotificationsScreen extends ConsumerWidget {
                   onTap: () async {
                     await ref.read(notificationRepositoryProvider).markAsRead(n.userId, n.id);
                     ref.invalidate(notificationsProvider);
-                    if (n.relatedBookingId != null && context.mounted) context.push('/bookings');
+                    // /bookings is a StatefulShellBranch destination — push()ing
+                    // it from this pushed-on-top screen stacks a second,
+                    // independently-keyed page instance alongside the shell's
+                    // own cached branch page, which crashes the Navigator with
+                    // a duplicate page-key assertion. go() switches the shell
+                    // to that branch instead.
+                    if (n.relatedBookingId != null && context.mounted) context.go('/bookings');
                   },
                 ),
               );

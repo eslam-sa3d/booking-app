@@ -23,16 +23,16 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyD-wNicww3iJWMm5UZ19QB9whZ-ZA5wox8',
-    appId: '1:691594727534:ios:3684339e9244e8c2dad67f',
+    appId: '1:691594727534:ios:05d858bf396b36bcdad67f',
     messagingSenderId: '691594727534',
     projectId: 'booking-app-36b8e',
     storageBucket: 'booking-app-36b8e.firebasestorage.app',
-    iosBundleId: 'com.swimacademy.bookingApp',
+    iosBundleId: 'com.appbooking.appbooking',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyB8hj4VPuAiJuwPn2eKZNO5SaTAdxS701c',
-    appId: '1:691594727534:android:3aa4a161896947b0dad67f',
+    appId: '1:691594727534:android:5a59ea979abdaf67dad67f',
     messagingSenderId: '691594727534',
     projectId: 'booking-app-36b8e',
     storageBucket: 'booking-app-36b8e.firebasestorage.app',

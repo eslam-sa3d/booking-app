@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/repository_providers.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_formatting.dart';
 import '../../core/utils/enum_localizations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -215,7 +216,8 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> with Single
                             ),
                           const SizedBox(height: 10),
                           Wrap(
-                            spacing: 8,
+                            spacing: 12,
+                            runSpacing: 8,
                             children: [
                               if (!data.isPast && data.booking.status != BookingStatus.cancelled) ...[
                                 AppButton(
@@ -231,6 +233,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> with Single
                                     label: l10n.myBookingsCancel,
                                     outlined: true,
                                     compact: true,
+                                    color: AppColors.error,
                                     onPressed: () => _cancelBooking(data),
                                   ),
                                 ),

@@ -1,4 +1,4 @@
-package com.swimacademy.booking_app
+package com.appbooking.appbooking
 
 import io.flutter.embedding.android.FlutterActivity
 

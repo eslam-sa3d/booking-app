@@ -3,6 +3,6 @@
 /// staff accounts". App Content & Settings is grouped in with them since it
 /// controls branding/legal content and (via /staff) account privileges,
 /// both admin-level concerns; everything else is staff+admin.
-const adminOnlyPaths = {'/payments', '/reports', '/settings', '/staff'};
+const adminOnlyPaths = {'/payments', '/payment-methods', '/reports', '/settings', '/staff'};
 
 bool isPathAdminOnly(String path) => adminOnlyPaths.any((p) => path.startsWith(p));

@@ -14,6 +14,15 @@ class FirebasePaymentRepository implements PaymentRepository {
   CollectionReference<Map<String, dynamic>> get _col => _db.collection('transactions');
 
   @override
+  Future<List<PaymentMethodConfig>> getActivePaymentMethods() async {
+    final snap = await _db.collection('paymentMethods').orderBy('order').get();
+    return snap.docs
+        .map((d) => PaymentMethodConfig.fromMap(d.data()))
+        .where((m) => m.isActive)
+        .toList();
+  }
+
+  @override
   Future<List<Payment>> getPaymentHistory(String userId) async {
     final snap = await _col.where('userId', isEqualTo: userId).get();
     final payments = snap.docs.map((d) => Payment.fromMap(d.data())).toList()

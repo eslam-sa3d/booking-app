@@ -16,6 +16,7 @@ class AppButton extends StatelessWidget {
     this.icon,
     this.outlined = false,
     this.compact = false,
+    this.color,
   });
 
   final String label;
@@ -25,6 +26,11 @@ class AppButton extends StatelessWidget {
   final bool outlined;
   final bool compact;
 
+  /// Overrides the button's accent color (defaults to [AppColors.primary]).
+  /// Use for destructive actions (e.g. cancel) — the rest of the styling
+  /// (outlined/filled, compact sizing) stays the same.
+  final Color? color;
+
   static final ButtonStyle _compactStyle = FilledButton.styleFrom(
     minimumSize: const Size(64, 36),
     padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -33,9 +39,18 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = color ?? AppColors.primary;
+
     if (!isLiquidGlassPlatform(context)) {
       final content = _content(color: null);
-      final style = compact ? _compactStyle : null;
+      var style = compact ? _compactStyle : null;
+      if (color != null) {
+        final colorOverride = ButtonStyle(
+          backgroundColor: WidgetStatePropertyAll(outlined ? accent.withValues(alpha: 0.12) : accent),
+          foregroundColor: WidgetStatePropertyAll(outlined ? accent : Colors.white),
+        );
+        style = (style ?? const ButtonStyle()).merge(colorOverride);
+      }
       if (outlined) {
         return FilledButton.tonal(onPressed: isLoading ? null : onPressed, style: style, child: content);
       }
@@ -45,10 +60,8 @@ class AppButton extends StatelessWidget {
     // The package's default glass tint is fully transparent (alpha 0) — an
     // explicit color is required or the button renders as blur with no fill,
     // which reads as barely-there/low-contrast against light backgrounds.
-    final foreground = outlined ? AppColors.primary : Colors.white;
-    final glassColor = outlined
-        ? AppColors.primary.withValues(alpha: 0.16)
-        : AppColors.primary.withValues(alpha: 0.5);
+    final foreground = outlined ? accent : Colors.white;
+    final glassColor = outlined ? accent.withValues(alpha: 0.16) : accent.withValues(alpha: 0.5);
 
     return glass.GlassButton.custom(
       onTap: onPressed ?? _noop,

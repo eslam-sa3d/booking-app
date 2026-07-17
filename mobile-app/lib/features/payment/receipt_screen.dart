@@ -41,7 +41,7 @@ ${l10n.receiptTransactionId}: $number
 ${l10n.receiptDate}: $dateStr
 ${l10n.receiptDescription}: ${payment.localizedDescription(isArabic)}
 ${l10n.receiptAmount}: ${payment.amount.toStringAsFixed(2)} ${payment.currency}
-${l10n.receiptMethod}: ${payment.method.label(l10n)}
+${l10n.receiptMethod}: ${payment.method}
 ${l10n.receiptStatus}: ${payment.status.label(l10n)}
 ''';
     // No dedicated share package is present in pubspec.yaml; mailto: via
@@ -121,7 +121,7 @@ ${l10n.receiptStatus}: ${payment.status.label(l10n)}
                     _ReceiptRow(label: l10n.receiptTransactionId, value: number),
                     _ReceiptRow(label: l10n.receiptDate, value: dateStr),
                     _ReceiptRow(label: l10n.receiptDescription, value: payment.localizedDescription(isArabic)),
-                    _ReceiptRow(label: l10n.receiptMethod, value: payment.method.label(l10n)),
+                    _ReceiptRow(label: l10n.receiptMethod, value: payment.method),
                     _ReceiptRow(label: l10n.receiptAmount, value: '${payment.amount.toStringAsFixed(2)} ${payment.currency}'),
                     _ReceiptRow(label: l10n.receiptStatus, value: payment.status.label(l10n)),
                   ],

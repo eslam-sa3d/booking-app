@@ -23,6 +23,7 @@ const _navItems = [
   _NavItem(Icons.local_offer_outlined, 'Banners', '/banners'),
   _NavItem(Icons.card_membership_outlined, 'Packages', '/packages'),
   _NavItem(Icons.payments_outlined, 'Payments', '/payments'),
+  _NavItem(Icons.credit_card_outlined, 'Payment Methods', '/payment-methods'),
   _NavItem(Icons.bar_chart_outlined, 'Reports & Analytics', '/reports'),
   _NavItem(Icons.people_outline, 'Members', '/members'),
   _NavItem(Icons.badge_outlined, 'Instructors', '/instructors'),

@@ -11,6 +11,7 @@ import '../../features/auth/otp_screen.dart';
 import '../../features/auth/register_screen.dart';
 import '../../features/auth/splash_screen.dart';
 import '../../features/auth/auth_controller.dart';
+import '../providers/shared_preferences_provider.dart';
 import '../../features/booking/booking_calendar_screen.dart';
 import '../../features/booking/booking_confirmation_screen.dart';
 import '../../features/classes/class_details_screen.dart';
@@ -58,12 +59,30 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: refreshNotifier,
+    // Every navigation driven by auth state goes through this single
+    // callback, keyed off refreshListenable. Splash used to also call
+    // context.go() itself once authControllerProvider.future resolved —
+    // that ran independently of (and raced) this callback reacting to the
+    // exact same state change, since go_router debounces refreshListenable
+    // reactions onto their own microtask. Two route-processing operations
+    // landing in the same frame produced two Page objects for the same
+    // location before the Navigator finished settling the first, which
+    // crashed with a duplicate-page-key assertion. Routing splash's exit
+    // through here too removes the second, competing participant.
     redirect: (context, state) {
       final authState = ref.read(authControllerProvider);
       final isLoggedIn = authState.value != null;
       final isResolving = authState.isLoading && !authState.hasValue && !authState.hasError;
-      if (isResolving) return null;
       final path = state.matchedLocation;
+
+      if (path == '/splash') {
+        if (isResolving) return null;
+        final seenOnboarding = ref.read(sharedPreferencesProvider).getBool(kOnboardingSeenKey) ?? false;
+        // Guests can browse Home freely; booking/profile actions gate on login individually.
+        return seenOnboarding ? '/home' : '/onboarding';
+      }
+
+      if (isResolving) return null;
       final isProtected = _protectedPathPrefixes.any((p) => path.startsWith(p));
       if (isProtected && !isLoggedIn) {
         return '/login?redirect=${Uri.encodeComponent(path)}';

@@ -32,6 +32,27 @@ Future<T?> showAppBottomSheet<T>(
     context: context,
     isScrollControlled: isScrollControlled,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => glass.GlassSheet(child: builder(ctx)),
+    builder: (ctx) {
+      final isDark = Theme.of(ctx).brightness == Brightness.dark;
+      final tint = isDark ? const Color(0xFF0B1220) : Colors.white;
+      return glass.GlassSheet(
+        // Same tuning as the package's internal kDefaultSheetSettings (not
+        // publicly exported), just with glassColor swapped: the default is
+        // only ~12% white, which reads as grey/translucent over the dimmed
+        // modal barrier rather than a clean white sheet.
+        settings: glass.LiquidGlassSettings(
+          glassColor: tint.withValues(alpha: 0.92),
+          thickness: 10.0,
+          blur: 10.0,
+          lightIntensity: 0.7,
+          lightAngle: 2.356194,
+          chromaticAberration: 0.0,
+          refractiveIndex: 0.15,
+          saturation: 1.2,
+          ambientStrength: 0.4,
+        ),
+        child: builder(ctx),
+      );
+    },
   );
 }

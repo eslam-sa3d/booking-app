@@ -7,12 +7,14 @@ import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/enum_localizations.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/error_view.dart';
+import '../../core/widgets/loading_view.dart';
 import '../../data/models/models.dart';
 import '../auth/auth_controller.dart';
 import '../packages/packages_providers.dart';
 import '../../core/widgets/glass_app_bar.dart';
+import 'payment_providers.dart';
 
 enum _CheckoutStage { form, processing, success, failed }
 
@@ -26,14 +28,7 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 }
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
-  // Credit/debit card is intentionally excluded: raw card fields were
-  // removed app-wide since no payment gateway integration exists yet (see
-  // checkout_screen constraints). Mada/Apple Pay/STC Pay don't collect or
-  // display raw card data so they stay available.
-  static final List<PaymentMethod> _availableMethods =
-      PaymentMethod.values.where((m) => m != PaymentMethod.creditCard).toList();
-
-  late PaymentMethod _method = _availableMethods.first;
+  String? _methodId;
   _CheckoutStage _stage = _CheckoutStage.form;
   String? _failureReason;
 
@@ -53,10 +48,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     if (user == null) return;
     setState(() => _stage = _CheckoutStage.processing);
 
+    final method = _methodId;
+    if (method == null) return;
+
     final result = await ref.read(paymentServiceProvider).charge(
           amount: widget.package.price,
           currency: widget.package.currency,
-          method: _method,
+          method: method,
         );
 
     if (!mounted) return;
@@ -67,7 +65,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             userId: user.id,
             amount: widget.package.price,
             currency: widget.package.currency,
-            method: _method,
+            method: method,
             status: result.success ? PaymentStatus.succeeded : PaymentStatus.failed,
             createdAt: DateTime.now(),
             description: '${widget.package.name} purchase',
@@ -154,14 +152,37 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: 24),
             Text(l10n.checkoutPaymentMethod, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 8),
-            ..._availableMethods.map(
-              (method) => RadioListTile<PaymentMethod>(
-                contentPadding: EdgeInsets.zero,
-                title: Text(method.label(l10n)),
-                value: method,
-                groupValue: _method,
-                onChanged: (v) => setState(() => _method = v!),
-              ),
+            Consumer(
+              builder: (context, ref, _) {
+                final methodsAsync = ref.watch(activePaymentMethodsProvider);
+                return methodsAsync.when(
+                  loading: () => const LoadingView(),
+                  error: (_, _) => ErrorView(onRetry: () => ref.invalidate(activePaymentMethodsProvider)),
+                  data: (methods) {
+                    if (methods.isEmpty) {
+                      return Text(l10n.checkoutNoPaymentMethods);
+                    }
+                    if (_methodId == null) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted && _methodId == null) setState(() => _methodId = methods.first.id);
+                      });
+                    }
+                    return Column(
+                      children: methods
+                          .map(
+                            (method) => RadioListTile<String>(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(method.localizedName(isArabic)),
+                              value: method.id,
+                              groupValue: _methodId,
+                              onChanged: (v) => setState(() => _methodId = v),
+                            ),
+                          )
+                          .toList(),
+                    );
+                  },
+                );
+              },
             ),
             const SizedBox(height: 20),
             Row(

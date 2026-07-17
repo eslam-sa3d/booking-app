@@ -5,6 +5,10 @@ abstract class PaymentRepository {
 
   Future<Payment> recordPayment(Payment payment);
 
+  /// Active, admin-configured payment methods to offer at checkout, ordered
+  /// for display.
+  Future<List<PaymentMethodConfig>> getActivePaymentMethods();
+
   /// Flags [transactionId] for admin review. Writes only
   /// `refundRequestStatus` (always 'pending'), `refundRequestedAt`, and
   /// `refundRequestReason` — matching exactly what the Firestore security
@@ -29,6 +33,6 @@ abstract class PaymentService {
   Future<PaymentChargeResult> charge({
     required double amount,
     required String currency,
-    required PaymentMethod method,
+    required String method,
   });
 }

@@ -37,8 +37,16 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Stock AppBar auto-implies a back button whenever the route can be
+    // popped and no leading widget was given — glass.GlassAppBar (used on
+    // iOS below) has no such logic and silently renders nothing, so every
+    // pushed screen loses its back button on iOS unless we synthesize one
+    // here ourselves.
+    final weSynthesizedLeading = leading == null && Navigator.canPop(context);
+    final effectiveLeading = leading ?? (weSynthesizedLeading ? _GlassBackButton(isGlass: isLiquidGlassPlatform(context)) : null);
+
     if (!isLiquidGlassPlatform(context)) {
-      return AppBar(title: title, actions: actions, bottom: bottom, centerTitle: centerTitle, leading: leading);
+      return AppBar(title: title, actions: actions, bottom: bottom, centerTitle: centerTitle, leading: effectiveLeading);
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -67,7 +75,7 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
               actions: actions,
               bottom: bottom,
               centerTitle: centerTitle,
-              leading: leading,
+              leading: effectiveLeading,
               backgroundColor: tint.withValues(alpha: 0.78),
               surfaceTintColor: Colors.transparent,
               elevation: 0,
@@ -92,8 +100,16 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
             decoration: BoxDecoration(border: hairline),
             child: glass.GlassAppBar(
               title: title,
-              leading: leading,
-              actions: actions,
+              leading: effectiveLeading,
+              // glass.GlassAppBar centers the title within whatever space is
+              // left between leading and actions, not the bar's full width —
+              // so a leading-only bar (the common case here) reads as
+              // off-center, shifted right by half the back button's width.
+              // Balancing it with a matching invisible spacer on the
+              // trailing side keeps the title visually centered on screen.
+              actions: (weSynthesizedLeading && (actions == null || actions!.isEmpty))
+                  ? const [SizedBox(width: _GlassBackButton.width)]
+                  : actions,
               centerTitle: centerTitle ?? true,
               backgroundColor: tint.withValues(alpha: 0.78),
               preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -101,6 +117,30 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Default back button synthesized by [GlassAppBar] when a screen is pushed
+/// and doesn't supply its own `leading`. Uses a real [glass.GlassButton] on
+/// iOS to match the rest of the bar's chrome; a plain [BackButton] elsewhere.
+class _GlassBackButton extends StatelessWidget {
+  const _GlassBackButton({required this.isGlass});
+
+  static const double width = 40;
+
+  final bool isGlass;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isGlass) return const BackButton();
+    return glass.GlassButton(
+      icon: const Icon(Icons.arrow_back_ios_new_rounded),
+      iconSize: 18,
+      width: width,
+      height: width,
+      style: glass.GlassButtonStyle.transparent,
+      onTap: () => Navigator.maybePop(context),
     );
   }
 }

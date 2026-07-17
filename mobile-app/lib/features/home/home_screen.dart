@@ -63,7 +63,12 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   InkWell(
                     borderRadius: BorderRadius.circular(24),
-                    onTap: () => context.push('/profile'),
+                    // /profile is a StatefulShellBranch destination (the
+                    // Profile tab) — go() switches the shell to it, same as
+                    // tapping the tab, instead of push()ing a redundant
+                    // second page instance that collides with the shell's
+                    // own cached branch page.
+                    onTap: () => context.go('/profile'),
                     child: AvatarPlaceholder(initials: user?.initials ?? '?', size: 36),
                   ),
                 ],

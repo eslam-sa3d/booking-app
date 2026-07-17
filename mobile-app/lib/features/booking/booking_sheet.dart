@@ -106,6 +106,19 @@ class _BookingSheetContentState extends ConsumerState<_BookingSheetContent> {
       );
     }
 
+    if (_participantId == null && (familyAsync.valueOrNull?.isEmpty ?? false)) {
+      // Self is the only possible participant when there's no family —
+      // pre-select it instead of making the user tap the sole radio option.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _participantId == null) {
+          setState(() {
+            _participantId = user.id;
+            _participantName = user.name;
+          });
+        }
+      });
+    }
+
     final isFull = widget.session.isFull;
 
     return Padding(

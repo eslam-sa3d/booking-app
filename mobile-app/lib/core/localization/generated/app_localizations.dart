@@ -1142,29 +1142,11 @@ abstract class AppLocalizations {
   /// **'Payment method'**
   String get checkoutPaymentMethod;
 
-  /// No description provided for @checkoutMethodMada.
+  /// No description provided for @checkoutNoPaymentMethods.
   ///
   /// In en, this message translates to:
-  /// **'Mada'**
-  String get checkoutMethodMada;
-
-  /// No description provided for @checkoutMethodApplePay.
-  ///
-  /// In en, this message translates to:
-  /// **'Apple Pay'**
-  String get checkoutMethodApplePay;
-
-  /// No description provided for @checkoutMethodStcPay.
-  ///
-  /// In en, this message translates to:
-  /// **'STC Pay'**
-  String get checkoutMethodStcPay;
-
-  /// No description provided for @checkoutMethodCreditCard.
-  ///
-  /// In en, this message translates to:
-  /// **'Credit / debit card'**
-  String get checkoutMethodCreditCard;
+  /// **'No payment methods are available right now — please try again later.'**
+  String get checkoutNoPaymentMethods;
 
   /// No description provided for @checkoutCardNumber.
   ///
