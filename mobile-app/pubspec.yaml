@@ -2,7 +2,7 @@ name: booking_app
 description: "Swim Academy booking app — browse classes, book slots, manage family & packages."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.11.4
