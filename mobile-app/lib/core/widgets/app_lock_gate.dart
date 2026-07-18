@@ -22,6 +22,17 @@ class AppLockGate extends ConsumerStatefulWidget {
 class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingObserver {
   bool _locked = false;
 
+  // Showing (and dismissing) the native biometric/PIN prompt itself pauses
+  // and resumes the app's own Activity/Scene — didChangeAppLifecycleState
+  // fires `resumed` for that, indistinguishable from the user genuinely
+  // switching back in from another app. Without this guard, a successful
+  // unlock's own resume event immediately re-locks the app, which re-opens
+  // the prompt, which resumes again, forever — the "asks every second"
+  // loop. While true (plus a short grace period after authenticate()
+  // settles, since the OS's resume event can arrive slightly after the
+  // Future resolves), resume events are ignored.
+  bool _authenticating = false;
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +51,7 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
   }
 
   void _lockIfEligible() {
+    if (_authenticating) return;
     final enabled = ref.read(biometricLockEnabledProvider);
     final loggedIn = ref.read(currentUserProvider) != null;
     if (enabled && loggedIn && !_locked) setState(() => _locked = true);
@@ -48,6 +60,7 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
   Future<void> _unlock() async {
     final auth = ref.read(localAuthProvider);
     final reason = AppLocalizations.of(context)?.appLockSubtitle ?? "Verify it's you to continue";
+    _authenticating = true;
     try {
       final supported = await auth.isDeviceSupported();
       if (!supported) {
@@ -61,6 +74,9 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
       if (didAuthenticate && mounted) setState(() => _locked = false);
     } catch (_) {
       // Best-effort — the lock screen stays up and the user can retry.
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 500));
+      _authenticating = false;
     }
   }
 
