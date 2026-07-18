@@ -86,7 +86,12 @@ class NotificationsRepository {
 
   Stream<List<NotificationDefinition>> watchAll() {
     return _col.orderBy('createdAt', descending: true).snapshots().map(
-          (snap) => snap.docs.map((d) => NotificationDefinition.fromMap(d.data())).toList(),
+          // NotificationDefinition.fromMap does a non-nullable cast on `id`
+          // — inject it from the query snapshot's own document ID rather
+          // than trusting the document body to contain one, so a single
+          // malformed/hand-written doc (missing `id`) can't throw and take
+          // down the entire broadcast list.
+          (snap) => snap.docs.map((d) => NotificationDefinition.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 
