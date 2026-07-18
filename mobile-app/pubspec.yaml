@@ -72,6 +72,9 @@ dependencies:
   # Android 12+ wallpaper-derived Material You color
   dynamic_color: ^1.8.1
 
+  # Face ID / fingerprint app-lock
+  local_auth: ^2.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

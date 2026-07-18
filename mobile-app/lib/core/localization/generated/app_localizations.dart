@@ -1460,6 +1460,36 @@ abstract class AppLocalizations {
   /// **'App version {version}'**
   String settingsAppVersion(String version);
 
+  /// No description provided for @settingsBiometricLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID / biometric lock'**
+  String get settingsBiometricLock;
+
+  /// No description provided for @settingsBiometricLockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Require Face ID or fingerprint to open the app'**
+  String get settingsBiometricLockSubtitle;
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App locked'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify it\'s you to continue'**
+  String get appLockSubtitle;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlock;
+
   /// No description provided for @faqTitle.
   ///
   /// In en, this message translates to:

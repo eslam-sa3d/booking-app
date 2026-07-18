@@ -12,7 +12,20 @@
           "package_name": "com.appbooking.appbooking"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "691594727534-k8eclol2fkki260rado2l7r6a4n298dc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.appbooking.appbooking",
+            "certificate_hash": "97f909b060f9c8b18f94b1b1f7cc68894be2bc05"
+          }
+        },
+        {
+          "client_id": "691594727534-lthu20a1l1qt5a2v4vhkj04cifjmacin.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB8hj4VPuAiJuwPn2eKZNO5SaTAdxS701c"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "691594727534-lthu20a1l1qt5a2v4vhkj04cifjmacin.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "691594727534-j5amqjmbtr3ik5udqe71vso9qq8lrkip.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.swimacademy.bookingApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -31,7 +56,12 @@
           "package_name": "com.swimacademy.booking_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "691594727534-lthu20a1l1qt5a2v4vhkj04cifjmacin.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB8hj4VPuAiJuwPn2eKZNO5SaTAdxS701c"
@@ -39,7 +69,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "691594727534-lthu20a1l1qt5a2v4vhkj04cifjmacin.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "691594727534-j5amqjmbtr3ik5udqe71vso9qq8lrkip.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.swimacademy.bookingApp"
+              }
+            }
+          ]
         }
       }
     }

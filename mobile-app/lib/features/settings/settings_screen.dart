@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/localization/generated/app_localizations.dart';
+import '../../core/providers/biometric_lock_provider.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/theme_mode_provider.dart';
 import '../../data/models/models.dart';
@@ -124,6 +125,7 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final user = ref.watch(currentUserProvider);
     final appSettings = ref.watch(appSettingsFutureProvider).valueOrNull;
+    final biometricLockEnabled = ref.watch(biometricLockEnabledProvider);
 
     return Scaffold(
       appBar: GlassAppBar(title: Text(l10n.settingsTitle)),
@@ -176,6 +178,16 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           if (user != null) ...[
+            const SizedBox(height: 20),
+            _SectionLabel(l10n.settingsBiometricLock),
+            Card(
+              child: SwitchListTile(
+                title: Text(l10n.settingsBiometricLock),
+                subtitle: Text(l10n.settingsBiometricLockSubtitle),
+                value: biometricLockEnabled,
+                onChanged: (v) => ref.read(biometricLockEnabledProvider.notifier).setEnabled(v),
+              ),
+            ),
             const SizedBox(height: 20),
             _SectionLabel(l10n.settingsNotifications),
             Card(

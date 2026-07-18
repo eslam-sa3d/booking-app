@@ -732,5 +732,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsBiometricLock => 'Face ID / biometric lock';
+
+  @override
+  String get settingsBiometricLockSubtitle =>
+      'Require Face ID or fingerprint to open the app';
+
+  @override
+  String get appLockTitle => 'App locked';
+
+  @override
+  String get appLockSubtitle => 'Verify it\'s you to continue';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
   String get faqTitle => 'Frequently asked questions';
 }

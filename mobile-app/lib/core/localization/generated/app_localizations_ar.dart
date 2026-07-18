@@ -729,5 +729,21 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get settingsBiometricLock => 'قفل ببصمة الوجه / الإصبع';
+
+  @override
+  String get settingsBiometricLockSubtitle =>
+      'يتطلب بصمة الوجه أو الإصبع لفتح التطبيق';
+
+  @override
+  String get appLockTitle => 'التطبيق مقفل';
+
+  @override
+  String get appLockSubtitle => 'تحقق من هويتك للمتابعة';
+
+  @override
+  String get appLockUnlock => 'فتح القفل';
+
+  @override
   String get faqTitle => 'الأسئلة الشائعة';
 }

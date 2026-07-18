@@ -9,6 +9,7 @@ import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_mode_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/app_lock_gate.dart';
 import 'features/auth/auth_controller.dart';
 
 class SwimAcademyApp extends ConsumerWidget {
@@ -46,6 +47,7 @@ class SwimAcademyApp extends ConsumerWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           routerConfig: router,
+          builder: (context, child) => AppLockGate(child: child ?? const SizedBox.shrink()),
         );
       },
     );

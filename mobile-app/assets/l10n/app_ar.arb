@@ -247,6 +247,11 @@
   "settingsDeleteAccount": "حذف الحساب",
   "settingsDeleteAccountConfirm": "سيتم حذف حسابك وجميع حجوزاتك نهائياً. لا يمكن التراجع عن هذا الإجراء.",
   "settingsAppVersion": "إصدار التطبيق {version}",
+  "settingsBiometricLock": "قفل ببصمة الوجه / الإصبع",
+  "settingsBiometricLockSubtitle": "يتطلب بصمة الوجه أو الإصبع لفتح التطبيق",
+  "appLockTitle": "التطبيق مقفل",
+  "appLockSubtitle": "تحقق من هويتك للمتابعة",
+  "appLockUnlock": "فتح القفل",
 
   "faqTitle": "الأسئلة الشائعة"
 }

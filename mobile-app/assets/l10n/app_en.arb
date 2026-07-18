@@ -259,6 +259,11 @@
   "settingsDeleteAccountConfirm": "This will permanently delete your account and all bookings. This cannot be undone.",
   "settingsAppVersion": "App version {version}",
   "@settingsAppVersion": {"placeholders": {"version": {"type": "String"}}},
+  "settingsBiometricLock": "Face ID / biometric lock",
+  "settingsBiometricLockSubtitle": "Require Face ID or fingerprint to open the app",
+  "appLockTitle": "App locked",
+  "appLockSubtitle": "Verify it's you to continue",
+  "appLockUnlock": "Unlock",
 
   "faqTitle": "Frequently asked questions"
 }

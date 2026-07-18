@@ -20,6 +20,11 @@ final notificationsProvider = FutureProvider((ref) async {
   return ref.watch(notificationRepositoryProvider).getNotifications(user.id);
 });
 
+final unreadNotificationsCountProvider = Provider<int>((ref) {
+  final notifications = ref.watch(notificationsProvider).valueOrNull ?? const [];
+  return notifications.where((n) => !n.isRead).length;
+});
+
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 

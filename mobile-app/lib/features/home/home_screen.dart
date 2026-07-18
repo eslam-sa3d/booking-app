@@ -12,6 +12,7 @@ import '../../core/widgets/error_view.dart';
 import '../../core/widgets/loading_view.dart';
 import '../../core/widgets/section_header.dart';
 import '../auth/auth_controller.dart';
+import '../notifications/notifications_screen.dart' show unreadNotificationsCountProvider;
 import 'home_providers.dart';
 import 'widgets/banner_carousel.dart';
 import 'widgets/branch_filter.dart';
@@ -30,6 +31,7 @@ class HomeScreen extends ConsumerWidget {
     final instructorsAsync = ref.watch(instructorsMapProvider);
     final categoriesMapAsync = ref.watch(categoriesMapProvider);
     final bannersAsync = ref.watch(bannersProvider);
+    final unreadCount = ref.watch(unreadNotificationsCountProvider);
 
     // The floating iOS glass nav bar sits outside this screen's own layout
     // (AppShell positions it on top, extending the body behind it), so the
@@ -59,7 +61,11 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   IconButton(
                     onPressed: () => context.push('/notifications'),
-                    icon: const Icon(Icons.notifications_outlined),
+                    icon: Badge.count(
+                      count: unreadCount,
+                      isLabelVisible: unreadCount > 0,
+                      child: const Icon(Icons.notifications_outlined),
+                    ),
                   ),
                   InkWell(
                     borderRadius: BorderRadius.circular(24),
