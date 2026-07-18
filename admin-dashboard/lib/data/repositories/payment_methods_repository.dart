@@ -17,7 +17,7 @@ class PaymentMethodsRepository with AuditedWrite {
 
   Stream<List<PaymentMethodConfig>> watchAll() {
     return _col.orderBy('order').snapshots().map(
-          (snap) => snap.docs.map((d) => PaymentMethodConfig.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => PaymentMethodConfig.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 

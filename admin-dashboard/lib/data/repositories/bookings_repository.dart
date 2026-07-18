@@ -9,7 +9,7 @@ class BookingsRepository {
 
   Stream<List<Booking>> watchByStatus(BookingStatus status) {
     return _col.where('status', isEqualTo: status.name).snapshots().map(
-          (snap) => snap.docs.map((d) => Booking.fromMap(d.data())).toList()
+          (snap) => snap.docs.map((d) => Booking.fromMap({...d.data(), 'id': d.id})).toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
         );
   }
@@ -20,7 +20,7 @@ class BookingsRepository {
         .orderBy('cancelledAt', descending: true)
         .limit(50)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => Booking.fromMap(d.data())).toList());
+        .map((snap) => snap.docs.map((d) => Booking.fromMap({...d.data(), 'id': d.id})).toList());
   }
 
   /// Staff-initiated cancellation — same status-update path the mobile app

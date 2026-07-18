@@ -17,7 +17,7 @@ class InstructorsRepository with AuditedWrite {
 
   Stream<List<Instructor>> watchAll() {
     return _col.orderBy('name').snapshots().map(
-          (snap) => snap.docs.map((d) => Instructor.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => Instructor.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 

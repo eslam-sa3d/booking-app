@@ -17,7 +17,7 @@ class BlockedDatesRepository with AuditedWrite {
 
   Stream<List<BlockedDate>> watchAll() {
     return _col.orderBy('date').snapshots().map(
-          (snap) => snap.docs.map((d) => BlockedDate.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => BlockedDate.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 

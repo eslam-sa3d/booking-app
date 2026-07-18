@@ -77,7 +77,7 @@ class DashboardRepository {
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .where('date', isLessThan: Timestamp.fromDate(end))
         .get();
-    return snap.docs.map((d) => SwimSession.fromMap(d.data())).toList()
+    return snap.docs.map((d) => SwimSession.fromMap({...d.data(), 'id': d.id})).toList()
       ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
   }
 

@@ -17,7 +17,7 @@ class CategoriesRepository with AuditedWrite {
 
   Stream<List<Category>> watchAll() {
     return _col.orderBy('order').snapshots().map(
-          (snap) => snap.docs.map((d) => Category.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => Category.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 

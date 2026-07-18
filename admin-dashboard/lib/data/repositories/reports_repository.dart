@@ -171,7 +171,7 @@ class ReportsRepository {
     ]);
     final bookingsSnap = results[0];
     final sessionsById = {
-      for (final d in results[1].docs) d.id: SwimSession.fromMap(d.data()),
+      for (final d in results[1].docs) d.id: SwimSession.fromMap({...d.data(), 'id': d.id}),
     };
     final classTitleById = {
       for (final d in results[2].docs) d.id: (d.data()['title'] as String? ?? 'Untitled class'),

@@ -17,14 +17,14 @@ class ClassesRepository with AuditedWrite {
 
   Stream<List<SwimClass>> watchClasses() {
     return _col.orderBy('title').snapshots().map(
-          (snap) => snap.docs.map((d) => SwimClass.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => SwimClass.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 
   Future<SwimClass?> getById(String id) async {
     final doc = await _col.doc(id).get();
     if (!doc.exists) return null;
-    return SwimClass.fromMap(doc.data()!);
+    return SwimClass.fromMap({...doc.data()!, 'id': doc.id});
   }
 
   Future<String> create(SwimClass swimClass) async {

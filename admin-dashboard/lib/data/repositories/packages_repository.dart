@@ -16,7 +16,7 @@ class PackagesRepository with AuditedWrite {
   CollectionReference<Map<String, dynamic>> get _col => _db.collection('packages');
 
   Stream<List<SwimPackage>> watchAll() {
-    return _col.snapshots().map((snap) => snap.docs.map((d) => SwimPackage.fromMap(d.data())).toList());
+    return _col.snapshots().map((snap) => snap.docs.map((d) => SwimPackage.fromMap({...d.data(), 'id': d.id})).toList());
   }
 
   Future<String> create(SwimPackage package) async {

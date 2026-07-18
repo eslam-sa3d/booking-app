@@ -24,7 +24,7 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<AppUser> _waitForUserDoc(String uid) async {
     for (var attempt = 0; attempt < 10; attempt++) {
       final snap = await _userDoc(uid).get();
-      if (snap.exists) return AppUser.fromMap(snap.data()!);
+      if (snap.exists) return AppUser.fromMap({...snap.data()!, 'id': snap.id});
       await Future.delayed(const Duration(milliseconds: 300));
     }
     throw AuthException('Account created but profile setup is taking longer than expected. Please try logging in again.');
@@ -36,7 +36,7 @@ class FirebaseAuthRepository implements AuthRepository {
       final credential = await _auth.signInWithEmailAndPassword(email: identifier.trim(), password: password);
       final snap = await _userDoc(credential.user!.uid).get();
       if (!snap.exists) return _waitForUserDoc(credential.user!.uid);
-      return AppUser.fromMap(snap.data()!);
+      return AppUser.fromMap({...snap.data()!, 'id': snap.id});
     } on fb_auth.FirebaseAuthException catch (e) {
       throw AuthException(_mapAuthError(e));
     }
@@ -112,7 +112,7 @@ class FirebaseAuthRepository implements AuthRepository {
     final uid = userCredential.user!.uid;
     final snap = await _userDoc(uid).get();
     if (!snap.exists) return _waitForUserDoc(uid);
-    final user = AppUser.fromMap(snap.data()!);
+    final user = AppUser.fromMap({...snap.data()!, 'id': snap.id});
     final updated = user.copyWith(phone: userCredential.user!.phoneNumber ?? user.phone);
     await _userDoc(uid).set(updated.toMap(), SetOptions(merge: true));
     return updated;
@@ -132,7 +132,7 @@ class FirebaseAuthRepository implements AuthRepository {
       final uid = userCredential.user!.uid;
       final snap = await _userDoc(uid).get();
       if (!snap.exists) return _waitForUserDoc(uid);
-      return AppUser.fromMap(snap.data()!);
+      return AppUser.fromMap({...snap.data()!, 'id': snap.id});
     } on fb_auth.FirebaseAuthException catch (e) {
       throw AuthException(_mapAuthError(e));
     }
@@ -170,7 +170,7 @@ class FirebaseAuthRepository implements AuthRepository {
     if (user == null) return null;
     final snap = await _userDoc(user.uid).get();
     if (!snap.exists) return null;
-    return AppUser.fromMap(snap.data()!);
+    return AppUser.fromMap({...snap.data()!, 'id': snap.id});
   }
 
   @override

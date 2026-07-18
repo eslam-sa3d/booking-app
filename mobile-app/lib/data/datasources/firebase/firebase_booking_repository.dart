@@ -13,7 +13,7 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<List<Booking>> getBookingsForUser(String userId) async {
     final snap = await _bookings.where('userId', isEqualTo: userId).get();
-    final bookings = snap.docs.map((d) => Booking.fromMap(d.data())).toList()
+    final bookings = snap.docs.map((d) => Booking.fromMap({...d.data(), 'id': d.id})).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return bookings;
   }
@@ -50,7 +50,7 @@ class FirebaseBookingRepository implements BookingRepository {
       final snap = await ref.get();
       final status = snap.data()?['status'] as String?;
       if (status != null && status != 'pending') {
-        return Booking.fromMap(snap.data()!);
+        return Booking.fromMap({...snap.data()!, 'id': snap.id});
       }
       await Future.delayed(const Duration(milliseconds: 250));
     }
@@ -72,7 +72,7 @@ class FirebaseBookingRepository implements BookingRepository {
     for (var week = 0; week < recurringWeeks; week++) {
       final sessionSnap = await _sessions.doc(currentSessionId).get();
       if (!sessionSnap.exists) break;
-      final session = SwimSession.fromMap(sessionSnap.data()!);
+      final session = SwimSession.fromMap({...sessionSnap.data()!, 'id': sessionSnap.id});
 
       final booking = await _createAndAwaitFinalization(
         userId: userId,
@@ -103,10 +103,10 @@ class FirebaseBookingRepository implements BookingRepository {
   Future<void> _enforceCancellationPolicy(String bookingId) async {
     final bookingSnap = await _bookings.doc(bookingId).get();
     if (!bookingSnap.exists) return;
-    final booking = Booking.fromMap(bookingSnap.data()!);
+    final booking = Booking.fromMap({...bookingSnap.data()!, 'id': bookingSnap.id});
     final sessionSnap = await _sessions.doc(booking.sessionId).get();
     if (!sessionSnap.exists) return;
-    final session = SwimSession.fromMap(sessionSnap.data()!);
+    final session = SwimSession.fromMap({...sessionSnap.data()!, 'id': sessionSnap.id});
     if (session.startDateTime.difference(DateTime.now()) < const Duration(hours: 24)) {
       throw const CancellationNotAllowedException();
     }
@@ -131,7 +131,7 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<Booking> rescheduleBooking(String bookingId, String newSessionId) async {
     final oldSnap = await _bookings.doc(bookingId).get();
-    final old = Booking.fromMap(oldSnap.data()!);
+    final old = Booking.fromMap({...oldSnap.data()!, 'id': oldSnap.id});
 
     // Cancel the old booking (triggers onBookingCancel to free/promote)
     // then create a fresh booking against the new session (triggers

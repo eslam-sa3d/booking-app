@@ -9,7 +9,7 @@ class BranchesRepository {
 
   Stream<List<Branch>> watchAll() {
     return _col.orderBy('name').snapshots().map(
-          (snap) => snap.docs.map((d) => Branch.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => Branch.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 

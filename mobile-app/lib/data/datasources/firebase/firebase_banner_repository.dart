@@ -10,7 +10,7 @@ class FirebaseBannerRepository implements BannerRepository {
   @override
   Future<List<PromoBanner>> getActiveBanners() async {
     final snap = await _db.collection('banners').orderBy('order').get();
-    return snap.docs.map((d) => PromoBanner.fromMap(d.data())).where((b) => b.isCurrentlyActive).toList();
+    return snap.docs.map((d) => PromoBanner.fromMap({...d.data(), 'id': d.id})).where((b) => b.isCurrentlyActive).toList();
   }
 
   @override
@@ -19,6 +19,6 @@ class FirebaseBannerRepository implements BannerRepository {
         .collection('banners')
         .orderBy('order')
         .snapshots()
-        .map((snap) => snap.docs.map((d) => PromoBanner.fromMap(d.data())).where((b) => b.isCurrentlyActive).toList());
+        .map((snap) => snap.docs.map((d) => PromoBanner.fromMap({...d.data(), 'id': d.id})).where((b) => b.isCurrentlyActive).toList());
   }
 }

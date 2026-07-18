@@ -12,7 +12,7 @@ class StaffRepository {
         .collection('users')
         .where('role', whereIn: ['staff', 'admin'])
         .snapshots()
-        .map((snap) => snap.docs.map((d) => AppUser.fromMap(d.data())).toList());
+        .map((snap) => snap.docs.map((d) => AppUser.fromMap({...d.data(), 'id': d.id})).toList());
   }
 
   /// Admin-only — enforced server-side by the callable itself (checks the

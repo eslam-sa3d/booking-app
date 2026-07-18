@@ -12,7 +12,7 @@ class FirebaseReviewRepository implements ReviewRepository {
   @override
   Future<List<Review>> getReviewsForClass(String classId) async {
     final snap = await _col.where('classId', isEqualTo: classId).get();
-    final reviews = snap.docs.map((d) => Review.fromMap(d.data())).toList()
+    final reviews = snap.docs.map((d) => Review.fromMap({...d.data(), 'id': d.id})).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return reviews;
   }

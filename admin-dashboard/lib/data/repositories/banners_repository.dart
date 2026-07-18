@@ -17,7 +17,7 @@ class BannersRepository with AuditedWrite {
 
   Stream<List<PromoBanner>> watchAll() {
     return _col.orderBy('order').snapshots().map(
-          (snap) => snap.docs.map((d) => PromoBanner.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => PromoBanner.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 

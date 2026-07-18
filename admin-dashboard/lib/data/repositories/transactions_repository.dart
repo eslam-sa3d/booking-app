@@ -17,7 +17,7 @@ class TransactionsRepository with AuditedWrite {
 
   Stream<List<Payment>> watchAll() {
     return _col.orderBy('createdAt', descending: true).snapshots().map(
-          (snap) => snap.docs.map((d) => Payment.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => Payment.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 
@@ -28,7 +28,7 @@ class TransactionsRepository with AuditedWrite {
         .where('refundRequestStatus', isEqualTo: 'pending')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => Payment.fromMap(d.data())).toList());
+        .map((snap) => snap.docs.map((d) => Payment.fromMap({...d.data(), 'id': d.id})).toList());
   }
 
   /// Manual entry (refund/adjustment) recorded by staff — real charges are
@@ -60,7 +60,7 @@ class TransactionsRepository with AuditedWrite {
         .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(end))
         .orderBy('createdAt', descending: true)
         .get();
-    return snap.docs.map((d) => Payment.fromMap(d.data())).toList();
+    return snap.docs.map((d) => Payment.fromMap({...d.data(), 'id': d.id})).toList();
   }
 
   /// Best-effort join from each transaction to the class it relates to, via

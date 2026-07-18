@@ -17,24 +17,24 @@ class MembersRepository with AuditedWrite {
 
   Stream<List<AppUser>> watchAll() {
     return _col.orderBy('createdAt', descending: true).snapshots().map(
-          (snap) => snap.docs.map((d) => AppUser.fromMap(d.data())).toList(),
+          (snap) => snap.docs.map((d) => AppUser.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
 
   Future<List<FamilyMember>> getFamilyMembers(String uid) async {
     final snap = await _col.doc(uid).collection('familyMembers').get();
-    return snap.docs.map((d) => FamilyMember.fromMap(d.data())).toList();
+    return snap.docs.map((d) => FamilyMember.fromMap({...d.data(), 'id': d.id})).toList();
   }
 
   Future<List<Booking>> getBookings(String uid) async {
     final snap = await _db.collection('bookings').where('userId', isEqualTo: uid).get();
-    return snap.docs.map((d) => Booking.fromMap(d.data())).toList()
+    return snap.docs.map((d) => Booking.fromMap({...d.data(), 'id': d.id})).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   Future<List<Payment>> getPayments(String uid) async {
     final snap = await _db.collection('transactions').where('userId', isEqualTo: uid).get();
-    return snap.docs.map((d) => Payment.fromMap(d.data())).toList()
+    return snap.docs.map((d) => Payment.fromMap({...d.data(), 'id': d.id})).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
@@ -47,14 +47,14 @@ class MembersRepository with AuditedWrite {
   Future<void> awardBadge(String uid, String familyMemberId, SwimBadge badge) async {
     final ref = _col.doc(uid).collection('familyMembers').doc(familyMemberId);
     final snap = await ref.get();
-    final member = FamilyMember.fromMap(snap.data()!);
+    final member = FamilyMember.fromMap({...snap.data()!, 'id': snap.id});
     await ref.update({'badges': [...member.badges, badge].map((b) => b.toMap()).toList()});
   }
 
   Future<void> addProgressNote(String uid, String familyMemberId, ProgressNote note) async {
     final ref = _col.doc(uid).collection('familyMembers').doc(familyMemberId);
     final snap = await ref.get();
-    final member = FamilyMember.fromMap(snap.data()!);
+    final member = FamilyMember.fromMap({...snap.data()!, 'id': snap.id});
     await ref.update({'progressNotes': [...member.progressNotes, note].map((n) => n.toMap()).toList()});
   }
 }

@@ -20,13 +20,13 @@ class SessionsRepository with AuditedWrite {
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(end))
         .snapshots()
-        .map((snap) => snap.docs.map((d) => SwimSession.fromMap(d.data())).toList()
+        .map((snap) => snap.docs.map((d) => SwimSession.fromMap({...d.data(), 'id': d.id})).toList()
           ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime)));
   }
 
   Stream<List<SwimSession>> watchForClass(String classId) {
     return _col.where('classId', isEqualTo: classId).snapshots().map(
-          (snap) => snap.docs.map((d) => SwimSession.fromMap(d.data())).toList()
+          (snap) => snap.docs.map((d) => SwimSession.fromMap({...d.data(), 'id': d.id})).toList()
             ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime)),
         );
   }
@@ -39,7 +39,7 @@ class SessionsRepository with AuditedWrite {
         .where('instructorId', isEqualTo: instructorId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfToday))
         .snapshots()
-        .map((snap) => snap.docs.map((d) => SwimSession.fromMap(d.data())).toList()
+        .map((snap) => snap.docs.map((d) => SwimSession.fromMap({...d.data(), 'id': d.id})).toList()
           ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime)));
   }
 

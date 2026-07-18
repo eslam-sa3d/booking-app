@@ -13,7 +13,7 @@ class FirebaseFamilyRepository implements FamilyRepository {
   @override
   Future<List<FamilyMember>> getFamilyMembers(String userId) async {
     final snap = await _col(userId).get();
-    return snap.docs.map((d) => FamilyMember.fromMap(d.data())).toList();
+    return snap.docs.map((d) => FamilyMember.fromMap({...d.data(), 'id': d.id})).toList();
   }
 
   @override
