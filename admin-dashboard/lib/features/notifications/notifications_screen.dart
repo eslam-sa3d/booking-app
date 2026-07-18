@@ -35,6 +35,16 @@ class NotificationsScreen extends ConsumerWidget {
           StreamBuilder<List<NotificationDefinition>>(
             stream: notificationsStream,
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                // A failed read (e.g. a permission error) previously fell
+                // through to "No broadcasts sent yet." — indistinguishable
+                // from an empty list, and misleading when broadcasts had
+                // actually been sent but couldn't be read back.
+                return Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text('Failed to load broadcasts: ${snapshot.error}'),
+                );
+              }
               final items = snapshot.data ?? [];
               if (items.isEmpty) {
                 return const Padding(padding: EdgeInsets.all(24), child: Text('No broadcasts sent yet.'));
@@ -199,24 +209,36 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
       _scheduledTime.hour,
       _scheduledTime.minute,
     );
-    await ref.read(notificationsRepositoryProvider).compose(
-          NotificationDefinition(
-            id: '',
-            type: 'promotion',
-            title: _titleCtrl.text.trim(),
-            titleAr: _titleArCtrl.text.trim(),
-            body: _bodyCtrl.text.trim(),
-            bodyAr: _bodyArCtrl.text.trim(),
-            target: _target,
-            targetUserId: _target == 'user' ? _selectedUser!.id : null,
-            targetSegment: _target == 'segment' ? _segment : null,
-            scheduledFor: _isScheduled ? scheduledFor : null,
-            createdAt: DateTime.now(),
-            createdBy: session.user.uid,
-            status: _isScheduled ? 'scheduled' : 'sent',
-          ),
+    try {
+      await ref.read(notificationsRepositoryProvider).compose(
+            NotificationDefinition(
+              id: '',
+              type: 'promotion',
+              title: _titleCtrl.text.trim(),
+              titleAr: _titleArCtrl.text.trim(),
+              body: _bodyCtrl.text.trim(),
+              bodyAr: _bodyArCtrl.text.trim(),
+              target: _target,
+              targetUserId: _target == 'user' ? _selectedUser!.id : null,
+              targetSegment: _target == 'segment' ? _segment : null,
+              scheduledFor: _isScheduled ? scheduledFor : null,
+              createdAt: DateTime.now(),
+              createdBy: session.user.uid,
+              status: _isScheduled ? 'scheduled' : 'sent',
+            ),
+          );
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      // Without this, a failed write (e.g. a permission error) left the
+      // dialog stuck on "Sending…" forever with no feedback — indistinguishable
+      // from the notification silently not being saved.
+      if (mounted) {
+        setState(() => _isSending = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send: $error')),
         );
-    if (mounted) Navigator.of(context).pop();
+      }
+    }
   }
 
   @override
