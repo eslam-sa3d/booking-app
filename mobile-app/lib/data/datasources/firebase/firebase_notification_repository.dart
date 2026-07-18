@@ -18,7 +18,14 @@ class FirebaseNotificationRepository implements NotificationRepository {
     // `users/{userId}/inbox` path they live at. AppNotification.fromMap
     // requires one, so it's injected here from the query parameter rather
     // than expecting the backend to duplicate it into every document.
-    final notifications = snap.docs.map((d) => AppNotification.fromMap({...d.data(), 'userId': userId})).toList()
+    // `id` is injected from the doc snapshot for the same reason `notify.ts`
+    // does set it, but a single hand-written/malformed doc missing it would
+    // otherwise throw on AppNotification.fromMap's non-nullable cast and
+    // take down this whole list (the admin dashboard's broadcast list hit
+    // exactly this failure mode — see notifications_repository.dart).
+    final notifications = snap.docs
+        .map((d) => AppNotification.fromMap({...d.data(), 'id': d.id, 'userId': userId}))
+        .toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return notifications;
   }
