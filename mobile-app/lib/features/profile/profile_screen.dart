@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/localization/generated/app_localizations.dart';
 import '../../core/widgets/avatar_placeholder.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_dialog.dart';
 import '../auth/auth_controller.dart';
 import '../../core/widgets/glass_app_bar.dart';
 
@@ -14,8 +13,11 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showAppDialog<bool>(
-      context,
+    // Plain showDialog/AlertDialog here, not the app's liquid-glass
+    // showAppDialog wrapper — logout confirmation should look like a
+    // standard Flutter dialog.
+    final confirmed = await showDialog<bool>(
+      context: context,
       builder: (ctx) => AlertDialog(
         content: Text(l10n.profileLogoutConfirm),
         actions: [
