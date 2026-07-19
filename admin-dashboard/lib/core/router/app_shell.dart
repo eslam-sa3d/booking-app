@@ -32,26 +32,39 @@ const _navItems = [
   _NavItem(Icons.admin_panel_settings_outlined, 'Staff Accounts', '/staff'),
 ];
 
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.child});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  // Desktop/tablet sidebar starts expanded (matches the previous
+  // always-visible behavior); mobile always starts collapsed via its own
+  // Drawer below, regardless of this flag.
+  bool _sidebarExpanded = true;
+
+  static const double _sidebarWidth = 240;
+
+  @override
+  Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final session = ref.watch(authStateProvider).value;
     final isAdmin = session?.isAdmin ?? false;
     final visibleNavItems = isAdmin ? _navItems : _navItems.where((item) => !isPathAdminOnly(item.path));
 
-    if (context.isMobile) {
-      String currentLabel = 'Swim Academy';
-      for (final item in visibleNavItems) {
-        if (location.startsWith(item.path)) {
-          currentLabel = item.label;
-          break;
-        }
+    String currentLabel = 'Swim Academy';
+    for (final item in visibleNavItems) {
+      if (location.startsWith(item.path)) {
+        currentLabel = item.label;
+        break;
       }
+    }
+
+    if (context.isMobile) {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: AppColors.sidebar,
@@ -72,26 +85,46 @@ class AppShell extends ConsumerWidget {
               Navigator.of(context).pop();
               ref.read(authControllerProvider).logout();
             },
+            onClose: () => Navigator.of(context).pop(),
           ),
         ),
-        body: child,
+        body: widget.child,
       );
     }
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.sidebar,
+        foregroundColor: Colors.white,
+        title: Text(currentLabel),
+        leading: IconButton(
+          icon: Icon(_sidebarExpanded ? Icons.menu_open : Icons.menu),
+          tooltip: _sidebarExpanded ? 'Collapse menu' : 'Expand menu',
+          onPressed: () => setState(() => _sidebarExpanded = !_sidebarExpanded),
+        ),
+      ),
       body: Row(
         children: [
-          SizedBox(
-            width: 240,
-            child: _SidebarContent(
-              navItems: visibleNavItems,
-              location: location,
-              session: session,
-              onItemTap: context.go,
-              onSignOut: () => ref.read(authControllerProvider).logout(),
+          ClipRect(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              width: _sidebarExpanded ? _sidebarWidth : 0,
+              child: OverflowBox(
+                alignment: Alignment.centerLeft,
+                minWidth: _sidebarWidth,
+                maxWidth: _sidebarWidth,
+                child: _SidebarContent(
+                  navItems: visibleNavItems,
+                  location: location,
+                  session: session,
+                  onItemTap: context.go,
+                  onSignOut: () => ref.read(authControllerProvider).logout(),
+                ),
+              ),
             ),
           ),
-          Expanded(child: child),
+          Expanded(child: widget.child),
         ],
       ),
     );
@@ -105,6 +138,7 @@ class _SidebarContent extends StatelessWidget {
     required this.session,
     required this.onItemTap,
     required this.onSignOut,
+    this.onClose,
   });
 
   final Iterable<_NavItem> navItems;
@@ -112,6 +146,9 @@ class _SidebarContent extends StatelessWidget {
   final Object? session;
   final ValueChanged<String> onItemTap;
   final VoidCallback onSignOut;
+  // Only set on mobile, where the sidebar is a dismissible Drawer; the
+  // desktop/tablet layout collapses via the AppBar toggle instead.
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -121,18 +158,24 @@ class _SidebarContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 24, 20, 24),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 12, 24),
               child: Row(
                 children: [
-                  Icon(Icons.pool_rounded, color: AppColors.primary, size: 26),
-                  SizedBox(width: 10),
-                  Expanded(
+                  const Icon(Icons.pool_rounded, color: AppColors.primary, size: 26),
+                  const SizedBox(width: 10),
+                  const Expanded(
                     child: Text(
                       'Swim Academy',
                       style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
                     ),
                   ),
+                  if (onClose != null)
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      tooltip: 'Close menu',
+                      onPressed: onClose,
+                    ),
                 ],
               ),
             ),
@@ -186,12 +229,15 @@ class _SidebarTile extends StatelessWidget {
             children: [
               Icon(icon, size: 20, color: isSelected ? AppColors.primary : Colors.white70),
               const SizedBox(width: 14),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white70,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  fontSize: 13.5,
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.white70,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 13.5,
+                  ),
                 ),
               ),
             ],
