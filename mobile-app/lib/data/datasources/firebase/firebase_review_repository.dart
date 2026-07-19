@@ -24,6 +24,7 @@ class FirebaseReviewRepository implements ReviewRepository {
       id: ref.id,
       userId: review.userId,
       userName: review.userName,
+      bookingId: review.bookingId,
       sessionId: review.sessionId,
       classId: review.classId,
       instructorId: review.instructorId,
@@ -31,17 +32,11 @@ class FirebaseReviewRepository implements ReviewRepository {
       comment: review.comment,
       createdAt: DateTime.now(),
     );
+    // firestore.rules requires this bookingId to reference the caller's own
+    // completed booking for sessionId, so the write fails outright if the
+    // caller never actually attended.
     await ref.set(created.toMap());
-
-    final bookingSnap = await _db
-        .collection('bookings')
-        .where('sessionId', isEqualTo: review.sessionId)
-        .where('userId', isEqualTo: review.userId)
-        .limit(1)
-        .get();
-    if (bookingSnap.docs.isNotEmpty) {
-      await bookingSnap.docs.first.reference.update({'reviewed': true});
-    }
+    await _db.collection('bookings').doc(review.bookingId).update({'reviewed': true});
     return created;
   }
 }

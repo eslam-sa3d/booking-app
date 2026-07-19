@@ -140,6 +140,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> with Single
             id: '',
             userId: user.id,
             userName: user.name,
+            bookingId: data.booking.id,
             sessionId: data.session!.id,
             classId: data.swimClass!.id,
             instructorId: data.swimClass!.instructorId,

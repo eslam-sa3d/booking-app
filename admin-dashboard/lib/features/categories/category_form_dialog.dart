@@ -32,13 +32,20 @@ class _CategoryFormDialogState extends ConsumerState<_CategoryFormDialog> {
       nameAr: _nameArCtrl.text.trim(),
       order: widget.existing?.order ?? 0,
     );
-    final repo = ref.read(categoriesRepositoryProvider);
-    if (widget.existing == null) {
-      await repo.create(category);
-    } else {
-      await repo.update(category);
+    try {
+      final repo = ref.read(categoriesRepositoryProvider);
+      if (widget.existing == null) {
+        await repo.create(category);
+      } else {
+        await repo.update(category);
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+      }
     }
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override

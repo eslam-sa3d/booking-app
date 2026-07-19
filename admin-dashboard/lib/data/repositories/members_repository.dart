@@ -15,8 +15,14 @@ class MembersRepository with AuditedWrite {
 
   CollectionReference<Map<String, dynamic>> get _col => _db.collection('users');
 
+  // Bounded so the Members screen doesn't stream every user document (and
+  // re-fire on every unrelated write anywhere in the app) as the member
+  // base grows — search/filtering only covers the most recent 500 until
+  // this becomes real server-side pagination.
+  static const _watchLimit = 500;
+
   Stream<List<AppUser>> watchAll() {
-    return _col.orderBy('createdAt', descending: true).snapshots().map(
+    return _col.orderBy('createdAt', descending: true).limit(_watchLimit).snapshots().map(
           (snap) => snap.docs.map((d) => AppUser.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }

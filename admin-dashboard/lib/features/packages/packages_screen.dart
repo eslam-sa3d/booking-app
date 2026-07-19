@@ -9,6 +9,21 @@ import 'package_form_dialog.dart';
 class PackagesScreen extends ConsumerWidget {
   const PackagesScreen({super.key});
 
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, SwimPackage pkg) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete package?'),
+        content: Text('"${pkg.name}" will no longer be purchasable. Existing owned packages are unaffected.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed == true) await ref.read(packagesRepositoryProvider).delete(pkg.id);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final packagesStream = ref.watch(packagesRepositoryProvider).watchAll();
@@ -53,7 +68,7 @@ class PackagesScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => showPackageFormDialog(context, ref, existing: pkg)),
-                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => ref.read(packagesRepositoryProvider).delete(pkg.id)),
+                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _confirmDelete(context, ref, pkg)),
                       ],
                     ),
                   ),

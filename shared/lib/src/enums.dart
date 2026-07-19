@@ -12,13 +12,16 @@ enum ClassCategory {
 }
 
 enum BookingStatus {
+  // Transient client-written sentinel while onBookingCreate finalizes the
+  // real status — never a value the UI should render as a success state.
+  pending,
   confirmed,
   waitlisted,
   cancelled,
   completed;
 
   static BookingStatus fromName(String name) =>
-      BookingStatus.values.firstWhere((e) => e.name == name, orElse: () => BookingStatus.confirmed);
+      BookingStatus.values.firstWhere((e) => e.name == name, orElse: () => BookingStatus.pending);
 }
 
 enum PackageType {
@@ -57,7 +60,8 @@ enum NotificationType {
   waitlistPromoted,
   packageExpiry,
   promotion,
-  general;
+  general,
+  refundResolved;
 
   static NotificationType fromName(String name) =>
       NotificationType.values.firstWhere((e) => e.name == name, orElse: () => NotificationType.general);

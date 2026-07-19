@@ -9,6 +9,21 @@ import 'category_form_dialog.dart';
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
 
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, Category category) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete category?'),
+        content: Text('"${category.nameEn}" will no longer be available to tag classes.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed == true) await ref.read(categoriesRepositoryProvider).delete(category.id);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesStream = ref.watch(categoriesRepositoryProvider).watchAll();
@@ -50,7 +65,7 @@ class CategoriesScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => showCategoryFormDialog(context, ref, existing: category)),
-                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => ref.read(categoriesRepositoryProvider).delete(category.id)),
+                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _confirmDelete(context, ref, category)),
                       ],
                     ),
                   ),

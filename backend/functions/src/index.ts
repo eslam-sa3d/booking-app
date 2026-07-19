@@ -6,6 +6,8 @@ export { onBookingCancel } from "./bookings/onBookingCancel";
 
 // Stub — real gateway integration deferred (see docs/architecture.md).
 export { paymentWebhook } from "./payments/webhook";
+export { purchasePackage } from "./payments/purchasePackage";
+export { onRefundResolved } from "./payments/onRefundResolved";
 
 export { onNotificationCreated, dispatchScheduledNotifications } from "./notifications/dispatch";
 export { packageExpiryReminders } from "./scheduled/packageExpiryReminders";
@@ -24,4 +26,6 @@ export {
   auditAppSettings,
   auditTransactions,
   auditMembers,
+  auditPaymentMethods,
+  auditUserPackages,
 } from "./audit/triggers";

@@ -51,7 +51,6 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
       return;
     }
     setState(() => _isSaving = true);
-    final repo = ref.read(classesRepositoryProvider);
     final swimClass = SwimClass(
       id: widget.existing?.id ?? '',
       title: _titleCtrl.text.trim(),
@@ -64,12 +63,20 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
       instructorId: _instructorId!,
       branchId: _branchId!,
     );
-    if (widget.existing == null) {
-      await repo.create(swimClass);
-    } else {
-      await repo.update(swimClass);
+    try {
+      final repo = ref.read(classesRepositoryProvider);
+      if (widget.existing == null) {
+        await repo.create(swimClass);
+      } else {
+        await repo.update(swimClass);
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+      }
     }
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override

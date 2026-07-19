@@ -56,7 +56,6 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
   Future<void> _save() async {
     if (_classId == null || _instructorId == null || _branchId == null) return;
     setState(() => _isSaving = true);
-    final repo = ref.read(sessionsRepositoryProvider);
     final session = SwimSession(
       id: widget.existing?.id ?? '',
       classId: _classId!,
@@ -69,12 +68,20 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
       instructorId: _instructorId!,
       branchId: _branchId!,
     );
-    if (widget.existing == null) {
-      await repo.create(session);
-    } else {
-      await repo.update(session);
+    try {
+      final repo = ref.read(sessionsRepositoryProvider);
+      if (widget.existing == null) {
+        await repo.create(session);
+      } else {
+        await repo.update(session);
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+      }
     }
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override

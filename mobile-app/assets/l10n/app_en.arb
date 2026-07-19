@@ -83,6 +83,7 @@
   "homeUpcomingClasses": "Upcoming classes",
   "homeBookNow": "Book now",
   "homePromoOffersTitle": "Offers & announcements",
+  "homeLoadMore": "Load more",
 
   "categoryKids": "Kids",
   "categoryAdults": "Adults",
@@ -145,6 +146,7 @@
   "myBookingsCancellationPolicy": "Free cancellation up to 24h before the session.",
   "myBookingsCancelTooLate": "Cancellations must be made at least 24 hours before the session starts.",
   "myBookingsRateSession": "Rate this session",
+  "myBookingsStatusPending": "Confirming…",
   "myBookingsStatusConfirmed": "Confirmed",
   "myBookingsStatusWaitlisted": "Waitlisted",
   "myBookingsStatusCancelled": "Cancelled",
@@ -181,6 +183,21 @@
   "profileSettings": "Settings",
   "profileSupport": "Support",
   "profileLogoutConfirm": "Are you sure you want to log out?",
+  "profileChooseFromGallery": "Choose from gallery",
+  "profileTakePhoto": "Take a photo",
+  "profilePhotoUpdated": "Profile photo updated",
+  "profilePhotoUploadError": "Couldn't upload photo. Please try again.",
+  "profileChangePhoto": "Change profile photo",
+  "profileConfirmPassword": "Confirm your password",
+  "profileReauthMessage": "For your security, please re-enter your password to continue.",
+  "profileEmailReauthRequired": "Email not updated — re-authentication is required.",
+  "profileEmailChangeHelper": "Changing this sends a verification link to the new address.",
+  "profileEmailVerificationSent": "A verification link was sent to {email}. Confirm it to finish updating your email.",
+  "@profileEmailVerificationSent": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
 
   "packagesTitle": "Packages & pricing",
   "packagesMyPackages": "My active packages",
@@ -214,6 +231,9 @@
   "checkoutFailedSubtitle": "Please check your payment details and try again.",
   "checkoutSecureNotice": "Payments are securely processed — we never store your card details.",
   "checkoutPayNowLink": "Pay Now",
+  "checkoutMethodDetailInstructions": "Tap the button below to complete your payment. We'll confirm it once it's received.",
+  "checkoutPendingTitle": "Payment pending",
+  "checkoutPendingSubtitle": "We'll confirm your payment once it's received and activate your package. You can check the status anytime in Payment History.",
 
   "paymentHistoryTitle": "Payment history",
   "paymentHistoryEmpty": "No payments yet",
@@ -262,9 +282,21 @@
   "@settingsAppVersion": {"placeholders": {"version": {"type": "String"}}},
   "settingsBiometricLock": "Face ID / biometric lock",
   "settingsBiometricLockSubtitle": "Require Face ID or fingerprint to open the app",
+  "settingsWhatsappUnavailable": "WhatsApp support isn't available yet.",
+  "settingsEmailUnavailable": "Email support isn't available yet.",
+  "settingsContentNotPublished": "This content hasn't been published yet.",
+  "settingsEmailSupport": "Email support",
+  "settingsReminderToggle": "Toggle session reminders",
+  "settingsReminderLabel": "Session reminders",
+  "settingsPromotionsToggle": "Toggle promotions and offers",
+  "settingsPromotionsLabel": "Promotions & offers",
+  "settingsAnnouncementsToggle": "Toggle announcements",
+  "settingsAnnouncementsLabel": "Announcements",
   "appLockTitle": "App locked",
   "appLockSubtitle": "Verify it's you to continue",
   "appLockUnlock": "Unlock",
 
-  "faqTitle": "Frequently asked questions"
+  "faqTitle": "Frequently asked questions",
+  "faqEmpty": "No FAQs are available yet.",
+  "faqLoadError": "Couldn't load the FAQs. Please try again later."
 }

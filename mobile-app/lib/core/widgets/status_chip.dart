@@ -11,6 +11,8 @@ class StatusChip extends StatelessWidget {
 
   Color _color() {
     switch (status) {
+      case BookingStatus.pending:
+        return Colors.grey.shade600;
       case BookingStatus.confirmed:
         return AppColors.success;
       case BookingStatus.waitlisted:

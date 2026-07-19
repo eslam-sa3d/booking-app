@@ -48,6 +48,8 @@ dependencies:
   firebase_messaging: ^15.1.5
   firebase_storage: ^12.3.7
   firebase_analytics: ^11.3.6
+  # purchasePackage callable (see backend/functions/src/payments/purchasePackage.ts)
+  cloud_functions: ^5.1.5
 
   # Google sign-in
   google_sign_in: ^6.2.2

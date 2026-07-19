@@ -87,7 +87,10 @@ export interface SwimClass {
   branchId: string;
   rating: number;
   reviewCount: number;
-  heroImageUrl?: string | null;
+  // Placeholder card art (no real image upload pipeline yet) — a brand
+  // color + a Material icon name, not a hosted image.
+  heroColorHex: string;
+  heroIcon: string;
 }
 
 /** sessions/{id} — a bookable occurrence of a class */
@@ -104,7 +107,10 @@ export interface SwimSession {
   branchId: string;
 }
 
-export type BookingStatus = "confirmed" | "waitlisted" | "cancelled" | "completed";
+// "pending" is a transient client-written sentinel while onBookingCreate
+// finalizes the real status — never a value business logic should treat
+// as a success state.
+export type BookingStatus = "pending" | "confirmed" | "waitlisted" | "cancelled" | "completed";
 
 /** bookings/{id} */
 export interface Booking {
@@ -120,6 +126,11 @@ export interface Booking {
   cancelledAt?: FirebaseFirestore.Timestamp | null;
   cancellationReason?: string | null;
   reviewed: boolean;
+  // Set server-side by onBookingCreate when a confirmed booking draws a
+  // session credit from one of the user's own active sessionPack packages;
+  // null when paid for standalone (or when no package with sessions
+  // remaining was available). onBookingCancel refunds the credit here.
+  userPackageId?: string | null;
 }
 
 export type PackageType = "sessionPack" | "monthlyUnlimited" | "privateLessons";
@@ -153,7 +164,20 @@ export interface UserPackage {
 }
 
 export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded";
-export type PaymentMethod = "mada" | "applePay" | "stcPay" | "creditCard";
+// References a paymentMethods/{id} doc id — CMS-configured by admins (see
+// PaymentMethodConfig below), not a fixed set of gateway method codes.
+export type PaymentMethod = string;
+
+/** paymentMethods/{id} — admin-configured checkout options */
+export interface PaymentMethodConfig {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  order: number;
+  isActive: boolean;
+  logoUrl?: string | null;
+  paymentLinkUrl?: string | null;
+}
 
 export type RefundRequestStatus = "pending" | "approved" | "denied";
 
@@ -183,6 +207,10 @@ export interface Review {
   id: string;
   userId: string;
   userName: string;
+  // References the caller's own completed bookings/{id} for this
+  // sessionId — firestore.rules verifies this at create time so a review
+  // can't be left for a class the user never actually attended.
+  bookingId: string;
   sessionId: string;
   classId: string;
   instructorId: string;
@@ -243,7 +271,9 @@ export interface Branch {
   nameAr: string;
   address: string;
   addressAr: string;
-  imageUrl?: string | null;
+  // A bundled local asset path (no branch photo upload pipeline yet), e.g.
+  // 'assets/images/branch_placeholder.png' — not a hosted image URL.
+  imageAsset: string;
 }
 
 export type NotificationType =
@@ -254,7 +284,8 @@ export type NotificationType =
   | "waitlistPromoted"
   | "packageExpiry"
   | "promotion"
-  | "general";
+  | "general"
+  | "refundResolved";
 
 /** notifications/{id} — staff-authored broadcast/definition */
 export interface NotificationDef {

@@ -3,8 +3,6 @@ import '../models/models.dart';
 abstract class PaymentRepository {
   Future<List<Payment>> getPaymentHistory(String userId);
 
-  Future<Payment> recordPayment(Payment payment);
-
   /// Active, admin-configured payment methods to offer at checkout, ordered
   /// for display.
   Future<List<PaymentMethodConfig>> getActivePaymentMethods();

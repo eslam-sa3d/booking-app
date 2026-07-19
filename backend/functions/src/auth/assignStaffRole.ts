@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { Timestamp } from "firebase-admin/firestore";
 import { auth, db } from "../lib/admin";
-import type { Role, AuditLogEntry } from "../models/types";
+import { logAudit } from "../lib/audit";
+import type { Role } from "../models/types";
 
 interface AssignStaffRoleRequest {
   targetUid: string;
@@ -32,17 +32,14 @@ export const assignStaffRole = onCall<AssignStaffRoleRequest>(async (request) =>
   await auth.setCustomUserClaims(targetUid, { role });
   await db.collection("users").doc(targetUid).set({ role }, { merge: true });
 
-  const entry: AuditLogEntry = {
-    id: "",
+  await logAudit({
     actorUid: request.auth.uid,
     action: "assignStaffRole",
     targetCollection: "users",
     targetId: targetUid,
     before,
     after: { role },
-    createdAt: Timestamp.now(),
-  };
-  await db.collection("auditLog").add(entry);
+  });
 
   return { success: true };
 });

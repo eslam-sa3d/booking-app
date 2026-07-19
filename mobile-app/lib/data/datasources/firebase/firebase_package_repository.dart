@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../models/models.dart';
 import '../../repositories/package_repository.dart';
 
 class FirebasePackageRepository implements PackageRepository {
-  FirebasePackageRepository(this._db);
+  FirebasePackageRepository(this._db, this._functions);
   final FirebaseFirestore _db;
+  final FirebaseFunctions _functions;
 
   @override
   Future<List<SwimPackage>> getPackages() async {
@@ -21,32 +23,29 @@ class FirebasePackageRepository implements PackageRepository {
     return packages;
   }
 
+  // firestore.rules blocks direct client writes to both
+  // `users/{uid}/packages` and `transactions` on purpose — package granting
+  // and transaction recording both go through this callable so a client can
+  // never self-grant session credits via a raw Firestore write.
   @override
-  Future<UserPackage> purchasePackage({required String userId, required String packageId}) async {
-    final packageSnap = await _db.collection('packages').doc(packageId).get();
-    final package = SwimPackage.fromMap({...packageSnap.data()!, 'id': packageSnap.id});
-    final ref = _db.collection('users').doc(userId).collection('packages').doc();
-    final userPackage = UserPackage(
-      id: ref.id,
-      userId: userId,
-      packageId: packageId,
-      purchasedAt: DateTime.now(),
-      expiresAt: DateTime.now().add(Duration(days: package.validityDays)),
-      sessionsRemaining: package.sessionCount,
-    );
-    await ref.set(userPackage.toMap());
-    return userPackage;
-  }
-
-  @override
-  Future<UserPackage> consumeSession(String userPackageId) async {
-    final snap = await _db.collectionGroup('packages').where('id', isEqualTo: userPackageId).limit(1).get();
-    if (snap.docs.isEmpty) throw Exception('Package not found');
-    final doc = snap.docs.first;
-    final current = UserPackage.fromMap({...doc.data(), 'id': doc.id});
-    if (current.sessionsRemaining == null) return current;
-    final updated = current.copyWith(sessionsRemaining: (current.sessionsRemaining! - 1).clamp(0, 999));
-    await doc.reference.update({'sessionsRemaining': updated.sessionsRemaining});
-    return updated;
+  Future<PackagePurchaseOutcome> purchasePackage({
+    required String userId,
+    required SwimPackage package,
+    required String method,
+    required PaymentStatus status,
+    String? failureReason,
+  }) async {
+    final callable = _functions.httpsCallable('purchasePackage');
+    final result = await callable.call<Map<String, dynamic>>({
+      'packageId': package.id,
+      'method': method,
+      'status': status.name,
+      'failureReason': failureReason,
+    });
+    final data = Map<String, dynamic>.from(result.data as Map);
+    final transaction = Payment.fromMap(Map<String, dynamic>.from(data['transaction'] as Map));
+    final userPackageMap = data['userPackage'] as Map?;
+    final userPackage = userPackageMap == null ? null : UserPackage.fromMap(Map<String, dynamic>.from(userPackageMap));
+    return PackagePurchaseOutcome(transaction: transaction, userPackage: userPackage);
   }
 }

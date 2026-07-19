@@ -243,6 +243,30 @@ class _PaymentsList extends ConsumerWidget {
   const _PaymentsList({required this.payments});
   final List<Payment> payments;
 
+  Future<void> _refund(BuildContext context, WidgetRef ref, Payment payment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Refund this transaction?'),
+        content: Text(
+          'Refunds ${payment.amount.toStringAsFixed(0)} ${payment.currency} for "${payment.description}". This cannot be undone from here.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Refund')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(transactionsRepositoryProvider).refund(payment.id);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (payments.isEmpty) {
@@ -265,7 +289,7 @@ class _PaymentsList extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.undo_rounded, size: 18),
                       tooltip: 'Refund',
-                      onPressed: () => ref.read(transactionsRepositoryProvider).refund(payment.id),
+                      onPressed: () => _refund(context, ref, payment),
                     ),
                 ],
               ),

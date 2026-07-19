@@ -39,19 +39,26 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
 
   Future<void> _save() async {
     setState(() => _isSaving = true);
-    await ref.read(appSettingsRepositoryProvider).save(AppSettings(
-          brandPrimaryColorHex: _colorCtrl.text.trim(),
-          logoUrl: _logoCtrl.text.trim().isEmpty ? null : _logoCtrl.text.trim(),
-          faqEn: _faqEn,
-          faqAr: _faqAr,
-          termsUrl: _termsCtrl.text.trim().isEmpty ? null : _termsCtrl.text.trim(),
-          privacyUrl: _privacyCtrl.text.trim().isEmpty ? null : _privacyCtrl.text.trim(),
-          whatsappNumber: _whatsappCtrl.text.trim().isEmpty ? null : _whatsappCtrl.text.trim(),
-          contactEmail: _contactCtrl.text.trim().isEmpty ? null : _contactCtrl.text.trim(),
-        ));
-    if (mounted) {
-      setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings saved')));
+    try {
+      await ref.read(appSettingsRepositoryProvider).save(AppSettings(
+            brandPrimaryColorHex: _colorCtrl.text.trim(),
+            logoUrl: _logoCtrl.text.trim().isEmpty ? null : _logoCtrl.text.trim(),
+            faqEn: _faqEn,
+            faqAr: _faqAr,
+            termsUrl: _termsCtrl.text.trim().isEmpty ? null : _termsCtrl.text.trim(),
+            privacyUrl: _privacyCtrl.text.trim().isEmpty ? null : _privacyCtrl.text.trim(),
+            whatsappNumber: _whatsappCtrl.text.trim().isEmpty ? null : _whatsappCtrl.text.trim(),
+            contactEmail: _contactCtrl.text.trim().isEmpty ? null : _contactCtrl.text.trim(),
+          ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings saved')));
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 

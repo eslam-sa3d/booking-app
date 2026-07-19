@@ -52,9 +52,14 @@ service cloud.firestore {
 
       // Owned package instances are only ever written by the purchase
       // Cloud Function / staff tooling, never directly by the client.
+      // Client purchase writes are rejected here on purpose — package
+      // granting goes through the `purchasePackage` callable (Admin SDK,
+      // bypasses rules) so a client can never self-report a fake payment
+      // success and grant itself session credits.
       match /packages/{userPackageId} {
         allow read: if isOwner(uid) || isStaff();
-        allow write: if isStaff();
+        allow create, update: if isStaff() && taggedByCaller();
+        allow delete: if isStaff();
       }
 
       // Per-user notification inbox: the owner may only toggle isRead;
@@ -136,19 +141,34 @@ service cloud.firestore {
     }
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // A review must reference a real booking of the caller's own that's
+      // actually completed for the class/session being reviewed — without
+      // this, any signed-in user could review (and skew an instructor's
+      // computed rating for) a class they never attended.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+        && exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId))
+        && get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid
+        && get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.sessionId == request.resource.data.sessionId
+        && get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.status == 'completed';
       allow update, delete: if isStaff();
     }
 
     // ---------------- bookings ----------------
     match /bookings/{bookingId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isStaff());
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // createdAt is pinned to the server's own request time so a client
+      // can't backdate it to jump the waitlist-promotion queue (which
+      // orders by createdAt) ahead of genuinely earlier bookings.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+        && request.resource.data.createdAt == request.time;
       // Customers may only cancel their own booking (status/cancellation
-      // fields), never touch session assignment or other users' bookings.
+      // fields), and only by transitioning it into 'cancelled' — never to
+      // 'confirmed'/'waitlisted', which would bypass the capacity-owning
+      // onBookingCreate/onBookingCancel Cloud Functions entirely.
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['status', 'cancelledAt', 'cancellationReason']);
+             .hasOnly(['status', 'cancelledAt', 'cancellationReason'])
+        && request.resource.data.status == 'cancelled';
       allow update, delete: if isStaff();
     }
 

@@ -15,8 +15,14 @@ class TransactionsRepository with AuditedWrite {
 
   CollectionReference<Map<String, dynamic>> get _col => _db.collection('transactions');
 
+  // Bounded so the Payments screen doesn't stream every transaction ever
+  // (and re-fire on every unrelated write anywhere in the app) as
+  // transaction history grows — until this becomes real server-side
+  // pagination, only the most recent 500 are live-watched.
+  static const _watchLimit = 500;
+
   Stream<List<Payment>> watchAll() {
-    return _col.orderBy('createdAt', descending: true).snapshots().map(
+    return _col.orderBy('createdAt', descending: true).limit(_watchLimit).snapshots().map(
           (snap) => snap.docs.map((d) => Payment.fromMap({...d.data(), 'id': d.id})).toList(),
         );
   }
@@ -38,18 +44,44 @@ class TransactionsRepository with AuditedWrite {
     await ref.set(tagged(payment.toMap()..['id'] = ref.id));
   }
 
-  Future<void> refund(String transactionId) =>
-      _col.doc(transactionId).update(tagged({'status': 'refunded'}));
+  /// Refunds a succeeded transaction. Reads-then-writes inside a
+  /// transaction so two staff clicking "refund" on the same transaction
+  /// concurrently can't both succeed — the second read sees the first
+  /// write's result and throws [AlreadyRefundedException].
+  Future<void> refund(String transactionId) {
+    final ref = _col.doc(transactionId);
+    return _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (snap.data()?['status'] == 'refunded') {
+        throw const AlreadyRefundedException();
+      }
+      tx.update(ref, tagged({'status': 'refunded'}));
+    });
+  }
 
-  /// Approves a pending refund request: marks the transaction refunded and
-  /// resolves the request. Denying leaves the transaction status untouched.
-  Future<void> resolveRefundRequest(String transactionId, {required bool approve}) => _col.doc(transactionId).update(
+  /// Approves or denies a pending refund request: marks the transaction
+  /// refunded (if approved) and resolves the request. Denying leaves the
+  /// transaction status untouched. Reads-then-writes inside a transaction
+  /// so two staff resolving the same request concurrently can't both
+  /// succeed — the loser sees the request is no longer 'pending' and
+  /// throws [RefundRequestNotPendingException] instead of double-resolving it.
+  Future<void> resolveRefundRequest(String transactionId, {required bool approve}) {
+    final ref = _col.doc(transactionId);
+    return _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (snap.data()?['refundRequestStatus'] != 'pending') {
+        throw const RefundRequestNotPendingException();
+      }
+      tx.update(
+        ref,
         tagged({
           'refundRequestStatus': approve ? 'approved' : 'denied',
           'refundResolvedBy': currentUid,
           if (approve) 'status': 'refunded',
         }),
       );
+    });
+  }
 
   /// Transactions created within [start, end] (inclusive), newest first.
   /// Backs the Payments & Reports date-range filter and revenue report —
@@ -116,4 +148,16 @@ class TransactionsRepository with AuditedWrite {
     }
     return result;
   }
+}
+
+class AlreadyRefundedException implements Exception {
+  const AlreadyRefundedException();
+  @override
+  String toString() => 'This transaction has already been refunded.';
+}
+
+class RefundRequestNotPendingException implements Exception {
+  const RefundRequestNotPendingException();
+  @override
+  String toString() => 'This refund request has already been resolved by someone else.';
 }

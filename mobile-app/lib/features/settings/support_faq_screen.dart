@@ -24,10 +24,7 @@ class SupportFaqScreen extends ConsumerWidget {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(
-                  isArabic ? 'لا توجد أسئلة شائعة متاحة حالياً.' : 'No FAQs are available yet.',
-                  textAlign: TextAlign.center,
-                ),
+                child: Text(l10n.faqEmpty, textAlign: TextAlign.center),
               ),
             );
           }
@@ -52,10 +49,7 @@ class SupportFaqScreen extends ConsumerWidget {
         error: (error, stackTrace) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(
-              isArabic ? 'تعذر تحميل الأسئلة الشائعة. حاول مرة أخرى لاحقاً.' : 'Couldn\'t load the FAQs. Please try again later.',
-              textAlign: TextAlign.center,
-            ),
+            child: Text(l10n.faqLoadError, textAlign: TextAlign.center),
           ),
         ),
       ),

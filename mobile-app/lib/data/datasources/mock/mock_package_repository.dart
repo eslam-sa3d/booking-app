@@ -22,30 +22,41 @@ class MockPackageRepository implements PackageRepository {
   }
 
   @override
-  Future<UserPackage> purchasePackage({required String userId, required String packageId}) async {
+  Future<PackagePurchaseOutcome> purchasePackage({
+    required String userId,
+    required SwimPackage package,
+    required String method,
+    required PaymentStatus status,
+    String? failureReason,
+  }) async {
     await _delay();
-    final package = MockSeedData.packages.firstWhere((p) => p.id == packageId);
+    final transaction = Payment(
+      id: _db.nextId('pay'),
+      userId: userId,
+      amount: package.price,
+      currency: package.currency,
+      method: method,
+      status: status,
+      createdAt: DateTime.now(),
+      description: '${package.name} purchase',
+      descriptionAr: 'شراء ${package.nameAr}',
+      relatedPackageId: package.id,
+    );
+    _db.payments.add(transaction);
+
+    if (status != PaymentStatus.succeeded) {
+      return PackagePurchaseOutcome(transaction: transaction);
+    }
+
     final userPackage = UserPackage(
       id: _db.nextId('up'),
       userId: userId,
-      packageId: packageId,
+      packageId: package.id,
       purchasedAt: DateTime.now(),
       expiresAt: DateTime.now().add(Duration(days: package.validityDays)),
       sessionsRemaining: package.sessionCount,
     );
     _db.userPackages.add(userPackage);
-    return userPackage;
-  }
-
-  @override
-  Future<UserPackage> consumeSession(String userPackageId) async {
-    await _delay();
-    final index = _db.userPackages.indexWhere((p) => p.id == userPackageId);
-    if (index == -1) throw Exception('Package not found');
-    final current = _db.userPackages[index];
-    if (current.sessionsRemaining == null) return current;
-    final updated = current.copyWith(sessionsRemaining: (current.sessionsRemaining! - 1).clamp(0, 999));
-    _db.userPackages[index] = updated;
-    return updated;
+    return PackagePurchaseOutcome(transaction: transaction, userPackage: userPackage);
   }
 }

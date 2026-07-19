@@ -35,13 +35,20 @@ class _InstructorFormDialogState extends ConsumerState<_InstructorFormDialog> {
       bioAr: _bioArCtrl.text.trim(),
       specialties: _specialtiesCtrl.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
     );
-    final repo = ref.read(instructorsRepositoryProvider);
-    if (widget.existing == null) {
-      await repo.create(instructor);
-    } else {
-      await repo.update(instructor);
+    try {
+      final repo = ref.read(instructorsRepositoryProvider);
+      if (widget.existing == null) {
+        await repo.create(instructor);
+      } else {
+        await repo.update(instructor);
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+      }
     }
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override

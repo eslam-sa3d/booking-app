@@ -23,7 +23,6 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final classesAsync = ref.watch(classesRepositoryProvider).watchClasses();
-    final membersAsync = ref.watch(membersRepositoryProvider).watchAll();
     final waitlistAsync = ref.read(bookingsRepositoryProvider).watchByStatus(BookingStatus.waitlisted);
     final statsAsync = ref.watch(_dashboardStatsProvider);
 
@@ -45,14 +44,15 @@ class DashboardScreen extends ConsumerWidget {
                   route: '/classes',
                 ),
               ),
-              StreamBuilder(
-                stream: membersAsync,
-                builder: (context, snap) => _StatCard(
-                  icon: Icons.people_outline,
-                  label: 'Total members',
-                  value: '${snap.data?.length ?? '—'}',
-                  route: '/members',
+              _StatCard(
+                icon: Icons.people_outline,
+                label: 'Total members',
+                value: statsAsync.when(
+                  data: (s) => '${s.membersCount}',
+                  loading: () => '—',
+                  error: (_, _) => '!',
                 ),
+                route: '/members',
               ),
               StreamBuilder(
                 stream: waitlistAsync,

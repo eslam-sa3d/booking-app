@@ -9,8 +9,34 @@ import '../../core/widgets/responsive_dialog.dart';
 import '../../data/repositories/instructors_repository.dart';
 import 'instructor_form_dialog.dart';
 
+// Cached per-id so re-rebuilding the list (e.g. from an unrelated stream
+// tick) doesn't re-issue a rating/class-lookup query for every row every
+// time — Riverpod keeps one cached result per distinct id argument.
+final _instructorRatingProvider = FutureProvider.family<InstructorRating, String>((ref, instructorId) {
+  return ref.watch(instructorsRepositoryProvider).getComputedRating(instructorId);
+});
+
+final _classByIdProvider = FutureProvider.family<SwimClass?, String>((ref, classId) {
+  return ref.watch(classesRepositoryProvider).getById(classId);
+});
+
 class InstructorsScreen extends ConsumerWidget {
   const InstructorsScreen({super.key});
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, Instructor instructor) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete instructor?'),
+        content: Text('"${instructor.name}" will no longer be assignable to classes or sessions.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed == true) await ref.read(instructorsRepositoryProvider).delete(instructor.id);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,11 +68,14 @@ class InstructorsScreen extends ConsumerWidget {
                     subtitle: Row(
                       children: [
                         Text('${instructor.specialties.join(', ')} · '),
-                        FutureBuilder<InstructorRating>(
-                          future: ref.read(instructorsRepositoryProvider).getComputedRating(instructor.id),
-                          builder: (context, snap) {
-                            if (!snap.hasData) return const Text('…');
-                            return Text('★ ${snap.data!.display}');
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final ratingAsync = ref.watch(_instructorRatingProvider(instructor.id));
+                            return Text(ratingAsync.when(
+                              data: (r) => '★ ${r.display}',
+                              loading: () => '…',
+                              error: (_, _) => '—',
+                            ));
                           },
                         ),
                       ],
@@ -61,7 +90,7 @@ class InstructorsScreen extends ConsumerWidget {
                           onPressed: () => _showSchedule(context, ref, instructor),
                         ),
                         IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => showInstructorFormDialog(context, ref, existing: instructor)),
-                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => ref.read(instructorsRepositoryProvider).delete(instructor.id)),
+                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _confirmDelete(context, ref, instructor)),
                       ],
                     ),
                   ),
@@ -105,10 +134,10 @@ class _InstructorScheduleDialog extends ConsumerWidget {
               separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final session = sessions[index];
-                return FutureBuilder<SwimClass?>(
-                  future: ref.read(classesRepositoryProvider).getById(session.classId),
-                  builder: (context, classSnap) {
-                    final title = classSnap.data?.title ?? session.classId;
+                return Consumer(
+                  builder: (context, ref, _) {
+                    final classAsync = ref.watch(_classByIdProvider(session.classId));
+                    final title = classAsync.valueOrNull?.title ?? session.classId;
                     return ListTile(
                       dense: true,
                       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),

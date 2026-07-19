@@ -66,27 +66,25 @@ class SettingsScreen extends ConsumerWidget {
     return ref.read(authControllerProvider.notifier).updateProfile(user.copyWith(notificationPreferences: prefs));
   }
 
-  Future<void> _openWhatsapp(BuildContext context, String? number, bool isArabic) async {
+  Future<void> _openWhatsapp(BuildContext context, String? number) async {
+    final l10n = AppLocalizations.of(context)!;
     if (number == null || number.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isArabic ? 'الدعم عبر واتساب غير متاح حالياً.' : 'WhatsApp support isn\'t available yet.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settingsWhatsappUnavailable)));
       return;
     }
     await _launch(Uri.parse('https://wa.me/$number'));
   }
 
-  Future<void> _openEmail(BuildContext context, String? email, bool isArabic) async {
+  Future<void> _openEmail(BuildContext context, String? email) async {
+    final l10n = AppLocalizations.of(context)!;
     if (email == null || email.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isArabic ? 'الدعم عبر البريد الإلكتروني غير متاح حالياً.' : 'Email support isn\'t available yet.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settingsEmailUnavailable)));
       return;
     }
     await _launch(Uri(scheme: 'mailto', path: email));
   }
 
-  Future<void> _openLegalDoc(BuildContext context, String? url, String title, bool isArabic) async {
+  Future<void> _openLegalDoc(BuildContext context, String? url, String title) async {
     if (url != null && url.trim().isNotEmpty) {
       final uri = Uri.tryParse(url);
       if (uri != null) {
@@ -95,6 +93,7 @@ class SettingsScreen extends ConsumerWidget {
       }
     }
     if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     showAppBottomSheet(
       context,
       isScrollControlled: true,
@@ -109,7 +108,7 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               const SizedBox(height: 12),
-              Text(isArabic ? 'لم يتم نشر هذا المحتوى بعد.' : 'This content hasn\'t been published yet.'),
+              Text(l10n.settingsContentNotPublished),
             ],
           ),
         ),
@@ -121,7 +120,6 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
-    final isArabic = ref.watch(isArabicProvider);
     final themeMode = ref.watch(themeModeProvider);
     final user = ref.watch(currentUserProvider);
     final appSettings = ref.watch(appSettingsFutureProvider).valueOrNull;
@@ -181,25 +179,25 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   Semantics(
-                    label: isArabic ? 'تبديل تذكيرات الحصص' : 'Toggle session reminders',
+                    label: l10n.settingsReminderToggle,
                     child: SwitchListTile(
-                      title: Text(isArabic ? 'تذكيرات الحصص' : 'Session reminders'),
+                      title: Text(l10n.settingsReminderLabel),
                       value: user.notificationPreferences.reminders,
                       onChanged: (v) => _updateNotificationPrefs(ref, user, reminders: v),
                     ),
                   ),
                   Semantics(
-                    label: isArabic ? 'تبديل العروض والتخفيضات' : 'Toggle promotions and offers',
+                    label: l10n.settingsPromotionsToggle,
                     child: SwitchListTile(
-                      title: Text(isArabic ? 'العروض والتخفيضات' : 'Promotions & offers'),
+                      title: Text(l10n.settingsPromotionsLabel),
                       value: user.notificationPreferences.promotions,
                       onChanged: (v) => _updateNotificationPrefs(ref, user, promotions: v),
                     ),
                   ),
                   Semantics(
-                    label: isArabic ? 'تبديل الإعلانات' : 'Toggle announcements',
+                    label: l10n.settingsAnnouncementsToggle,
                     child: SwitchListTile(
-                      title: Text(isArabic ? 'الإعلانات' : 'Announcements'),
+                      title: Text(l10n.settingsAnnouncementsLabel),
                       value: user.notificationPreferences.announcements,
                       onChanged: (v) => _updateNotificationPrefs(ref, user, announcements: v),
                     ),
@@ -216,13 +214,13 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.chat_bubble_outline_rounded),
                   title: Text(l10n.settingsWhatsapp),
-                  onTap: () => _openWhatsapp(context, appSettings?.whatsappNumber, isArabic),
+                  onTap: () => _openWhatsapp(context, appSettings?.whatsappNumber),
                 ),
                 ListTile(
                   leading: const Icon(Icons.email_outlined),
-                  title: Text(isArabic ? 'راسلنا عبر البريد الإلكتروني' : 'Email support'),
+                  title: Text(l10n.settingsEmailSupport),
                   subtitle: appSettings?.contactEmail != null ? Text(appSettings!.contactEmail!) : null,
-                  onTap: () => _openEmail(context, appSettings?.contactEmail, isArabic),
+                  onTap: () => _openEmail(context, appSettings?.contactEmail),
                 ),
                 ListTile(
                   leading: const Icon(Icons.help_outline_rounded),
@@ -232,12 +230,12 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
                   title: Text(l10n.settingsTerms),
-                  onTap: () => _openLegalDoc(context, appSettings?.termsUrl, l10n.settingsTerms, isArabic),
+                  onTap: () => _openLegalDoc(context, appSettings?.termsUrl, l10n.settingsTerms),
                 ),
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: Text(l10n.settingsPrivacy),
-                  onTap: () => _openLegalDoc(context, appSettings?.privacyUrl, l10n.settingsPrivacy, isArabic),
+                  onTap: () => _openLegalDoc(context, appSettings?.privacyUrl, l10n.settingsPrivacy),
                 ),
               ],
             ),

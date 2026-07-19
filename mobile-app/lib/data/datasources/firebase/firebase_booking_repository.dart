@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../models/models.dart';
@@ -18,6 +20,18 @@ class FirebaseBookingRepository implements BookingRepository {
     return bookings;
   }
 
+  /// A participant is either the account holder themselves, or one of their
+  /// own registered family members — never an arbitrary id, which would let
+  /// a booking consume capacity attributed to someone who isn't actually
+  /// the caller.
+  Future<void> _verifyParticipant(String userId, String participantId) async {
+    if (participantId == userId) return;
+    final memberSnap = await _db.collection('users').doc(userId).collection('familyMembers').doc(participantId).get();
+    if (!memberSnap.exists) {
+      throw Exception('Selected participant does not belong to this account.');
+    }
+  }
+
   /// Creates the booking doc client-side (status is a placeholder) then
   /// waits for the `onBookingCreate` Cloud Function to finalize the real
   /// status/session counts inside its transaction — same
@@ -30,6 +44,7 @@ class FirebaseBookingRepository implements BookingRepository {
     required String participantName,
     String? recurrenceGroupId,
   }) async {
+    await _verifyParticipant(userId, participantId);
     final ref = _bookings.doc();
     final booking = Booking(
       id: ref.id,
@@ -44,17 +59,22 @@ class FirebaseBookingRepository implements BookingRepository {
     // 'pending' is a sentinel the client uses to detect once
     // onBookingCreate has run and overwritten it with the real
     // confirmed/waitlisted status — it's never a value the UI renders.
-    await ref.set(booking.toMap()..['status'] = 'pending');
+    // createdAt is overridden with the server timestamp sentinel: rules
+    // require request.resource.data.createdAt == request.time, so the
+    // waitlist-promotion queue (which orders by createdAt) can't be jumped
+    // by a client backdating its own booking.
+    await ref.set(booking.toMap()
+      ..['status'] = 'pending'
+      ..['createdAt'] = FieldValue.serverTimestamp());
 
-    for (var attempt = 0; attempt < 20; attempt++) {
-      final snap = await ref.get();
-      final status = snap.data()?['status'] as String?;
-      if (status != null && status != 'pending') {
-        return Booking.fromMap({...snap.data()!, 'id': snap.id});
-      }
-      await Future.delayed(const Duration(milliseconds: 250));
+    try {
+      final snap = await ref.snapshots().firstWhere((s) => (s.data()?['status'] as String?) != 'pending').timeout(
+            const Duration(seconds: 15),
+          );
+      return Booking.fromMap({...snap.data()!, 'id': snap.id});
+    } on TimeoutException {
+      throw Exception('Booking confirmation is taking longer than expected. Check My Bookings shortly.');
     }
-    throw Exception('Booking confirmation is taking longer than expected. Check My Bookings shortly.');
   }
 
   @override

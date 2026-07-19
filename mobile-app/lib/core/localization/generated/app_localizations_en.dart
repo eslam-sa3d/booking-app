@@ -246,6 +246,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePromoOffersTitle => 'Offers & announcements';
 
   @override
+  String get homeLoadMore => 'Load more';
+
+  @override
   String get categoryKids => 'Kids';
 
   @override
@@ -416,6 +419,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myBookingsRateSession => 'Rate this session';
 
   @override
+  String get myBookingsStatusPending => 'Confirming…';
+
+  @override
   String get myBookingsStatusConfirmed => 'Confirmed';
 
   @override
@@ -516,6 +522,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileLogoutConfirm => 'Are you sure you want to log out?';
 
   @override
+  String get profileChooseFromGallery => 'Choose from gallery';
+
+  @override
+  String get profileTakePhoto => 'Take a photo';
+
+  @override
+  String get profilePhotoUpdated => 'Profile photo updated';
+
+  @override
+  String get profilePhotoUploadError =>
+      'Couldn\'t upload photo. Please try again.';
+
+  @override
+  String get profileChangePhoto => 'Change profile photo';
+
+  @override
+  String get profileConfirmPassword => 'Confirm your password';
+
+  @override
+  String get profileReauthMessage =>
+      'For your security, please re-enter your password to continue.';
+
+  @override
+  String get profileEmailReauthRequired =>
+      'Email not updated — re-authentication is required.';
+
+  @override
+  String get profileEmailChangeHelper =>
+      'Changing this sends a verification link to the new address.';
+
+  @override
+  String profileEmailVerificationSent(String email) {
+    return 'A verification link was sent to $email. Confirm it to finish updating your email.';
+  }
+
+  @override
   String get packagesTitle => 'Packages & pricing';
 
   @override
@@ -606,6 +648,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkoutPayNowLink => 'Pay Now';
+
+  @override
+  String get checkoutMethodDetailInstructions =>
+      'Tap the button below to complete your payment. We\'ll confirm it once it\'s received.';
+
+  @override
+  String get checkoutPendingTitle => 'Payment pending';
+
+  @override
+  String get checkoutPendingSubtitle =>
+      'We\'ll confirm your payment once it\'s received and activate your package. You can check the status anytime in Payment History.';
 
   @override
   String get paymentHistoryTitle => 'Payment history';
@@ -742,6 +795,38 @@ class AppLocalizationsEn extends AppLocalizations {
       'Require Face ID or fingerprint to open the app';
 
   @override
+  String get settingsWhatsappUnavailable =>
+      'WhatsApp support isn\'t available yet.';
+
+  @override
+  String get settingsEmailUnavailable => 'Email support isn\'t available yet.';
+
+  @override
+  String get settingsContentNotPublished =>
+      'This content hasn\'t been published yet.';
+
+  @override
+  String get settingsEmailSupport => 'Email support';
+
+  @override
+  String get settingsReminderToggle => 'Toggle session reminders';
+
+  @override
+  String get settingsReminderLabel => 'Session reminders';
+
+  @override
+  String get settingsPromotionsToggle => 'Toggle promotions and offers';
+
+  @override
+  String get settingsPromotionsLabel => 'Promotions & offers';
+
+  @override
+  String get settingsAnnouncementsToggle => 'Toggle announcements';
+
+  @override
+  String get settingsAnnouncementsLabel => 'Announcements';
+
+  @override
   String get appLockTitle => 'App locked';
 
   @override
@@ -752,4 +837,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqTitle => 'Frequently asked questions';
+
+  @override
+  String get faqEmpty => 'No FAQs are available yet.';
+
+  @override
+  String get faqLoadError => 'Couldn\'t load the FAQs. Please try again later.';
 }

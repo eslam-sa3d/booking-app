@@ -8,6 +8,32 @@ import '../../core/widgets/page_scaffold.dart';
 class RequestsScreen extends ConsumerWidget {
   const RequestsScreen({super.key});
 
+  Future<void> _resolveRefund(BuildContext context, WidgetRef ref, Payment payment, {required bool approve}) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(approve ? 'Approve refund?' : 'Deny refund?'),
+        content: Text(
+          approve
+              ? 'This marks the transaction as refunded and notifies the customer. This cannot be undone from here.'
+              : 'The customer will be notified their refund request was denied.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(approve ? 'Approve' : 'Deny')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(transactionsRepositoryProvider).resolveRefundRequest(payment.id, approve: approve);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final waitlistStream = ref.watch(bookingsRepositoryProvider).watchByStatus(BookingStatus.waitlisted);
@@ -51,14 +77,12 @@ class RequestsScreen extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             TextButton(
-                              onPressed: () =>
-                                  ref.read(transactionsRepositoryProvider).resolveRefundRequest(payment.id, approve: false),
+                              onPressed: () => _resolveRefund(context, ref, payment, approve: false),
                               child: const Text('Deny'),
                             ),
                             const SizedBox(width: 8),
                             ElevatedButton(
-                              onPressed: () =>
-                                  ref.read(transactionsRepositoryProvider).resolveRefundRequest(payment.id, approve: true),
+                              onPressed: () => _resolveRefund(context, ref, payment, approve: true),
                               child: const Text('Approve'),
                             ),
                           ],

@@ -14,6 +14,11 @@ class Booking {
   final DateTime? cancelledAt;
   final String? cancellationReason;
   final bool reviewed;
+  // Set server-side by onBookingCreate when a confirmed booking draws a
+  // session credit from one of the user's own active sessionPack packages;
+  // null when paid for standalone (or when no package with sessions
+  // remaining was available). onBookingCancel refunds the credit here.
+  final String? userPackageId;
 
   const Booking({
     required this.id,
@@ -21,13 +26,14 @@ class Booking {
     required this.sessionId,
     required this.participantId,
     required this.participantName,
-    this.status = BookingStatus.confirmed,
+    this.status = BookingStatus.pending,
     required this.createdAt,
     this.isRecurring = false,
     this.recurrenceGroupId,
     this.cancelledAt,
     this.cancellationReason,
     this.reviewed = false,
+    this.userPackageId,
   });
 
   Booking copyWith({
@@ -49,6 +55,7 @@ class Booking {
       cancelledAt: cancelledAt ?? this.cancelledAt,
       cancellationReason: cancellationReason ?? this.cancellationReason,
       reviewed: reviewed ?? this.reviewed,
+      userPackageId: userPackageId,
     );
   }
 
@@ -65,6 +72,7 @@ class Booking {
         'cancelledAt': cancelledAt,
         'cancellationReason': cancellationReason,
         'reviewed': reviewed,
+        'userPackageId': userPackageId,
       };
 
   factory Booking.fromMap(Map<String, dynamic> map) => Booking(
@@ -73,12 +81,13 @@ class Booking {
         sessionId: map['sessionId'] as String,
         participantId: map['participantId'] as String,
         participantName: map['participantName'] as String,
-        status: BookingStatus.fromName(map['status'] as String? ?? 'confirmed'),
+        status: BookingStatus.fromName(map['status'] as String? ?? 'pending'),
         createdAt: parseTimestamp(map['createdAt']),
         isRecurring: map['isRecurring'] as bool? ?? false,
         recurrenceGroupId: map['recurrenceGroupId'] as String?,
         cancelledAt: parseTimestampOrNull(map['cancelledAt']),
         cancellationReason: map['cancellationReason'] as String?,
         reviewed: map['reviewed'] as bool? ?? false,
+        userPackageId: map['userPackageId'] as String?,
       );
 }

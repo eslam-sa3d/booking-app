@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (build, lint, emulator smoke test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/functions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/functions/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - run: npm run lint
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      # Runs the Auth/Firestore/Functions emulators, seeds them with the
+      # freshly-built functions, then runs the smoke test against them and
+      # tears everything down — the closest thing this repo has to an
+      # integration test for the booking capacity/waitlist transaction
+      # logic, so it's a real CI gate rather than a manual-only script.
+      - name: Emulator smoke test
+        working-directory: backend
+        run: |
+          firebase emulators:exec \
+            --project demo-swim-academy \
+            --only auth,firestore,functions \
+            'cd functions && npm run smoke-test'
+
+  shared:
+    name: Shared package (analyze)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: shared
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: flutter analyze
+
+  mobile-app:
+    name: Mobile app (analyze, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: flutter analyze
+
+      - run: flutter test
+
+  admin-dashboard:
+    name: Admin dashboard (analyze)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin-dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: flutter analyze

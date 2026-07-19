@@ -6,8 +6,15 @@ import 'package:shared/shared.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
-Future<void> showBannerFormDialog(BuildContext context, WidgetRef ref, {PromoBanner? existing}) {
-  return showDialog(context: context, builder: (_) => _BannerFormDialog(existing: existing));
+Future<void> showBannerFormDialog(
+  BuildContext context,
+  WidgetRef ref, {
+  PromoBanner? existing,
+}) {
+  return showDialog(
+    context: context,
+    builder: (_) => _BannerFormDialog(existing: existing),
+  );
 }
 
 class _BannerFormDialog extends ConsumerStatefulWidget {
@@ -19,12 +26,23 @@ class _BannerFormDialog extends ConsumerStatefulWidget {
 }
 
 class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
+  final _formKey = GlobalKey<FormState>();
   late final _titleCtrl = TextEditingController(text: widget.existing?.title);
-  late final _titleArCtrl = TextEditingController(text: widget.existing?.titleAr);
-  late final _subtitleCtrl = TextEditingController(text: widget.existing?.subtitle);
-  late final _subtitleArCtrl = TextEditingController(text: widget.existing?.subtitleAr);
-  late final _imageUrlCtrl = TextEditingController(text: widget.existing?.imageUrl);
-  late final _linkCtrl = TextEditingController(text: widget.existing?.linkAction);
+  late final _titleArCtrl = TextEditingController(
+    text: widget.existing?.titleAr,
+  );
+  late final _subtitleCtrl = TextEditingController(
+    text: widget.existing?.subtitle,
+  );
+  late final _subtitleArCtrl = TextEditingController(
+    text: widget.existing?.subtitleAr,
+  );
+  late final _imageUrlCtrl = TextEditingController(
+    text: widget.existing?.imageUrl,
+  );
+  late final _linkCtrl = TextEditingController(
+    text: widget.existing?.linkAction,
+  );
   late bool _isActive = widget.existing?.isActive ?? true;
   late DateTime? _startDate = widget.existing?.startDate;
   late DateTime? _endDate = widget.existing?.endDate;
@@ -33,30 +51,43 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
   final _dateFmt = DateFormat('MMM d, yyyy');
 
   PromoBanner _buildBanner() => PromoBanner(
-        id: widget.existing?.id ?? '',
-        title: _titleCtrl.text.trim(),
-        titleAr: _titleArCtrl.text.trim(),
-        subtitle: _subtitleCtrl.text.trim(),
-        subtitleAr: _subtitleArCtrl.text.trim(),
-        imageUrl: _imageUrlCtrl.text.trim(),
-        linkAction: _linkCtrl.text.trim().isEmpty ? null : _linkCtrl.text.trim(),
-        order: widget.existing?.order ?? 0,
-        isActive: _isActive,
-        startDate: _startDate,
-        endDate: _endDate,
-      );
+    id: widget.existing?.id ?? '',
+    title: _titleCtrl.text.trim(),
+    titleAr: _titleArCtrl.text.trim(),
+    subtitle: _subtitleCtrl.text.trim(),
+    subtitleAr: _subtitleArCtrl.text.trim(),
+    imageUrl: _imageUrlCtrl.text.trim(),
+    linkAction: _linkCtrl.text.trim().isEmpty ? null : _linkCtrl.text.trim(),
+    order: widget.existing?.order ?? 0,
+    isActive: _isActive,
+    startDate: _startDate,
+    endDate: _endDate,
+  );
 
   Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
     final banner = _buildBanner();
-    final repo = ref.read(bannersRepositoryProvider);
-    if (widget.existing == null) {
-      await repo.create(banner);
-    } else {
-      await repo.update(banner);
+    try {
+      final repo = ref.read(bannersRepositoryProvider);
+      if (widget.existing == null) {
+        await repo.create(banner);
+      } else {
+        await repo.update(banner);
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+      }
     }
-    if (mounted) Navigator.of(context).pop();
   }
+
+  String? _req(String? v) =>
+      (v == null || v.trim().isEmpty) ? 'Required' : null;
 
   Future<void> _pickDate({required bool isStart}) async {
     final now = DateTime.now();
@@ -86,12 +117,21 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
           width: 360,
           child: _BannerPreviewCard(banner: _buildBanner()),
         ),
-        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _dateField({required String label, required DateTime? value, required bool isStart}) {
+  Widget _dateField({
+    required String label,
+    required DateTime? value,
+    required bool isStart,
+  }) {
     return Row(
       children: [
         Expanded(
@@ -124,21 +164,48 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
     return ResponsiveDialogShell(
       title: widget.existing == null ? 'Add banner' : 'Edit banner',
       desktopWidth: 460,
-      content: SingleChildScrollView(
-        child: Column(
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title (EN)')),
+              TextFormField(
+                controller: _titleCtrl,
+                decoration: const InputDecoration(labelText: 'Title (EN)'),
+                validator: _req,
+              ),
               const SizedBox(height: 12),
-              TextFormField(controller: _titleArCtrl, decoration: const InputDecoration(labelText: 'Title (AR)')),
+              TextFormField(
+                controller: _titleArCtrl,
+                decoration: const InputDecoration(labelText: 'Title (AR)'),
+                validator: _req,
+              ),
               const SizedBox(height: 12),
-              TextFormField(controller: _subtitleCtrl, decoration: const InputDecoration(labelText: 'Subtitle (EN)')),
+              TextFormField(
+                controller: _subtitleCtrl,
+                decoration: const InputDecoration(labelText: 'Subtitle (EN)'),
+                validator: _req,
+              ),
               const SizedBox(height: 12),
-              TextFormField(controller: _subtitleArCtrl, decoration: const InputDecoration(labelText: 'Subtitle (AR)')),
+              TextFormField(
+                controller: _subtitleArCtrl,
+                decoration: const InputDecoration(labelText: 'Subtitle (AR)'),
+                validator: _req,
+              ),
               const SizedBox(height: 12),
-              TextFormField(controller: _imageUrlCtrl, decoration: const InputDecoration(labelText: 'Image URL')),
+              TextFormField(
+                controller: _imageUrlCtrl,
+                decoration: const InputDecoration(labelText: 'Image URL'),
+                validator: _req,
+              ),
               const SizedBox(height: 12),
-              TextFormField(controller: _linkCtrl, decoration: const InputDecoration(labelText: 'Link action (e.g. class:c1, packages)')),
+              TextFormField(
+                controller: _linkCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Link action (e.g. class:c1, packages)',
+                ),
+              ),
               const SizedBox(height: 12),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -146,13 +213,31 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
                 value: _isActive,
                 onChanged: (v) => setState(() => _isActive = v),
               ),
-              const Align(alignment: Alignment.centerLeft, child: Text('Active date range (optional)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Active date range (optional)',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                ),
+              ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Expanded(child: _dateField(label: 'Active from', value: _startDate, isStart: true)),
+                  Expanded(
+                    child: _dateField(
+                      label: 'Active from',
+                      value: _startDate,
+                      isStart: true,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _dateField(label: 'Active until', value: _endDate, isStart: false)),
+                  Expanded(
+                    child: _dateField(
+                      label: 'Active until',
+                      value: _endDate,
+                      isStart: false,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -167,9 +252,16 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
             ],
           ),
         ),
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isSaving ? null : _save,
+          child: Text(_isSaving ? 'Saving…' : 'Save'),
+        ),
       ],
     );
   }
@@ -194,7 +286,11 @@ class _BannerPreviewCard extends StatelessWidget {
           height: 130,
           child: Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: _gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+              gradient: const LinearGradient(
+                colors: _gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(20),
             ),
             clipBehavior: Clip.antiAlias,
@@ -211,7 +307,10 @@ class _BannerPreviewCard extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.black.withValues(alpha: 0.15), Colors.transparent],
+                      colors: [
+                        Colors.black.withValues(alpha: 0.15),
+                        Colors.transparent,
+                      ],
                       begin: Alignment.bottomLeft,
                       end: Alignment.topRight,
                     ),
@@ -224,22 +323,37 @@ class _BannerPreviewCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              banner.title.isEmpty ? 'Banner title' : banner.title,
-                              style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+                              banner.title.isEmpty
+                                  ? 'Banner title'
+                                  : banner.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              banner.subtitle.isEmpty ? 'Banner subtitle' : banner.subtitle,
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
+                              banner.subtitle.isEmpty
+                                  ? 'Banner subtitle'
+                                  : banner.subtitle,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                      Icon(Icons.local_offer_rounded, color: Colors.white.withValues(alpha: 0.85), size: 40),
+                      Icon(
+                        Icons.local_offer_rounded,
+                        color: Colors.white.withValues(alpha: 0.85),
+                        size: 40,
+                      ),
                     ],
                   ),
                 ),
@@ -249,8 +363,16 @@ class _BannerPreviewCard extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          banner.isCurrentlyActive ? 'Would show now on the mobile home screen' : 'Would NOT show right now (inactive or outside date range)',
-          style: TextStyle(fontSize: 12, color: banner.isCurrentlyActive ? Colors.teal : Colors.orange.shade800, fontWeight: FontWeight.w600),
+          banner.isCurrentlyActive
+              ? 'Would show now on the mobile home screen'
+              : 'Would NOT show right now (inactive or outside date range)',
+          style: TextStyle(
+            fontSize: 12,
+            color: banner.isCurrentlyActive
+                ? Colors.teal
+                : Colors.orange.shade800,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );

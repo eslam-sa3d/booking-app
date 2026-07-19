@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,6 +28,7 @@ import '../../data/repositories/review_repository.dart';
 /// reads through the repository providers below, never these directly.
 final firebaseFirestoreProvider = Provider<FirebaseFirestore>((ref) => FirebaseFirestore.instance);
 final firebaseAuthProvider = Provider<fb_auth.FirebaseAuth>((ref) => fb_auth.FirebaseAuth.instance);
+final firebaseFunctionsProvider = Provider<FirebaseFunctions>((ref) => FirebaseFunctions.instance);
 
 /// Every provider below exposes the abstract repository type — tests
 /// override individual providers with their Mock* counterpart (see
@@ -45,7 +47,7 @@ final familyRepositoryProvider = Provider<FamilyRepository>(
   (ref) => FirebaseFamilyRepository(ref.watch(firebaseFirestoreProvider)),
 );
 final packageRepositoryProvider = Provider<PackageRepository>(
-  (ref) => FirebasePackageRepository(ref.watch(firebaseFirestoreProvider)),
+  (ref) => FirebasePackageRepository(ref.watch(firebaseFirestoreProvider), ref.watch(firebaseFunctionsProvider)),
 );
 final paymentRepositoryProvider = Provider<PaymentRepository>(
   (ref) => FirebasePaymentRepository(ref.watch(firebaseFirestoreProvider)),

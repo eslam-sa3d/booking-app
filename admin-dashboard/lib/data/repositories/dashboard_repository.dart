@@ -12,6 +12,7 @@ class DashboardStats {
     required this.upcomingSessions,
     required this.fullOrNearFullSessions,
     required this.expiringPackages,
+    required this.membersCount,
   });
 
   final int todaysBookings;
@@ -19,6 +20,7 @@ class DashboardStats {
   final int upcomingSessions;
   final int fullOrNearFullSessions;
   final int expiringPackages;
+  final int membersCount;
 }
 
 class DashboardRepository {
@@ -41,14 +43,8 @@ class DashboardRepository {
   }
 
   /// Sum of `amount` across succeeded transactions created within the
-  /// current calendar month.
-  ///
-  /// NOTE: this equality-on-`status` + range-on-`createdAt` query needs a
-  /// composite index (status ASC, createdAt ASC) on `transactions` that
-  /// isn't currently in firestore.indexes.json — the closest existing one
-  /// there is keyed on `refundRequestStatus` + `createdAt`, which doesn't
-  /// cover this. Firestore will throw FAILED_PRECONDITION at runtime until
-  /// that index is added.
+  /// current calendar month. Covered by the `transactions` (status ASC,
+  /// createdAt ASC) composite index in firestore.indexes.json.
   Future<double> getRevenueThisMonth() async {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, 1);
@@ -95,17 +91,26 @@ class DashboardRepository {
     return snap.count ?? 0;
   }
 
+  /// Total registered users — a `.count()` aggregation query reads zero
+  /// documents, unlike streaming every user doc just to read `.length`.
+  Future<int> getMembersCount() async {
+    final snap = await _db.collection('users').count().get();
+    return snap.count ?? 0;
+  }
+
   Future<DashboardStats> loadStats() async {
     final results = await Future.wait<dynamic>([
       getTodaysBookingsCount(),
       getRevenueThisMonth(),
       getUpcomingSessions(),
       getExpiringPackagesCount(),
+      getMembersCount(),
     ]);
     final todaysBookings = results[0] as int;
     final revenueThisMonth = results[1] as double;
     final upcoming = results[2] as List<SwimSession>;
     final expiringPackages = results[3] as int;
+    final membersCount = results[4] as int;
     final fullOrNearFull = upcoming.where((s) => s.capacity > 0 && s.bookedCount >= s.capacity * 0.8).length;
 
     return DashboardStats(
@@ -114,6 +119,7 @@ class DashboardRepository {
       upcomingSessions: upcoming.length,
       fullOrNearFullSessions: fullOrNearFull,
       expiringPackages: expiringPackages,
+      membersCount: membersCount,
     );
   }
 }

@@ -7,6 +7,7 @@ import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/glass_app_bar.dart';
+import '../../data/datasources/mock/mock_auth_repository.dart' show AuthException;
 import '../../data/models/models.dart';
 import 'auth_controller.dart';
 
@@ -93,6 +94,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             code: _codeController.text,
           );
       await _handleVerified(user);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.message);
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = l10n.errorGeneric);

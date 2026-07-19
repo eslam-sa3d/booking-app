@@ -17,7 +17,7 @@ import '../packages/packages_providers.dart';
 import '../../core/widgets/glass_app_bar.dart';
 import 'payment_providers.dart';
 
-enum _CheckoutStage { form, processing, success, failed }
+enum _CheckoutStage { form, methodDetail, processing, success, pending, failed }
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key, required this.package});
@@ -30,6 +30,7 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   String? _methodId;
+  PaymentMethodConfig? _selectedMethod;
   _CheckoutStage _stage = _CheckoutStage.form;
   String? _failureReason;
 
@@ -44,52 +45,98 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         );
   }
 
+  // Methods admin configures with a payment link (bank transfer, external
+  // gateway, etc.) route through the link-detail screen instead — there's no
+  // way for the app to charge those directly, so checkout only fakes an
+  // immediate charge for methods without one.
   Future<void> _pay() async {
+    final method = _selectedMethod;
+    if (method == null) return;
+
+    final link = method.paymentLinkUrl;
+    if (link != null && link.isNotEmpty) {
+      setState(() => _stage = _CheckoutStage.methodDetail);
+      return;
+    }
+
+    await _chargeDirectly(method);
+  }
+
+  Future<void> _chargeDirectly(PaymentMethodConfig method) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
     setState(() => _stage = _CheckoutStage.processing);
 
-    final method = _methodId;
-    if (method == null) return;
-
-    final result = await ref.read(paymentServiceProvider).charge(
-          amount: widget.package.price,
-          currency: widget.package.currency,
-          method: method,
-        );
-
-    if (!mounted) return;
-
-    await ref.read(paymentRepositoryProvider).recordPayment(
-          Payment(
-            id: '',
-            userId: user.id,
+    try {
+      final result = await ref.read(paymentServiceProvider).charge(
             amount: widget.package.price,
             currency: widget.package.currency,
-            method: method,
+            method: method.id,
+          );
+      if (!mounted) return;
+
+      // Transaction recording and package granting happen together
+      // server-side (see purchasePackage Cloud Function) — firestore.rules
+      // blocks a client from writing either directly.
+      final outcome = await ref.read(packageRepositoryProvider).purchasePackage(
+            userId: user.id,
+            package: widget.package,
+            method: method.id,
             status: result.success ? PaymentStatus.succeeded : PaymentStatus.failed,
-            createdAt: DateTime.now(),
-            description: '${widget.package.name} purchase',
-            descriptionAr: 'شراء ${widget.package.nameAr}',
-            relatedPackageId: widget.package.id,
-          ),
-        );
+            failureReason: result.failureReason,
+          );
 
-    await ref.read(analyticsServiceProvider).logPaymentCompleted(
-          packageId: widget.package.id,
-          amount: widget.package.price,
-          success: result.success,
-        );
+      await ref.read(analyticsServiceProvider).logPaymentCompleted(
+            packageId: widget.package.id,
+            amount: widget.package.price,
+            success: outcome.success,
+          );
 
-    if (result.success) {
-      await ref.read(packageRepositoryProvider).purchasePackage(userId: user.id, packageId: widget.package.id);
-      ref.invalidate(userPackagesProvider);
-      if (mounted) setState(() => _stage = _CheckoutStage.success);
-    } else {
+      if (outcome.success) {
+        ref.invalidate(userPackagesProvider);
+        if (mounted) setState(() => _stage = _CheckoutStage.success);
+      } else {
+        if (mounted) {
+          setState(() {
+            _stage = _CheckoutStage.failed;
+            _failureReason = result.failureReason;
+          });
+        }
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
           _stage = _CheckoutStage.failed;
-          _failureReason = result.failureReason;
+          _failureReason = null;
+        });
+      }
+    }
+  }
+
+  // The app can't know whether an external payment actually went through —
+  // it just opens the admin-configured link and records the attempt as
+  // pending for later reconciliation (see PaymentHistoryScreen/admin Payments).
+  Future<void> _confirmExternalPayment(PaymentMethodConfig method) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    try {
+      await _openPaymentLink(method.paymentLinkUrl!);
+      if (!mounted) return;
+
+      await ref.read(packageRepositoryProvider).purchasePackage(
+            userId: user.id,
+            package: widget.package,
+            method: method.id,
+            status: PaymentStatus.pending,
+          );
+
+      if (mounted) setState(() => _stage = _CheckoutStage.pending);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _stage = _CheckoutStage.failed;
+          _failureReason = null;
         });
       }
     }
@@ -114,6 +161,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   Widget _buildBody(BuildContext context, AppLocalizations l10n, bool isArabic) {
     switch (_stage) {
+      case _CheckoutStage.methodDetail:
+        final method = _selectedMethod!;
+        return _PaymentLinkView(
+          method: method,
+          amount: widget.package.price,
+          currency: widget.package.currency,
+          isArabic: isArabic,
+          l10n: l10n,
+          onConfirm: () => _confirmExternalPayment(method),
+          onBack: () => setState(() => _stage = _CheckoutStage.form),
+        );
+      case _CheckoutStage.pending:
+        return _ResultView(
+          icon: Icons.hourglass_top_rounded,
+          color: AppColors.warning,
+          title: l10n.checkoutPendingTitle,
+          subtitle: l10n.checkoutPendingSubtitle,
+          actionLabel: l10n.actionDone,
+          onAction: () => context.go('/packages'),
+        );
       case _CheckoutStage.processing:
         return Center(
           child: Column(
@@ -171,12 +238,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     }
                     if (_methodId == null) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted && _methodId == null) setState(() => _methodId = methods.first.id);
+                        if (mounted && _methodId == null) {
+                          setState(() {
+                            _methodId = methods.first.id;
+                            _selectedMethod = methods.first;
+                          });
+                        }
                       });
                     }
                     return RadioGroup<String>(
                       groupValue: _methodId,
-                      onChanged: (v) => setState(() => _methodId = v),
+                      onChanged: (v) => setState(() {
+                        _methodId = v;
+                        for (final m in methods) {
+                          if (m.id == v) _selectedMethod = m;
+                        }
+                      }),
                       child: Column(
                         children: methods
                             .map(
@@ -233,23 +310,91 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 }
 
 class _MethodLogo extends StatelessWidget {
-  const _MethodLogo({required this.logoUrl});
+  const _MethodLogo({required this.logoUrl, this.size = 32});
   final String? logoUrl;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final url = logoUrl;
     if (url == null || url.isEmpty) {
-      return const Icon(Icons.payments_outlined);
+      return Icon(Icons.payments_outlined, size: size);
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: Image.network(
         url,
-        width: 32,
-        height: 32,
+        width: size,
+        height: size,
         fit: BoxFit.contain,
-        errorBuilder: (_, _, _) => const Icon(Icons.payments_outlined),
+        errorBuilder: (_, _, _) => Icon(Icons.payments_outlined, size: size),
+      ),
+    );
+  }
+}
+
+/// Shown after tapping the main checkout button when the selected payment
+/// method has an admin-configured link (bank transfer, external gateway,
+/// etc.) — the app can't charge those directly, so this surfaces the
+/// method's own logo/branding and hands off to that external link.
+class _PaymentLinkView extends StatelessWidget {
+  const _PaymentLinkView({
+    required this.method,
+    required this.amount,
+    required this.currency,
+    required this.isArabic,
+    required this.l10n,
+    required this.onConfirm,
+    required this.onBack,
+  });
+
+  final PaymentMethodConfig method;
+  final double amount;
+  final String currency;
+  final bool isArabic;
+  final AppLocalizations l10n;
+  final VoidCallback onConfirm;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          IconButton(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back_rounded),
+            visualDensity: VisualDensity.compact,
+          ),
+          const SizedBox(height: 12),
+          Center(child: _MethodLogo(logoUrl: method.logoUrl, size: 88)),
+          const SizedBox(height: 20),
+          Text(
+            method.localizedName(isArabic),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${amount.toStringAsFixed(0)} $currency',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.checkoutMethodDetailInstructions,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 32),
+          Semantics(
+            button: true,
+            label: l10n.checkoutPayNowLink,
+            child: AppButton(label: l10n.checkoutPayNowLink, onPressed: onConfirm),
+          ),
+        ],
       ),
     );
   }

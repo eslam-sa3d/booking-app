@@ -298,8 +298,15 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
     setState(() => _isSaving = true);
     final name = _nameCtrl.text.trim();
     final phone = _phoneCtrl.text.trim();
-    await ref.read(membersRepositoryProvider).updateProfile(widget.member.id, name: name, phone: phone);
-    if (mounted) Navigator.of(context).pop(widget.member.copyWith(name: name, phone: phone));
+    try {
+      await ref.read(membersRepositoryProvider).updateProfile(widget.member.id, name: name, phone: phone);
+      if (mounted) Navigator.of(context).pop(widget.member.copyWith(name: name, phone: phone));
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+      }
+    }
   }
 
   @override
@@ -333,11 +340,15 @@ class _AwardBadgeDialog extends StatefulWidget {
 }
 
 class _AwardBadgeDialogState extends State<_AwardBadgeDialog> {
+  final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _titleArCtrl = TextEditingController();
   final _iconCtrl = TextEditingController(text: 'emoji_events');
 
+  String? _req(String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null;
+
   void _save() {
+    if (!_formKey.currentState!.validate()) return;
     final badge = SwimBadge(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: _titleCtrl.text.trim(),
@@ -353,16 +364,19 @@ class _AwardBadgeDialogState extends State<_AwardBadgeDialog> {
     return ResponsiveDialogShell(
       title: 'Award badge',
       desktopWidth: 360,
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title (EN)')),
-            const SizedBox(height: 12),
-            TextFormField(controller: _titleArCtrl, decoration: const InputDecoration(labelText: 'Title (AR)')),
-            const SizedBox(height: 12),
-            TextFormField(controller: _iconCtrl, decoration: const InputDecoration(labelText: 'Icon name (Material, e.g. emoji_events)')),
-          ],
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title (EN)'), validator: _req),
+              const SizedBox(height: 12),
+              TextFormField(controller: _titleArCtrl, decoration: const InputDecoration(labelText: 'Title (AR)'), validator: _req),
+              const SizedBox(height: 12),
+              TextFormField(controller: _iconCtrl, decoration: const InputDecoration(labelText: 'Icon name (Material, e.g. emoji_events)')),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -381,11 +395,15 @@ class _AddProgressNoteDialog extends StatefulWidget {
 }
 
 class _AddProgressNoteDialogState extends State<_AddProgressNoteDialog> {
+  final _formKey = GlobalKey<FormState>();
   final _noteCtrl = TextEditingController();
   final _noteArCtrl = TextEditingController();
   final _instructorCtrl = TextEditingController();
 
+  String? _req(String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null;
+
   void _save() {
+    if (!_formKey.currentState!.validate()) return;
     final note = ProgressNote(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       note: _noteCtrl.text.trim(),
@@ -401,16 +419,19 @@ class _AddProgressNoteDialogState extends State<_AddProgressNoteDialog> {
     return ResponsiveDialogShell(
       title: 'Add progress note',
       desktopWidth: 360,
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(controller: _noteCtrl, decoration: const InputDecoration(labelText: 'Note (EN)'), maxLines: 2),
-            const SizedBox(height: 12),
-            TextFormField(controller: _noteArCtrl, decoration: const InputDecoration(labelText: 'Note (AR)'), maxLines: 2),
-            const SizedBox(height: 12),
-            TextFormField(controller: _instructorCtrl, decoration: const InputDecoration(labelText: 'Instructor name')),
-          ],
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(controller: _noteCtrl, decoration: const InputDecoration(labelText: 'Note (EN)'), maxLines: 2, validator: _req),
+              const SizedBox(height: 12),
+              TextFormField(controller: _noteArCtrl, decoration: const InputDecoration(labelText: 'Note (AR)'), maxLines: 2, validator: _req),
+              const SizedBox(height: 12),
+              TextFormField(controller: _instructorCtrl, decoration: const InputDecoration(labelText: 'Instructor name'), validator: _req),
+            ],
+          ),
         ),
       ),
       actions: [

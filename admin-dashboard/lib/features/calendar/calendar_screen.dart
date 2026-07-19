@@ -23,6 +23,21 @@ final _focusedMonthProvider = StateProvider<DateTime>((ref) {
 class CalendarScreen extends ConsumerWidget {
   const CalendarScreen({super.key});
 
+  static Future<bool> _confirm(BuildContext context, {required String title, required String content}) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDay = ref.watch(_selectedDayProvider);
@@ -144,7 +159,14 @@ class CalendarScreen extends ConsumerWidget {
                               session: session,
                               swimClass: classesById[session.classId],
                               onTap: () => showSessionFormDialog(context, ref, date: selectedDay, classes: classes, existing: session),
-                              onDelete: () => ref.read(sessionsRepositoryProvider).delete(session.id),
+                              onDelete: () async {
+                                final confirmed = await _confirm(
+                                  context,
+                                  title: 'Delete session?',
+                                  content: 'This does not cancel or notify already-booked customers.',
+                                );
+                                if (confirmed) await ref.read(sessionsRepositoryProvider).delete(session.id);
+                              },
                             ),
                         ],
                       ),
@@ -323,7 +345,14 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
                               subtitle: Text('${bd.branchId == null ? 'All branches' : (branchesById[bd.branchId] ?? bd.branchId!)} · ${bd.reason}'),
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete_outline),
-                                onPressed: () => ref.read(blockedDatesRepositoryProvider).delete(bd.id),
+                                onPressed: () async {
+                                  final confirmed = await CalendarScreen._confirm(
+                                    context,
+                                    title: 'Unblock this date?',
+                                    content: 'Staff will be able to create sessions on ${_fmt(bd.date)} again.',
+                                  );
+                                  if (confirmed) await ref.read(blockedDatesRepositoryProvider).delete(bd.id);
+                                },
                               ),
                             ),
                         ],

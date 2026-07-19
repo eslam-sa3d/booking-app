@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/localization/generated/app_localizations.dart';
-import '../../core/providers/locale_provider.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -49,11 +48,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  bool get _isArabic => ref.read(isArabicProvider);
-
-  String _t(String en, String ar) => _isArabic ? ar : en;
-
   Future<void> _pickPhoto() async {
+    final l10n = AppLocalizations.of(context)!;
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
@@ -65,12 +61,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: Text(_t('Choose from gallery', 'اختر من المعرض')),
+              title: Text(l10n.profileChooseFromGallery),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: Text(_t('Take a photo', 'التقط صورة')),
+              title: Text(l10n.profileTakePhoto),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
           ],
@@ -87,13 +83,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final url = await ref.read(authRepositoryProvider).uploadProfilePhoto(File(picked.path));
       await ref.read(authControllerProvider.notifier).updateProfile(user.copyWith(photoUrl: url));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_t('Profile photo updated', 'تم تحديث الصورة الشخصية'))),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.profilePhotoUpdated)));
       }
     } catch (e) {
       if (mounted) {
-        final message = e is AuthException ? e.message : _t('Couldn\'t upload photo. Please try again.', 'تعذر رفع الصورة. حاول مرة أخرى.');
+        final message = e is AuthException ? e.message : l10n.profilePhotoUploadError;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
@@ -105,35 +99,33 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   /// cancels. Used to satisfy Firebase's `requires-recent-login` guard
   /// before sensitive operations like changing the account email.
   Future<String?> _promptForPassword() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     final result = await showAppDialog<String>(
       context,
       builder: (ctx) => AlertDialog(
-        title: Text(_t('Confirm your password', 'أكّد كلمة المرور')),
+        title: Text(l10n.profileConfirmPassword),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_t(
-              'For your security, please re-enter your password to continue.',
-              'لأمانك، الرجاء إعادة إدخال كلمة المرور للمتابعة.',
-            )),
+            Text(l10n.profileReauthMessage),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
               obscureText: true,
               autofocus: true,
-              decoration: InputDecoration(labelText: _t('Password', 'كلمة المرور')),
+              decoration: InputDecoration(labelText: l10n.authPassword),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(_t('Cancel', 'إلغاء')),
+            child: Text(l10n.actionCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
-            child: Text(_t('Confirm', 'تأكيد')),
+            child: Text(l10n.actionConfirm),
           ),
         ],
       ),
@@ -142,6 +134,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _updateEmailWithReauth(String newEmail) async {
+    final l10n = AppLocalizations.of(context)!;
     final repo = ref.read(authRepositoryProvider);
     try {
       await repo.updateEmail(newEmail);
@@ -149,10 +142,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (e.code == 'requires-recent-login') {
         final password = await _promptForPassword();
         if (password == null) {
-          throw AuthException(_t(
-            'Email not updated — re-authentication is required.',
-            'لم يتم تحديث البريد الإلكتروني — يلزم إعادة تسجيل الدخول.',
-          ));
+          throw AuthException(l10n.profileEmailReauthRequired);
         }
         await repo.reauthenticate(password: password);
         await repo.updateEmail(newEmail);
@@ -163,6 +153,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     final user = ref.read(currentUserProvider);
     if (user == null || !_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
@@ -183,21 +174,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (mounted) {
         if (emailChanged) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_t(
-                'A verification link was sent to $newEmail. Confirm it to finish updating your email.',
-                'تم إرسال رابط تحقق إلى $newEmail. أكّده لإتمام تحديث بريدك الإلكتروني.',
-              )),
-            ),
+            SnackBar(content: Text(l10n.profileEmailVerificationSent(newEmail))),
           );
         }
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        final message = e is AuthException
-            ? e.message
-            : _t('Something went wrong. Please try again.', 'حدث خطأ ما. حاول مرة أخرى.');
+        final message = e is AuthException ? e.message : l10n.errorGeneric;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
@@ -236,7 +220,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         right: 0,
                         child: Semantics(
                           button: true,
-                          label: _t('Change profile photo', 'تغيير الصورة الشخصية'),
+                          label: l10n.profileChangePhoto,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
                             onTap: _isUploadingPhoto ? null : _pickPhoto,
@@ -267,10 +251,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: l10n.authEmail,
-                    helperText: _t(
-                      'Changing this sends a verification link to the new address.',
-                      'تغيير هذا الحقل يرسل رابط تحقق إلى العنوان الجديد.',
-                    ),
+                    helperText: l10n.profileEmailChangeHelper,
                     helperMaxLines: 2,
                   ),
                   validator: (v) => Validators.email(v, l10n),

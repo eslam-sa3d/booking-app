@@ -1,6 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared/shared.dart';
 
+// Intentionally does NOT mix in AuditedWrite, unlike every other repository
+// in this directory: firestore.rules' `branches` rule is a plain
+// `allow write: if isStaff();` with no `taggedByCaller()` requirement, so
+// there's no `updatedBy` tag for an audit trigger to read, and deletes stay
+// a direct Firestore call rather than routing through `adminDelete`. If you
+// add audit logging for branches, add the tag here AND a matching rule.
 class BranchesRepository {
   BranchesRepository(this._db);
   final FirebaseFirestore _db;

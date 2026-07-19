@@ -27,25 +27,6 @@ class MockPaymentRepository implements PaymentRepository {
   }
 
   @override
-  Future<Payment> recordPayment(Payment payment) async {
-    await _delay();
-    final created = Payment(
-      id: _db.nextId('pay'),
-      userId: payment.userId,
-      amount: payment.amount,
-      currency: payment.currency,
-      method: payment.method,
-      status: payment.status,
-      createdAt: DateTime.now(),
-      description: payment.description,
-      descriptionAr: payment.descriptionAr,
-      relatedPackageId: payment.relatedPackageId,
-    );
-    _db.payments.add(created);
-    return created;
-  }
-
-  @override
   Future<void> requestRefund(String transactionId, String reason) async {
     await _delay();
     final index = _db.payments.indexWhere((p) => p.id == transactionId);

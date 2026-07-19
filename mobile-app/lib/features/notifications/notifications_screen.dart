@@ -46,6 +46,8 @@ class NotificationsScreen extends ConsumerWidget {
         return Icons.local_offer_outlined;
       case NotificationType.general:
         return Icons.notifications_outlined;
+      case NotificationType.refundResolved:
+        return Icons.currency_exchange_rounded;
     }
   }
 

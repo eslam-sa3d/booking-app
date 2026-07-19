@@ -17,7 +17,11 @@ export const onNotificationCreated = onDocumentCreated("notifications/{notificat
   const snapshot = event.data;
   if (!snapshot) return;
   const definition = snapshot.data() as NotificationDef;
-  if (definition.status === "scheduled") return;
+  // Allow-list, not a block-list: only an explicit "send now" compose
+  // dispatches immediately. A 'scheduled' compose waits for
+  // dispatchScheduledNotifications; a 'draft' (or any future status) must
+  // never auto-send just because a document was created.
+  if (definition.status !== "sent") return;
   await performDispatch(snapshot.id, definition);
 });
 

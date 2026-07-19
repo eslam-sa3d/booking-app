@@ -3,7 +3,15 @@ import 'firestore_codec.dart';
 
 class AppNotification {
   final String id;
+  // Not stored on the underlying users/{uid}/inbox/{id} document — it's
+  // implicit in the doc path. Callers reading from Firestore must inject it
+  // (see FirebaseNotificationRepository); defaults to '' rather than
+  // throwing if a caller forgets, since a missing owner id here is a bug in
+  // the caller, not corrupt data.
   final String userId;
+  // Links back to the originating notifications/{id} broadcast this inbox
+  // copy was delivered from (null for direct/transactional notifications).
+  final String? sourceNotificationId;
   final NotificationType type;
   final String title;
   final String titleAr;
@@ -15,7 +23,8 @@ class AppNotification {
 
   const AppNotification({
     required this.id,
-    required this.userId,
+    this.userId = '',
+    this.sourceNotificationId,
     required this.type,
     required this.title,
     required this.titleAr,
@@ -33,6 +42,7 @@ class AppNotification {
     return AppNotification(
       id: id,
       userId: userId,
+      sourceNotificationId: sourceNotificationId,
       type: type,
       title: title,
       titleAr: titleAr,
@@ -47,6 +57,7 @@ class AppNotification {
   Map<String, dynamic> toMap() => {
         'id': id,
         'userId': userId,
+        'sourceNotificationId': sourceNotificationId,
         'type': type.name,
         'title': title,
         'titleAr': titleAr,
@@ -59,7 +70,8 @@ class AppNotification {
 
   factory AppNotification.fromMap(Map<String, dynamic> map) => AppNotification(
         id: map['id'] as String,
-        userId: map['userId'] as String,
+        userId: map['userId'] as String? ?? '',
+        sourceNotificationId: map['sourceNotificationId'] as String?,
         type: NotificationType.fromName(map['type'] as String? ?? 'general'),
         title: map['title'] as String,
         titleAr: map['titleAr'] as String? ?? '',

@@ -246,6 +246,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homePromoOffersTitle => 'عروض وإعلانات';
 
   @override
+  String get homeLoadMore => 'تحميل المزيد';
+
+  @override
   String get categoryKids => 'أطفال';
 
   @override
@@ -413,6 +416,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get myBookingsRateSession => 'قيّم هذه الحصة';
 
   @override
+  String get myBookingsStatusPending => 'جارٍ التأكيد…';
+
+  @override
   String get myBookingsStatusConfirmed => 'مؤكد';
 
   @override
@@ -513,6 +519,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileLogoutConfirm => 'هل أنت متأكد أنك تريد تسجيل الخروج؟';
 
   @override
+  String get profileChooseFromGallery => 'اختر من المعرض';
+
+  @override
+  String get profileTakePhoto => 'التقط صورة';
+
+  @override
+  String get profilePhotoUpdated => 'تم تحديث الصورة الشخصية';
+
+  @override
+  String get profilePhotoUploadError => 'تعذر رفع الصورة. حاول مرة أخرى.';
+
+  @override
+  String get profileChangePhoto => 'تغيير الصورة الشخصية';
+
+  @override
+  String get profileConfirmPassword => 'أكّد كلمة المرور';
+
+  @override
+  String get profileReauthMessage =>
+      'لأمانك، الرجاء إعادة إدخال كلمة المرور للمتابعة.';
+
+  @override
+  String get profileEmailReauthRequired =>
+      'لم يتم تحديث البريد الإلكتروني — يلزم إعادة تسجيل الدخول.';
+
+  @override
+  String get profileEmailChangeHelper =>
+      'تغيير هذا الحقل يرسل رابط تحقق إلى العنوان الجديد.';
+
+  @override
+  String profileEmailVerificationSent(String email) {
+    return 'تم إرسال رابط تحقق إلى $email. أكّده لإتمام تحديث بريدك الإلكتروني.';
+  }
+
+  @override
   String get packagesTitle => 'الباقات والأسعار';
 
   @override
@@ -603,6 +644,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get checkoutPayNowLink => 'ادفع الآن';
+
+  @override
+  String get checkoutMethodDetailInstructions =>
+      'اضغط على الزر أدناه لإتمام عملية الدفع. سنقوم بتأكيدها بمجرد استلامها.';
+
+  @override
+  String get checkoutPendingTitle => 'الدفع قيد المراجعة';
+
+  @override
+  String get checkoutPendingSubtitle =>
+      'سنقوم بتأكيد دفعتك بمجرد استلامها وتفعيل باقتك. يمكنك متابعة الحالة في أي وقت من سجل المدفوعات.';
 
   @override
   String get paymentHistoryTitle => 'سجل المدفوعات';
@@ -739,6 +791,37 @@ class AppLocalizationsAr extends AppLocalizations {
       'يتطلب بصمة الوجه أو الإصبع لفتح التطبيق';
 
   @override
+  String get settingsWhatsappUnavailable => 'الدعم عبر واتساب غير متاح حالياً.';
+
+  @override
+  String get settingsEmailUnavailable =>
+      'الدعم عبر البريد الإلكتروني غير متاح حالياً.';
+
+  @override
+  String get settingsContentNotPublished => 'لم يتم نشر هذا المحتوى بعد.';
+
+  @override
+  String get settingsEmailSupport => 'راسلنا عبر البريد الإلكتروني';
+
+  @override
+  String get settingsReminderToggle => 'تبديل تذكيرات الحصص';
+
+  @override
+  String get settingsReminderLabel => 'تذكيرات الحصص';
+
+  @override
+  String get settingsPromotionsToggle => 'تبديل العروض والتخفيضات';
+
+  @override
+  String get settingsPromotionsLabel => 'العروض والتخفيضات';
+
+  @override
+  String get settingsAnnouncementsToggle => 'تبديل الإعلانات';
+
+  @override
+  String get settingsAnnouncementsLabel => 'الإعلانات';
+
+  @override
   String get appLockTitle => 'التطبيق مقفل';
 
   @override
@@ -749,4 +832,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get faqTitle => 'الأسئلة الشائعة';
+
+  @override
+  String get faqEmpty => 'لا توجد أسئلة شائعة متاحة حالياً.';
+
+  @override
+  String get faqLoadError =>
+      'تعذر تحميل الأسئلة الشائعة. حاول مرة أخرى لاحقاً.';
 }

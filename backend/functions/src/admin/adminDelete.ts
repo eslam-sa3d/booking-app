@@ -12,6 +12,8 @@ const DELETABLE: Record<string, "staff" | "admin"> = {
   instructors: "staff",
   categories: "staff",
   blockedDates: "staff",
+  // Matches firestore.rules: `allow delete: if isAdmin();` on paymentMethods.
+  paymentMethods: "admin",
 };
 
 interface AdminDeleteRequest {

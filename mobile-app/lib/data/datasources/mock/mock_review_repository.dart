@@ -21,6 +21,7 @@ class MockReviewRepository implements ReviewRepository {
       id: _db.nextId('rv'),
       userId: review.userId,
       userName: review.userName,
+      bookingId: review.bookingId,
       sessionId: review.sessionId,
       classId: review.classId,
       instructorId: review.instructorId,
@@ -30,7 +31,7 @@ class MockReviewRepository implements ReviewRepository {
     );
     _db.reviews.add(created);
 
-    final bookingIndex = _db.bookings.indexWhere((b) => b.sessionId == review.sessionId && b.userId == review.userId);
+    final bookingIndex = _db.bookings.indexWhere((b) => b.id == review.bookingId);
     if (bookingIndex != -1) {
       _db.bookings[bookingIndex] = _db.bookings[bookingIndex].copyWith(reviewed: true);
     }

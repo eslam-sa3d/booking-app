@@ -4,6 +4,8 @@ import '../../data/models/enums.dart';
 extension BookingStatusL10n on BookingStatus {
   String label(AppLocalizations l10n) {
     switch (this) {
+      case BookingStatus.pending:
+        return l10n.myBookingsStatusPending;
       case BookingStatus.confirmed:
         return l10n.myBookingsStatusConfirmed;
       case BookingStatus.waitlisted:

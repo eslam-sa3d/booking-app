@@ -31,25 +31,6 @@ class FirebasePaymentRepository implements PaymentRepository {
   }
 
   @override
-  Future<Payment> recordPayment(Payment payment) async {
-    final ref = _col.doc();
-    final created = Payment(
-      id: ref.id,
-      userId: payment.userId,
-      amount: payment.amount,
-      currency: payment.currency,
-      method: payment.method,
-      status: payment.status,
-      createdAt: DateTime.now(),
-      description: payment.description,
-      descriptionAr: payment.descriptionAr,
-      relatedPackageId: payment.relatedPackageId,
-    );
-    await ref.set(created.toMap());
-    return created;
-  }
-
-  @override
   Future<void> requestRefund(String transactionId, String reason) async {
     // Firestore security rules only allow a user to set these three fields
     // on their own transaction doc (and only to 'pending') — do not add

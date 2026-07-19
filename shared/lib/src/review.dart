@@ -4,6 +4,10 @@ class Review {
   final String id;
   final String userId;
   final String userName;
+  // References the caller's own completed booking for this sessionId —
+  // firestore.rules verifies this at create time so a review can't be left
+  // for a class the user never actually attended.
+  final String bookingId;
   final String sessionId;
   final String classId;
   final String instructorId;
@@ -15,6 +19,7 @@ class Review {
     required this.id,
     required this.userId,
     required this.userName,
+    required this.bookingId,
     required this.sessionId,
     required this.classId,
     required this.instructorId,
@@ -27,6 +32,7 @@ class Review {
         'id': id,
         'userId': userId,
         'userName': userName,
+        'bookingId': bookingId,
         'sessionId': sessionId,
         'classId': classId,
         'instructorId': instructorId,
@@ -39,6 +45,7 @@ class Review {
         id: map['id'] as String,
         userId: map['userId'] as String,
         userName: map['userName'] as String? ?? '',
+        bookingId: map['bookingId'] as String? ?? '',
         sessionId: map['sessionId'] as String,
         classId: map['classId'] as String,
         instructorId: map['instructorId'] as String? ?? '',

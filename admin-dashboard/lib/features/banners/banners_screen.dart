@@ -9,6 +9,21 @@ import 'banner_form_dialog.dart';
 class BannersScreen extends ConsumerWidget {
   const BannersScreen({super.key});
 
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, PromoBanner banner) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete banner?'),
+        content: Text('"${banner.title}" will be removed from the mobile home screen.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed == true) await ref.read(bannersRepositoryProvider).delete(banner.id);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bannersStream = ref.watch(bannersRepositoryProvider).watchAll();
@@ -51,7 +66,7 @@ class BannersScreen extends ConsumerWidget {
                       children: [
                         if (!banner.isActive) const Padding(padding: EdgeInsets.only(right: 8), child: Text('Inactive', style: TextStyle(color: Colors.grey))),
                         IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => showBannerFormDialog(context, ref, existing: banner)),
-                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => ref.read(bannersRepositoryProvider).delete(banner.id)),
+                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _confirmDelete(context, ref, banner)),
                       ],
                     ),
                   ),

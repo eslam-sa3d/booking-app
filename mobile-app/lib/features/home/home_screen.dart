@@ -146,15 +146,11 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       if (state.hasMore) ...[
                         const SizedBox(height: 16),
-                        // No dedicated l10n key ships for this yet — a plain
-                        // conditional keeps both locales reasonable without
-                        // touching the generated l10n files (out of scope
-                        // for this change).
                         Semantics(
                           button: true,
-                          label: isArabic ? 'تحميل المزيد' : 'Load more',
+                          label: l10n.homeLoadMore,
                           child: AppButton(
-                            label: isArabic ? 'تحميل المزيد' : 'Load more',
+                            label: l10n.homeLoadMore,
                             outlined: true,
                             isLoading: state.isLoadingMore,
                             onPressed: () => ref.read(classesProvider.notifier).loadMore(),

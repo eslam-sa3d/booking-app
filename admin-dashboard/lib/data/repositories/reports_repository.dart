@@ -200,14 +200,9 @@ class ReportsRepository {
   }
 
   /// Sum of succeeded transaction amounts, grouped by month, for the last
-  /// [months] months (default 6), oldest first.
-  ///
-  /// NOTE: this equality-on-`status` + range-on-`createdAt` query needs a
-  /// composite index (status ASC, createdAt ASC) on `transactions` that
-  /// isn't currently in firestore.indexes.json — same gap already flagged in
-  /// dashboard_repository.dart's `getRevenueThisMonth`. Firestore will throw
-  /// FAILED_PRECONDITION at runtime until that index is added (the error
-  /// includes a direct link to create it).
+  /// [months] months (default 6), oldest first. Covered by the
+  /// `transactions` (status ASC, createdAt ASC) composite index in
+  /// firestore.indexes.json.
   Future<List<RevenueMonth>> getRevenueTrend({int months = 6}) async {
     final now = DateTime.now();
     final firstMonth = DateTime(now.year, now.month - (months - 1), 1);
@@ -233,11 +228,8 @@ class ReportsRepository {
 
   /// Count of new `users` with `role == 'customer'`, grouped by signup
   /// month, for the last [months] months (default 6), oldest first.
-  ///
-  /// NOTE: like [getRevenueTrend], this equality-on-`role` + range-on-
-  /// `createdAt` query needs a composite index (role ASC, createdAt ASC) on
-  /// `users` that isn't currently in firestore.indexes.json. Firestore will
-  /// throw FAILED_PRECONDITION at runtime until that index is added.
+  /// Covered by the `users` (role ASC, createdAt ASC) composite index in
+  /// firestore.indexes.json.
   Future<List<MemberGrowthMonth>> getMemberGrowth({int months = 6}) async {
     final now = DateTime.now();
     final firstMonth = DateTime(now.year, now.month - (months - 1), 1);

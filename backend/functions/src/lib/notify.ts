@@ -75,23 +75,32 @@ export async function notifyUsers(uids: string[], payload: NotifyPayload): Promi
     ((d.data()?.fcmTokens as string[] | undefined) ?? []).map((token) => ({ uid: d.id, token }))
   );
   if (tokenOwners.length === 0) return;
-  const tokens = tokenOwners.map((t) => t.token);
 
-  try {
-    const response = await getMessaging().sendEachForMulticast({
-      tokens,
-      notification: { title: payload.title, body: payload.body },
-      data: {
-        type: payload.type,
-        ...(payload.sourceNotificationId ? { notificationId: payload.sourceNotificationId } : {}),
-        ...(payload.relatedBookingId ? { bookingId: payload.relatedBookingId } : {}),
-      },
-    });
-    logger.info(`notifyUsers: sent to ${response.successCount}/${tokens.length} tokens`, { type: payload.type });
-    await pruneStaleTokens(tokenOwners, response.responses);
-  } catch (err) {
-    logger.error("notifyUsers: FCM send failed", err);
+  // sendEachForMulticast hard-caps at 500 registration tokens per call —
+  // chunk so a broadcast to a large segment doesn't throw and silently
+  // drop every push for the whole send.
+  const FCM_BATCH_SIZE = 500;
+  let totalSuccess = 0;
+  for (let i = 0; i < tokenOwners.length; i += FCM_BATCH_SIZE) {
+    const chunk = tokenOwners.slice(i, i + FCM_BATCH_SIZE);
+    const tokens = chunk.map((t) => t.token);
+    try {
+      const response = await getMessaging().sendEachForMulticast({
+        tokens,
+        notification: { title: payload.title, body: payload.body },
+        data: {
+          type: payload.type,
+          ...(payload.sourceNotificationId ? { notificationId: payload.sourceNotificationId } : {}),
+          ...(payload.relatedBookingId ? { bookingId: payload.relatedBookingId } : {}),
+        },
+      });
+      totalSuccess += response.successCount;
+      await pruneStaleTokens(chunk, response.responses);
+    } catch (err) {
+      logger.error("notifyUsers: FCM send failed for a batch", err);
+    }
   }
+  logger.info(`notifyUsers: sent to ${totalSuccess}/${tokenOwners.length} tokens`, { type: payload.type });
 }
 
 const STALE_TOKEN_CODES = new Set([

@@ -10,6 +10,28 @@ import '../auth/auth_controller.dart';
 class StaffScreen extends ConsumerWidget {
   const StaffScreen({super.key});
 
+  Future<void> _confirmRevoke(BuildContext context, WidgetRef ref, AppUser user) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Revoke dashboard access?'),
+        content: Text('${user.name} will lose staff/admin access and become a regular customer.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Revoke')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(staffRepositoryProvider).assignRole(targetUid: user.id, role: 'customer');
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to revoke access: $error')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(authStateProvider).value;
@@ -58,7 +80,7 @@ class StaffScreen extends ConsumerWidget {
                               IconButton(
                                 icon: const Icon(Icons.person_remove_outlined),
                                 tooltip: 'Revoke to customer',
-                                onPressed: () => ref.read(staffRepositoryProvider).assignRole(targetUid: user.id, role: 'customer'),
+                                onPressed: () => _confirmRevoke(context, ref, user),
                               ),
                           ],
                         ),
@@ -76,6 +98,7 @@ class StaffScreen extends ConsumerWidget {
   void _showPromoteDialog(BuildContext context, WidgetRef ref) {
     final uidCtrl = TextEditingController();
     String role = 'staff';
+    bool isSaving = false;
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -103,11 +126,21 @@ class StaffScreen extends ConsumerWidget {
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
             FilledButton(
-              onPressed: () async {
-                await ref.read(staffRepositoryProvider).assignRole(targetUid: uidCtrl.text.trim(), role: role);
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
-              child: const Text('Grant'),
+              onPressed: isSaving
+                  ? null
+                  : () async {
+                      setState(() => isSaving = true);
+                      try {
+                        await ref.read(staffRepositoryProvider).assignRole(targetUid: uidCtrl.text.trim(), role: role);
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      } catch (error) {
+                        setState(() => isSaving = false);
+                        if (ctx.mounted) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Failed to grant access: $error')));
+                        }
+                      }
+                    },
+              child: Text(isSaving ? 'Granting…' : 'Grant'),
             ),
           ],
         ),

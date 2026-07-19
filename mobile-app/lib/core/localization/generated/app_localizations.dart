@@ -548,6 +548,12 @@ abstract class AppLocalizations {
   /// **'Offers & announcements'**
   String get homePromoOffersTitle;
 
+  /// No description provided for @homeLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get homeLoadMore;
+
   /// No description provided for @categoryKids.
   ///
   /// In en, this message translates to:
@@ -866,6 +872,12 @@ abstract class AppLocalizations {
   /// **'Rate this session'**
   String get myBookingsRateSession;
 
+  /// No description provided for @myBookingsStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming…'**
+  String get myBookingsStatusPending;
+
   /// No description provided for @myBookingsStatusConfirmed.
   ///
   /// In en, this message translates to:
@@ -1058,6 +1070,66 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to log out?'**
   String get profileLogoutConfirm;
 
+  /// No description provided for @profileChooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get profileChooseFromGallery;
+
+  /// No description provided for @profileTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get profileTakePhoto;
+
+  /// No description provided for @profilePhotoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo updated'**
+  String get profilePhotoUpdated;
+
+  /// No description provided for @profilePhotoUploadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload photo. Please try again.'**
+  String get profilePhotoUploadError;
+
+  /// No description provided for @profileChangePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change profile photo'**
+  String get profileChangePhoto;
+
+  /// No description provided for @profileConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your password'**
+  String get profileConfirmPassword;
+
+  /// No description provided for @profileReauthMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, please re-enter your password to continue.'**
+  String get profileReauthMessage;
+
+  /// No description provided for @profileEmailReauthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email not updated — re-authentication is required.'**
+  String get profileEmailReauthRequired;
+
+  /// No description provided for @profileEmailChangeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing this sends a verification link to the new address.'**
+  String get profileEmailChangeHelper;
+
+  /// No description provided for @profileEmailVerificationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'A verification link was sent to {email}. Confirm it to finish updating your email.'**
+  String profileEmailVerificationSent(String email);
+
   /// No description provided for @packagesTitle.
   ///
   /// In en, this message translates to:
@@ -1219,6 +1291,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pay Now'**
   String get checkoutPayNowLink;
+
+  /// No description provided for @checkoutMethodDetailInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the button below to complete your payment. We\'ll confirm it once it\'s received.'**
+  String get checkoutMethodDetailInstructions;
+
+  /// No description provided for @checkoutPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment pending'**
+  String get checkoutPendingTitle;
+
+  /// No description provided for @checkoutPendingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll confirm your payment once it\'s received and activate your package. You can check the status anytime in Payment History.'**
+  String get checkoutPendingSubtitle;
 
   /// No description provided for @paymentHistoryTitle.
   ///
@@ -1478,6 +1568,66 @@ abstract class AppLocalizations {
   /// **'Require Face ID or fingerprint to open the app'**
   String get settingsBiometricLockSubtitle;
 
+  /// No description provided for @settingsWhatsappUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp support isn\'t available yet.'**
+  String get settingsWhatsappUnavailable;
+
+  /// No description provided for @settingsEmailUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Email support isn\'t available yet.'**
+  String get settingsEmailUnavailable;
+
+  /// No description provided for @settingsContentNotPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'This content hasn\'t been published yet.'**
+  String get settingsContentNotPublished;
+
+  /// No description provided for @settingsEmailSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Email support'**
+  String get settingsEmailSupport;
+
+  /// No description provided for @settingsReminderToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle session reminders'**
+  String get settingsReminderToggle;
+
+  /// No description provided for @settingsReminderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Session reminders'**
+  String get settingsReminderLabel;
+
+  /// No description provided for @settingsPromotionsToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle promotions and offers'**
+  String get settingsPromotionsToggle;
+
+  /// No description provided for @settingsPromotionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotions & offers'**
+  String get settingsPromotionsLabel;
+
+  /// No description provided for @settingsAnnouncementsToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle announcements'**
+  String get settingsAnnouncementsToggle;
+
+  /// No description provided for @settingsAnnouncementsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcements'**
+  String get settingsAnnouncementsLabel;
+
   /// No description provided for @appLockTitle.
   ///
   /// In en, this message translates to:
@@ -1501,6 +1651,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Frequently asked questions'**
   String get faqTitle;
+
+  /// No description provided for @faqEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No FAQs are available yet.'**
+  String get faqEmpty;
+
+  /// No description provided for @faqLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the FAQs. Please try again later.'**
+  String get faqLoadError;
 }
 
 class _AppLocalizationsDelegate

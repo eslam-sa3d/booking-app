@@ -49,26 +49,37 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
   Future<void> _create() async {
     if (_classId == null || _weekdays.isEmpty) return;
     setState(() => _isSaving = true);
-    final swimClass = widget.classes.firstWhere((c) => c.id == _classId);
-    final blockedDates = await ref.read(blockedDatesRepositoryProvider).watchAll().first;
-    final blockedKeys = blockedDates
-        .map((bd) => '${bd.date.year.toString().padLeft(4, '0')}-${bd.date.month.toString().padLeft(2, '0')}-${bd.date.day.toString().padLeft(2, '0')}')
-        .toSet();
-    final count = await ref.read(sessionsRepositoryProvider).createRecurring(
-          classId: _classId!,
-          instructorId: swimClass.instructorId,
-          branchId: swimClass.branchId,
-          weekdays: _weekdays.toList(),
-          startMinutes: _start.hour * 60 + _start.minute,
-          endMinutes: _end.hour * 60 + _end.minute,
-          capacity: int.tryParse(_capacityCtrl.text) ?? 10,
-          start: _rangeStart,
-          end: _rangeEnd,
-          blockedDates: blockedKeys,
-        );
-    if (mounted) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Created $count sessions')));
+    try {
+      final swimClass = widget.classes.firstWhere((c) => c.id == _classId);
+      final blockedDates = await ref.read(blockedDatesRepositoryProvider).watchAll().first;
+      // A blocked date scoped to one branch (branchId != null) must only
+      // skip sessions for that same branch — otherwise closing Branch A
+      // silently blocks bulk creation at Branch B too.
+      final blockedKeys = blockedDates
+          .where((bd) => bd.branchId == null || bd.branchId == swimClass.branchId)
+          .map((bd) => '${bd.date.year.toString().padLeft(4, '0')}-${bd.date.month.toString().padLeft(2, '0')}-${bd.date.day.toString().padLeft(2, '0')}')
+          .toSet();
+      final count = await ref.read(sessionsRepositoryProvider).createRecurring(
+            classId: _classId!,
+            instructorId: swimClass.instructorId,
+            branchId: swimClass.branchId,
+            weekdays: _weekdays.toList(),
+            startMinutes: _start.hour * 60 + _start.minute,
+            endMinutes: _end.hour * 60 + _end.minute,
+            capacity: int.tryParse(_capacityCtrl.text) ?? 10,
+            start: _rangeStart,
+            end: _rangeEnd,
+            blockedDates: blockedKeys,
+          );
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Created $count sessions')));
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create sessions: $error')));
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -158,10 +159,31 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    // Remove this device's FCM token from the signed-out user's doc first
+    // (needs a valid auth context to write) — otherwise a different user
+    // signing in on this same device would inherit pushes meant for
+    // whoever was previously logged in here.
+    await _removeCurrentDeviceToken();
     // Sign out of Google too so the native account picker doesn't silently
     // re-offer the last Google account on the next "Continue with Google"
     // tap; harmless no-op if the session never used Google sign-in.
     await Future.wait([_auth.signOut(), _googleSignIn.signOut()]);
+  }
+
+  Future<void> _removeCurrentDeviceToken() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
+      await _userDoc(user.uid).update({
+        'fcmTokens': FieldValue.arrayRemove([token]),
+      });
+      await FirebaseMessaging.instance.deleteToken();
+    } catch (_) {
+      // Best-effort — a stale token left behind is a minor nuisance, never
+      // a reason to block logout.
+    }
   }
 
   @override
@@ -219,7 +241,23 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> deleteAccount(String userId) async {
-    await _userDoc(userId).delete();
+    // Firestore doesn't cascade-delete subcollections when the parent doc
+    // is deleted — familyMembers would otherwise be orphaned forever.
+    final familyMembers = await _userDoc(userId).collection('familyMembers').get();
+    final batch = _db.batch();
+    for (final doc in familyMembers.docs) {
+      batch.delete(doc.reference);
+    }
+    batch.delete(_userDoc(userId));
+    await batch.commit();
+
+    try {
+      await FirebaseStorage.instance.ref('users/$userId/profile.jpg').delete();
+    } catch (_) {
+      // No profile photo to delete — not an error.
+    }
+
+    await _googleSignIn.signOut();
     await _auth.currentUser?.delete();
   }
 
