@@ -152,34 +152,47 @@ class _BookingSheetContentState extends ConsumerState<_BookingSheetContent> {
           const SizedBox(height: 16),
           Text(l10n.calendarSelectParticipant, style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          RadioListTile<String>(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.calendarSelectParticipantSelf),
-            value: user.id,
+          RadioGroup<String>(
             groupValue: _participantId,
-            onChanged: (v) => setState(() {
-              _participantId = v;
-              _participantName = user.name;
-            }),
-          ),
-          familyAsync.when(
-            loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
-            data: (members) => Column(
-              children: members
-                  .map(
-                    (m) => RadioListTile<String>(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(m.name),
-                      value: m.id,
-                      groupValue: _participantId,
-                      onChanged: (v) => setState(() {
-                        _participantId = v;
-                        _participantName = m.name;
-                      }),
-                    ),
-                  )
-                  .toList(),
+            onChanged: (v) {
+              if (v == null) return;
+              setState(() {
+                _participantId = v;
+                if (v == user.id) {
+                  _participantName = user.name;
+                } else {
+                  for (final m in familyAsync.valueOrNull ?? const <FamilyMember>[]) {
+                    if (m.id == v) {
+                      _participantName = m.name;
+                      break;
+                    }
+                  }
+                }
+              });
+            },
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.calendarSelectParticipantSelf),
+                  value: user.id,
+                ),
+                familyAsync.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
+                  data: (members) => Column(
+                    children: members
+                        .map(
+                          (m) => RadioListTile<String>(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(m.name),
+                            value: m.id,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 8),

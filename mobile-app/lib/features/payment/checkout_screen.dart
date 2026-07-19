@@ -167,18 +167,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         if (mounted && _methodId == null) setState(() => _methodId = methods.first.id);
                       });
                     }
-                    return Column(
-                      children: methods
-                          .map(
-                            (method) => RadioListTile<String>(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(method.localizedName(isArabic)),
-                              value: method.id,
-                              groupValue: _methodId,
-                              onChanged: (v) => setState(() => _methodId = v),
-                            ),
-                          )
-                          .toList(),
+                    return RadioGroup<String>(
+                      groupValue: _methodId,
+                      onChanged: (v) => setState(() => _methodId = v),
+                      child: Column(
+                        children: methods
+                            .map(
+                              (method) => RadioListTile<String>(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(method.localizedName(isArabic)),
+                                value: method.id,
+                              ),
+                            )
+                            .toList(),
+                      ),
                     );
                   },
                 );

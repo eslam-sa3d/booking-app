@@ -134,47 +134,34 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           _SectionLabel(l10n.settingsLanguage),
           Card(
-            child: Column(
-              children: [
-                RadioListTile<String>(
-                  title: Text(l10n.settingsLanguageEnglish),
-                  value: 'en',
-                  groupValue: locale.languageCode,
-                  onChanged: (v) => ref.read(localeProvider.notifier).setLocale(const Locale('en')),
-                ),
-                RadioListTile<String>(
-                  title: Text(l10n.settingsLanguageArabic),
-                  value: 'ar',
-                  groupValue: locale.languageCode,
-                  onChanged: (v) => ref.read(localeProvider.notifier).setLocale(const Locale('ar')),
-                ),
-              ],
+            child: RadioGroup<String>(
+              groupValue: locale.languageCode,
+              onChanged: (v) {
+                if (v != null) ref.read(localeProvider.notifier).setLocale(Locale(v));
+              },
+              child: Column(
+                children: [
+                  RadioListTile<String>(title: Text(l10n.settingsLanguageEnglish), value: 'en'),
+                  RadioListTile<String>(title: Text(l10n.settingsLanguageArabic), value: 'ar'),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 20),
           _SectionLabel(l10n.settingsDarkMode),
           Card(
-            child: Column(
-              children: [
-                RadioListTile<ThemeMode>(
-                  title: Text(l10n.settingsDarkModeSystem),
-                  value: ThemeMode.system,
-                  groupValue: themeMode,
-                  onChanged: (v) => ref.read(themeModeProvider.notifier).setMode(v!),
-                ),
-                RadioListTile<ThemeMode>(
-                  title: Text(l10n.settingsDarkModeOff),
-                  value: ThemeMode.light,
-                  groupValue: themeMode,
-                  onChanged: (v) => ref.read(themeModeProvider.notifier).setMode(v!),
-                ),
-                RadioListTile<ThemeMode>(
-                  title: Text(l10n.settingsDarkModeOn),
-                  value: ThemeMode.dark,
-                  groupValue: themeMode,
-                  onChanged: (v) => ref.read(themeModeProvider.notifier).setMode(v!),
-                ),
-              ],
+            child: RadioGroup<ThemeMode>(
+              groupValue: themeMode,
+              onChanged: (v) {
+                if (v != null) ref.read(themeModeProvider.notifier).setMode(v);
+              },
+              child: Column(
+                children: [
+                  RadioListTile<ThemeMode>(title: Text(l10n.settingsDarkModeSystem), value: ThemeMode.system),
+                  RadioListTile<ThemeMode>(title: Text(l10n.settingsDarkModeOff), value: ThemeMode.light),
+                  RadioListTile<ThemeMode>(title: Text(l10n.settingsDarkModeOn), value: ThemeMode.dark),
+                ],
+              ),
             ),
           ),
           if (user != null) ...[
