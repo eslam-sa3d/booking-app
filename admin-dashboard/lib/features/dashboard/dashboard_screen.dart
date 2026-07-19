@@ -78,7 +78,7 @@ class DashboardScreen extends ConsumerWidget {
                 icon: Icons.payments_outlined,
                 label: 'Revenue this month',
                 value: statsAsync.when(
-                  data: (s) => '${s.revenueThisMonth.toStringAsFixed(0)} SAR',
+                  data: (s) => '${s.revenueThisMonth.toStringAsFixed(0)} EGP',
                   loading: () => '—',
                   error: (_, _) => '!',
                 ),

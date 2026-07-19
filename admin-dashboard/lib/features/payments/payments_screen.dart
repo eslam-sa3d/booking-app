@@ -113,7 +113,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 spacing: 16,
                 runSpacing: 16,
                 children: [
-                  _ReportStat(label: 'Total revenue', value: '${totalRevenue.toStringAsFixed(0)} SAR'),
+                  _ReportStat(label: 'Total revenue', value: '${totalRevenue.toStringAsFixed(0)} EGP'),
                   _ReportStat(label: 'Successful transactions', value: '${succeeded.length}'),
                   _ReportStat(label: 'Refunded', value: '$refunded'),
                 ],
@@ -394,7 +394,7 @@ class _ClassRevenueCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(child: Text(entry.key, overflow: TextOverflow.ellipsis)),
-                    Text('${entry.value.toStringAsFixed(0)} SAR', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text('${entry.value.toStringAsFixed(0)} EGP', style: const TextStyle(fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),

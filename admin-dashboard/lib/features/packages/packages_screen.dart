@@ -47,7 +47,7 @@ class PackagesScreen extends ConsumerWidget {
                     ]),
                     subtitle: Text(
                       '${pkg.type.name} · ${pkg.sessionCount != null ? '${pkg.sessionCount} sessions' : 'unlimited'} · '
-                      '${pkg.validityDays} days · ${pkg.price.toStringAsFixed(0)} SAR',
+                      '${pkg.validityDays} days · ${pkg.price.toStringAsFixed(0)} EGP',
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,

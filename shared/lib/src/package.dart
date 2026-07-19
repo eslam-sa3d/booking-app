@@ -24,7 +24,7 @@ class SwimPackage {
     this.sessionCount,
     required this.validityDays,
     required this.price,
-    this.currency = 'SAR',
+    this.currency = 'EGP',
     this.isPopular = false,
   });
 
@@ -82,7 +82,7 @@ class SwimPackage {
         sessionCount: (map['sessionCount'] as num?)?.toInt(),
         validityDays: (map['validityDays'] as num?)?.toInt() ?? 30,
         price: (map['price'] as num?)?.toDouble() ?? 0,
-        currency: map['currency'] as String? ?? 'SAR',
+        currency: map['currency'] as String? ?? 'EGP',
         isPopular: map['isPopular'] as bool? ?? false,
       );
 }

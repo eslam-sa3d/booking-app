@@ -30,14 +30,14 @@ class AnalyticsService {
   Future<void> logPackagePurchaseStarted({required String packageId, required double amount}) =>
       _analytics.logEvent(
         name: 'package_purchase_started',
-        parameters: {'package_id': packageId, 'value': amount, 'currency': 'SAR'},
+        parameters: {'package_id': packageId, 'value': amount, 'currency': 'EGP'},
       );
 
   Future<void> logPaymentCompleted({required String packageId, required double amount, required bool success}) =>
       success
-          ? _analytics.logPurchase(currency: 'SAR', value: amount, parameters: {'package_id': packageId})
+          ? _analytics.logPurchase(currency: 'EGP', value: amount, parameters: {'package_id': packageId})
           : _analytics.logEvent(
               name: 'payment_failed',
-              parameters: {'package_id': packageId, 'value': amount, 'currency': 'SAR'},
+              parameters: {'package_id': packageId, 'value': amount, 'currency': 'EGP'},
             );
 }

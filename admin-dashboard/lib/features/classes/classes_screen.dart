@@ -57,7 +57,7 @@ class _ClassRow extends ConsumerWidget {
         builder: (context, snap) {
           final byId = {for (final c in snap.data ?? const <Category>[]) c.id: c.nameEn};
           final names = swimClass.categories.map((id) => byId[id] ?? id).join(', ');
-          return Text('$names · ${swimClass.durationMinutes} min · ${swimClass.price.toStringAsFixed(0)} SAR');
+          return Text('$names · ${swimClass.durationMinutes} min · ${swimClass.price.toStringAsFixed(0)} EGP');
         },
       ),
       trailing: Row(

@@ -96,7 +96,7 @@ class _ReportsBody extends StatelessWidget {
             _StatCard(
               icon: Icons.payments_outlined,
               label: 'Revenue (6mo)',
-              value: '${totalRevenue.toStringAsFixed(0)} SAR',
+              value: '${totalRevenue.toStringAsFixed(0)} EGP',
               onTap: () => _scrollToSection(_revenueTrendSectionKey),
             ),
             _StatCard(
@@ -509,7 +509,7 @@ class _RevenueTrendCard extends StatelessWidget {
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final month = points[group.x.toInt()].month;
                         return BarTooltipItem(
-                          '${_monthNames[month.month - 1]}: ${rod.toY.toStringAsFixed(0)} SAR',
+                          '${_monthNames[month.month - 1]}: ${rod.toY.toStringAsFixed(0)} EGP',
                           const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
                         );
                       },

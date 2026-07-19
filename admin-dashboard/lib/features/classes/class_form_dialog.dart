@@ -121,7 +121,7 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: TextFormField(controller: _priceCtrl, decoration: const InputDecoration(labelText: 'Price (SAR)'), keyboardType: TextInputType.number, validator: _req)),
+                    Expanded(child: TextFormField(controller: _priceCtrl, decoration: const InputDecoration(labelText: 'Price (EGP)'), keyboardType: TextInputType.number, validator: _req)),
                     const SizedBox(width: 12),
                     Expanded(child: TextFormField(controller: _durationCtrl, decoration: const InputDecoration(labelText: 'Duration (min)'), keyboardType: TextInputType.number, validator: _req)),
                   ],

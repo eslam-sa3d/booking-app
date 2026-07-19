@@ -88,19 +88,19 @@ async function seedContent(adminUid) {
     {
       id: "c1", title: "Kids Beginner Splash", titleAr: "سباحة الأطفال للمبتدئين",
       description: "Water safety and basic strokes for ages 4-8.", descriptionAr: "السلامة في الماء والحركات الأساسية.",
-      categories: ["kids", "beginner"], durationMinutes: 45, price: 150, currency: "SAR",
+      categories: ["kids", "beginner"], durationMinutes: 45, price: 150, currency: "EGP",
       instructorId: "i1", branchId: "b1", rating: 4.9, reviewCount: 12, heroColorHex: "#0EA5A4", heroIcon: "child_friendly",
     },
     {
       id: "c2", title: "Adult Advanced Techniques", titleAr: "تقنيات متقدمة للكبار",
       description: "Stroke refinement with a former national coach.", descriptionAr: "تطوير تقنية السباحة مع مدرب سابق.",
-      categories: ["adults", "advanced"], durationMinutes: 60, price: 220, currency: "SAR",
+      categories: ["adults", "advanced"], durationMinutes: 60, price: 220, currency: "EGP",
       instructorId: "i2", branchId: "b2", rating: 4.8, reviewCount: 6, heroColorHex: "#1E293B", heroIcon: "bolt",
     },
   ];
   const packages = [
-    { id: "p1", name: "8-Session Pack", nameAr: "باقة 8 حصص", description: "Use across any class within 60 days.", descriptionAr: "استخدمها في أي حصة خلال 60 يوماً.", type: "sessionPack", sessionCount: 8, validityDays: 60, price: 1100, currency: "SAR", isPopular: false },
-    { id: "p2", name: "Monthly Unlimited", nameAr: "اشتراك شهري مفتوح", description: "Unlimited group sessions for 30 days.", descriptionAr: "حصص جماعية غير محدودة لمدة 30 يوماً.", type: "monthlyUnlimited", sessionCount: null, validityDays: 30, price: 1400, currency: "SAR", isPopular: true },
+    { id: "p1", name: "8-Session Pack", nameAr: "باقة 8 حصص", description: "Use across any class within 60 days.", descriptionAr: "استخدمها في أي حصة خلال 60 يوماً.", type: "sessionPack", sessionCount: 8, validityDays: 60, price: 1100, currency: "EGP", isPopular: false },
+    { id: "p2", name: "Monthly Unlimited", nameAr: "اشتراك شهري مفتوح", description: "Unlimited group sessions for 30 days.", descriptionAr: "حصص جماعية غير محدودة لمدة 30 يوماً.", type: "monthlyUnlimited", sessionCount: null, validityDays: 30, price: 1400, currency: "EGP", isPopular: true },
   ];
   const banners = [
     { id: "bn1", title: "Summer offer: 20% off", titleAr: "عرض الصيف: خصم 20%", subtitle: "On Monthly Unlimited packages", subtitleAr: "على باقات الاشتراك الشهري", imageUrl: "", linkAction: "packages", order: 0, isActive: true },

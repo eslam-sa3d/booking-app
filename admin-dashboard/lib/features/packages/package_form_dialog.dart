@@ -86,7 +86,7 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
               ],
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _priceCtrl, decoration: const InputDecoration(labelText: 'Price (SAR)'), keyboardType: TextInputType.number),
+            TextFormField(controller: _priceCtrl, decoration: const InputDecoration(labelText: 'Price (EGP)'), keyboardType: TextInputType.number),
             const SizedBox(height: 12),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
