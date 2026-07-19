@@ -22,15 +22,27 @@ class AppLockGate extends ConsumerStatefulWidget {
 class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingObserver {
   bool _locked = false;
 
-  // Showing (and dismissing) the native biometric/PIN prompt itself pauses
-  // and resumes the app's own Activity/Scene — didChangeAppLifecycleState
-  // fires `resumed` for that, indistinguishable from the user genuinely
-  // switching back in from another app. Without this guard, a successful
-  // unlock's own resume event immediately re-locks the app, which re-opens
-  // the prompt, which resumes again, forever — the "asks every second"
-  // loop. While true (plus a short grace period after authenticate()
-  // settles, since the OS's resume event can arrive slightly after the
-  // Future resolves), resume events are ignored.
+  // Showing the native biometric/PIN prompt transitions the app to
+  // `inactive` (still "present", just momentarily not interactive) and
+  // back to `resumed` when it's dismissed — the exact same `resumed`
+  // event didChangeAppLifecycleState sees for a genuine user switching
+  // back in from another app. A *real* backgrounding always passes
+  // through `paused` (no longer visible at all) at some point before
+  // returning to `resumed` — the full sequence is
+  // resumed -> inactive -> paused -> inactive -> resumed; a transient
+  // system sheet like Face ID only ever dips to `inactive`. So rather than
+  // comparing just the immediately-preceding state (which would already
+  // be `inactive`, not `paused`, by the time a genuine return-to-resumed
+  // fires), track whether `paused` was seen at all since the last
+  // `resumed` — that's the real distinguishing signal, no delay-guessing
+  // needed. Without this, a successful unlock's own trailing resume event
+  // re-locks the app, which reopens the prompt, which resumes again,
+  // forever (the "asks every second" loop).
+  bool _wasPausedSinceResume = false;
+
+  // Still guarded defensively: authenticate() itself is in flight, so any
+  // resume event that arrives before it settles is necessarily noise, not
+  // a fresh reason to lock.
   bool _authenticating = false;
 
   @override
@@ -47,7 +59,12 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _lockIfEligible();
+    if (state == AppLifecycleState.paused) {
+      _wasPausedSinceResume = true;
+    } else if (state == AppLifecycleState.resumed) {
+      if (_wasPausedSinceResume) _lockIfEligible();
+      _wasPausedSinceResume = false;
+    }
   }
 
   void _lockIfEligible() {
@@ -75,7 +92,9 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
     } catch (_) {
       // Best-effort — the lock screen stays up and the user can retry.
     } finally {
-      await Future.delayed(const Duration(milliseconds: 500));
+      // A brief settle window for the prompt's own trailing lifecycle
+      // event, on top of the paused/inactive distinction above.
+      await Future.delayed(const Duration(milliseconds: 800));
       _authenticating = false;
     }
   }
