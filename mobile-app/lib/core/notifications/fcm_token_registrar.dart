@@ -18,6 +18,15 @@ class FcmTokenRegistrar {
   final Ref _ref;
 
   void init() {
+    // Ask for notification permission as early as possible — before the
+    // user even has an account — so a browsing guest gets the OS prompt at
+    // first launch instead of it being silently skipped until they log in.
+    // Nothing is saved here; requestPermission() is safe to call again
+    // later (a no-op returning the already-decided status once answered),
+    // which is exactly what registerForCurrentUser() below does once a
+    // token actually has somewhere to be saved.
+    _requestPermissionEarly();
+
     // fireImmediately covers a user already resolved from a persisted
     // session at cold start, not just a fresh login transition — without
     // it, a user who denies the permission prompt once and later enables
@@ -28,6 +37,16 @@ class FcmTokenRegistrar {
     _ref.listen(currentUserProvider, (previous, next) {
       if (next != null) registerForCurrentUser();
     }, fireImmediately: true);
+  }
+
+  Future<void> _requestPermissionEarly() async {
+    try {
+      await FirebaseMessaging.instance.requestPermission();
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Early notification permission request skipped: $error\n$stackTrace');
+      }
+    }
   }
 
   Future<void> registerForCurrentUser() async {
