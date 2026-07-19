@@ -8,13 +8,27 @@ import '../../features/auth/auth_controller.dart';
 
 /// Requests notification permission and stores the device's FCM token on
 /// the user's profile (`users/{uid}.fcmTokens`) so
-/// backend/functions/src/notifications/dispatch.ts can push to it. Runs
-/// once per login; failures (permission denied, simulator without APNs,
-/// web without a service worker) are swallowed — push is a nice-to-have,
-/// never a blocker for using the app.
+/// backend/functions/src/notifications/dispatch.ts can push to it. Runs on
+/// every cold start where a user is signed in, not just a fresh login —
+/// failures (permission denied, simulator without APNs, web without a
+/// service worker) are swallowed — push is a nice-to-have, never a blocker
+/// for using the app.
 class FcmTokenRegistrar {
   FcmTokenRegistrar(this._ref);
   final Ref _ref;
+
+  void init() {
+    // fireImmediately covers a user already resolved from a persisted
+    // session at cold start, not just a fresh login transition — without
+    // it, a user who denies the permission prompt once and later enables
+    // it manually in iOS Settings would never log in again, so
+    // registration would never get a chance to re-run for them. Re-running
+    // on every cold start also refreshes a rotated/expired FCM token,
+    // which Firebase recommends doing periodically anyway.
+    _ref.listen(currentUserProvider, (previous, next) {
+      if (next != null) registerForCurrentUser();
+    }, fireImmediately: true);
+  }
 
   Future<void> registerForCurrentUser() async {
     final user = _ref.read(currentUserProvider);
@@ -41,4 +55,8 @@ class FcmTokenRegistrar {
   }
 }
 
-final fcmTokenRegistrarProvider = Provider((ref) => FcmTokenRegistrar(ref));
+final fcmTokenRegistrarProvider = Provider((ref) {
+  final registrar = FcmTokenRegistrar(ref);
+  registrar.init();
+  return registrar;
+});

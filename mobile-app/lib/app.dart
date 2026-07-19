@@ -10,7 +10,6 @@ import 'core/providers/theme_mode_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/app_lock_gate.dart';
-import 'features/auth/auth_controller.dart';
 
 class SwimAcademyApp extends ConsumerWidget {
   const SwimAcademyApp({super.key});
@@ -21,13 +20,10 @@ class SwimAcademyApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
 
-    // Registers/refreshes the device's FCM token whenever a user signs in
-    // — best-effort, see FcmTokenRegistrar for why failures are swallowed.
-    ref.listen(currentUserProvider, (previous, next) {
-      if (previous == null && next != null) {
-        ref.read(fcmTokenRegistrarProvider).registerForCurrentUser();
-      }
-    });
+    // Registers/refreshes the device's FCM token on every cold start where
+    // a user is signed in — see FcmTokenRegistrar.init for why this can't
+    // be a plain null->user transition listener here.
+    ref.watch(fcmTokenRegistrarProvider);
 
     // Sets up FirebaseMessaging.onMessage/onMessageOpenedApp listeners once
     // (the provider is cached, so re-reading it on rebuild is a no-op) so
