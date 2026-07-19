@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/analytics/analytics_service.dart';
 import '../../core/localization/generated/app_localizations.dart';
@@ -94,6 +95,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
   }
 
+  Future<void> _openPaymentLink(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -175,7 +182,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             .map(
                               (method) => RadioListTile<String>(
                                 contentPadding: EdgeInsets.zero,
+                                secondary: _MethodLogo(logoUrl: method.logoUrl),
                                 title: Text(method.localizedName(isArabic)),
+                                subtitle: method.paymentLinkUrl == null
+                                    ? null
+                                    : Align(
+                                        alignment: AlignmentDirectional.centerStart,
+                                        child: TextButton(
+                                          onPressed: () => _openPaymentLink(method.paymentLinkUrl!),
+                                          style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                                          child: Text(l10n.checkoutPayNowLink),
+                                        ),
+                                      ),
                                 value: method.id,
                               ),
                             )
@@ -211,6 +229,29 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ],
         );
     }
+  }
+}
+
+class _MethodLogo extends StatelessWidget {
+  const _MethodLogo({required this.logoUrl});
+  final String? logoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = logoUrl;
+    if (url == null || url.isEmpty) {
+      return const Icon(Icons.payments_outlined);
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Image.network(
+        url,
+        width: 32,
+        height: 32,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => const Icon(Icons.payments_outlined),
+      ),
+    );
   }
 }
 

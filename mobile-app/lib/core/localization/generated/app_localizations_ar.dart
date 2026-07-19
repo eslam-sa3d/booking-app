@@ -602,6 +602,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'تتم معالجة المدفوعات بشكل آمن — لا نقوم أبداً بتخزين بيانات بطاقتك.';
 
   @override
+  String get checkoutPayNowLink => 'ادفع الآن';
+
+  @override
   String get paymentHistoryTitle => 'سجل المدفوعات';
 
   @override

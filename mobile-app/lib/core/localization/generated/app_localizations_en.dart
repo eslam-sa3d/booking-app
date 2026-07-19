@@ -605,6 +605,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Payments are securely processed — we never store your card details.';
 
   @override
+  String get checkoutPayNowLink => 'Pay Now';
+
+  @override
   String get paymentHistoryTitle => 'Payment history';
 
   @override

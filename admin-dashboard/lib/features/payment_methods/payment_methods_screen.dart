@@ -46,7 +46,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
                 for (final method in methods)
                   ListTile(
                     key: ValueKey(method.id),
-                    leading: Icon(Icons.payments_outlined, color: method.isActive ? Colors.teal : Colors.grey),
+                    leading: _MethodLogo(method: method),
                     title: Row(
                       children: [
                         Text(method.nameEn, style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -79,6 +79,29 @@ class PaymentMethodsScreen extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _MethodLogo extends StatelessWidget {
+  const _MethodLogo({required this.method});
+  final PaymentMethodConfig method;
+
+  @override
+  Widget build(BuildContext context) {
+    final logoUrl = method.logoUrl;
+    if (logoUrl == null || logoUrl.isEmpty) {
+      return Icon(Icons.payments_outlined, color: method.isActive ? Colors.teal : Colors.grey);
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Image.network(
+        logoUrl,
+        width: 32,
+        height: 32,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => Icon(Icons.payments_outlined, color: method.isActive ? Colors.teal : Colors.grey),
       ),
     );
   }

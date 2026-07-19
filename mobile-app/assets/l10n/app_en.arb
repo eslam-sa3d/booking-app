@@ -213,6 +213,7 @@
   "checkoutFailedTitle": "Payment failed",
   "checkoutFailedSubtitle": "Please check your payment details and try again.",
   "checkoutSecureNotice": "Payments are securely processed — we never store your card details.",
+  "checkoutPayNowLink": "Pay Now",
 
   "paymentHistoryTitle": "Payment history",
   "paymentHistoryEmpty": "No payments yet",

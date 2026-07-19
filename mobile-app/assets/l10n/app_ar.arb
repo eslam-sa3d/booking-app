@@ -202,6 +202,7 @@
   "checkoutFailedTitle": "فشلت عملية الدفع",
   "checkoutFailedSubtitle": "يرجى التحقق من بيانات الدفع والمحاولة مرة أخرى.",
   "checkoutSecureNotice": "تتم معالجة المدفوعات بشكل آمن — لا نقوم أبداً بتخزين بيانات بطاقتك.",
+  "checkoutPayNowLink": "ادفع الآن",
 
   "paymentHistoryTitle": "سجل المدفوعات",
   "paymentHistoryEmpty": "لا توجد مدفوعات بعد",

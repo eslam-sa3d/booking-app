@@ -21,6 +21,8 @@ class _PaymentMethodFormDialogState extends ConsumerState<_PaymentMethodFormDial
   final _formKey = GlobalKey<FormState>();
   late final _nameEnCtrl = TextEditingController(text: widget.existing?.nameEn);
   late final _nameArCtrl = TextEditingController(text: widget.existing?.nameAr);
+  late final _logoUrlCtrl = TextEditingController(text: widget.existing?.logoUrl);
+  late final _paymentLinkCtrl = TextEditingController(text: widget.existing?.paymentLinkUrl);
   late bool _isActive = widget.existing?.isActive ?? true;
   bool _isSaving = false;
 
@@ -33,6 +35,8 @@ class _PaymentMethodFormDialogState extends ConsumerState<_PaymentMethodFormDial
       nameAr: _nameArCtrl.text.trim(),
       order: widget.existing?.order ?? 0,
       isActive: _isActive,
+      logoUrl: _logoUrlCtrl.text.trim().isEmpty ? null : _logoUrlCtrl.text.trim(),
+      paymentLinkUrl: _paymentLinkCtrl.text.trim().isEmpty ? null : _paymentLinkCtrl.text.trim(),
     );
     final repo = ref.read(paymentMethodsRepositoryProvider);
     if (widget.existing == null) {
@@ -57,6 +61,22 @@ class _PaymentMethodFormDialogState extends ConsumerState<_PaymentMethodFormDial
               TextFormField(controller: _nameEnCtrl, decoration: const InputDecoration(labelText: 'Name (EN)'), validator: _req),
               const SizedBox(height: 12),
               TextFormField(controller: _nameArCtrl, decoration: const InputDecoration(labelText: 'Name (AR)'), validator: _req),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _logoUrlCtrl,
+                decoration: const InputDecoration(labelText: 'Logo URL', hintText: 'https://...'),
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _paymentLinkCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Payment link URL',
+                  hintText: 'https://...',
+                  helperText: 'Opened when the customer taps "Pay Now" at checkout',
+                ),
+                keyboardType: TextInputType.url,
+              ),
               const SizedBox(height: 12),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,

@@ -1214,6 +1214,12 @@ abstract class AppLocalizations {
   /// **'Payments are securely processed — we never store your card details.'**
   String get checkoutSecureNotice;
 
+  /// No description provided for @checkoutPayNowLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Now'**
+  String get checkoutPayNowLink;
+
   /// No description provided for @paymentHistoryTitle.
   ///
   /// In en, this message translates to:
