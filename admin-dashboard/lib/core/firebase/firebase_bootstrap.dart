@@ -13,6 +13,16 @@ const bool kUseFirebaseEmulators = false;
 Future<void> bootstrapFirebase() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
 
+  // Some corporate proxies/security agents break the Firestore Web SDK's
+  // default streaming (WebChannel) transport — real-time listeners then
+  // hang forever on a "Listen/channel ... 404" request that never
+  // resolves. Auto-detecting long-polling falls back to plain HTTP
+  // requests when streaming isn't usable, without the overhead of
+  // forcing it when it isn't needed.
+  FirebaseFirestore.instance.settings = const Settings(
+    webExperimentalAutoDetectLongPolling: true,
+  );
+
   if (kUseFirebaseEmulators) {
     await FirebaseAuth.instance.useAuthEmulator('127.0.0.1', 9099);
     FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
