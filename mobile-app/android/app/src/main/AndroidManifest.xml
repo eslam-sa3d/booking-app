@@ -34,6 +34,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Without this, FCM auto-displaying a push while the app is
+             backgrounded/terminated uses its own default channel (created
+             with IMPORTANCE_DEFAULT) instead of the app's own
+             high_importance_channel (see PushNotificationHandler, used for
+             foreground pushes) — background notifications would show as a
+             quiet shade entry instead of a heads-up banner, unlike
+             foreground ones. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="high_importance_channel" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
