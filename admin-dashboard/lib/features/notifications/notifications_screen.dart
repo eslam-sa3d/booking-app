@@ -130,6 +130,15 @@ class _NotificationTile extends ConsumerWidget {
             FutureBuilder<NotificationStats>(
               future: ref.read(notificationsRepositoryProvider).getStats(item.id),
               builder: (context, snap) {
+                if (snap.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      l10n.notificationsFailedToLoadStats(snap.error.toString()),
+                      style: const TextStyle(fontSize: 12, color: Colors.red),
+                    ),
+                  );
+                }
                 if (!snap.hasData) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 4),

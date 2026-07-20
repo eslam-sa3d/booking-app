@@ -1054,6 +1054,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationsLoadingStats => 'جارٍ تحميل إحصاءات التسليم…';
 
   @override
+  String notificationsFailedToLoadStats(String error) {
+    return 'فشل تحميل إحصاءات التسليم: $error';
+  }
+
+  @override
   String notificationsDeliveryStats(int delivered, int read) {
     return 'تم التسليم: $delivered · تمت القراءة: $read';
   }

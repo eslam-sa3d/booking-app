@@ -327,6 +327,7 @@
   "notificationsBodyTargetLine": "{body} · الهدف: {target}",
   "notificationsScheduledFor": "مجدول لـ {date}",
   "notificationsLoadingStats": "جارٍ تحميل إحصاءات التسليم…",
+  "notificationsFailedToLoadStats": "فشل تحميل إحصاءات التسليم: {error}",
   "notificationsDeliveryStats": "تم التسليم: {delivered} · تمت القراءة: {read}",
   "notificationsStatusDraft": "مسودة",
   "notificationsStatusScheduled": "مجدولة",

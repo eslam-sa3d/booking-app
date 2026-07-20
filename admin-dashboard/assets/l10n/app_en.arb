@@ -374,6 +374,8 @@
   "notificationsScheduledFor": "Scheduled for {date}",
   "@notificationsScheduledFor": {"placeholders": {"date": {"type": "String"}}},
   "notificationsLoadingStats": "Loading delivery stats…",
+  "notificationsFailedToLoadStats": "Failed to load delivery stats: {error}",
+  "@notificationsFailedToLoadStats": {"placeholders": {"error": {"type": "String"}}},
   "notificationsDeliveryStats": "Delivered: {delivered} · Read: {read}",
   "@notificationsDeliveryStats": {"placeholders": {"delivered": {"type": "int"}, "read": {"type": "int"}}},
   "notificationsStatusDraft": "Draft",

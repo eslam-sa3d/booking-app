@@ -1053,6 +1053,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsLoadingStats => 'Loading delivery stats…';
 
   @override
+  String notificationsFailedToLoadStats(String error) {
+    return 'Failed to load delivery stats: $error';
+  }
+
+  @override
   String notificationsDeliveryStats(int delivered, int read) {
     return 'Delivered: $delivered · Read: $read';
   }

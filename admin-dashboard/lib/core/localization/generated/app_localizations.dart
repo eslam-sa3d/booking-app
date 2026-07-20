@@ -1950,6 +1950,12 @@ abstract class AppLocalizations {
   /// **'Loading delivery stats…'**
   String get notificationsLoadingStats;
 
+  /// No description provided for @notificationsFailedToLoadStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load delivery stats: {error}'**
+  String notificationsFailedToLoadStats(String error);
+
   /// No description provided for @notificationsDeliveryStats.
   ///
   /// In en, this message translates to:
