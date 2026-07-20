@@ -2,12 +2,21 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 // The admin dashboard's Firebase Hosting URL (admin-dashboard/firebase.json).
 // Update this if a custom domain is ever configured for the dashboard.
 const String kAdminDashboardUrl = 'https://booking-app-36b8e.web.app';
 final Uri _kAllowedHost = Uri.parse(kAdminDashboardUrl);
+
+// Matches admin-dashboard's AppColors (lib/core/theme/app_theme.dart) so the
+// native shell reads as part of the same product, not a generic wrapper.
+class _BrandColors {
+  _BrandColors._();
+  static const primary = Color(0xFF0EA5A4);
+  static const sidebar = Color(0xFF0F172A);
+}
 
 /// Keeps the app locked to the admin dashboard's own host. Anything else
 /// (e.g. an external link inside the dashboard) is rejected rather than
@@ -30,7 +39,7 @@ class BookingAdminApp extends StatelessWidget {
       title: 'Booking Admin',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        colorScheme: ColorScheme.fromSeed(seedColor: _BrandColors.primary),
         useMaterial3: true,
       ),
       home: const AdminWebViewScreen(),
@@ -143,19 +152,35 @@ class _AdminWebViewScreenState extends State<AdminWebViewScreen> {
         Navigator.of(context).maybePop();
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('Booking Admin'),
+          backgroundColor: _BrandColors.sidebar,
+          foregroundColor: Colors.white,
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+          titleSpacing: 16,
+          title: const Row(
+            children: [
+              Icon(Icons.pool_rounded, color: _BrandColors.primary, size: 22),
+              SizedBox(width: 10),
+              Text('Booking Admin', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
+            ],
+          ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               tooltip: 'Refresh',
               onPressed: () => _controller.reload(),
             ),
           ],
           bottom: _isLoading
               ? PreferredSize(
-                  preferredSize: const Size.fromHeight(3),
-                  child: LinearProgressIndicator(value: _loadProgress),
+                  preferredSize: const Size.fromHeight(2),
+                  child: LinearProgressIndicator(
+                    value: _loadProgress == 0 ? null : _loadProgress,
+                    minHeight: 2,
+                    backgroundColor: Colors.white12,
+                    valueColor: const AlwaysStoppedAnimation(_BrandColors.primary),
+                  ),
                 )
               : null,
         ),
@@ -187,11 +212,15 @@ class _OfflineView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+          const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
           const SizedBox(height: 16),
           const Text('No internet connection'),
           const SizedBox(height: 16),
-          FilledButton(onPressed: onRetry, child: const Text('Retry')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: _BrandColors.primary),
+            onPressed: onRetry,
+            child: const Text('Retry'),
+          ),
         ],
       ),
     );
@@ -212,14 +241,18 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
               "Couldn't load the dashboard.\n$message",
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Retry')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: _BrandColors.primary),
+              onPressed: onRetry,
+              child: const Text('Retry'),
+            ),
           ],
         ),
       ),
