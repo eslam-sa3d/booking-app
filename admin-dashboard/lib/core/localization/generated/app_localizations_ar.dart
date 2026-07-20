@@ -120,10 +120,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loginSignIn => 'تسجيل الدخول';
 
   @override
-  String get loginStaffOnlyNotice =>
-      'لحسابات الموظفين والمشرفين فقط. اطلب من أحد المشرفين منحك صلاحية الوصول عبر «حسابات الموظفين».';
-
-  @override
   String get dashboardTitle => 'لوحة التحكم';
 
   @override

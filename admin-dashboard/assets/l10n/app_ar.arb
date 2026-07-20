@@ -40,7 +40,6 @@
   "loginEmail": "البريد الإلكتروني",
   "loginPassword": "كلمة المرور",
   "loginSignIn": "تسجيل الدخول",
-  "loginStaffOnlyNotice": "لحسابات الموظفين والمشرفين فقط. اطلب من أحد المشرفين منحك صلاحية الوصول عبر «حسابات الموظفين».",
 
   "dashboardTitle": "لوحة التحكم",
   "dashboardActiveClasses": "الفصول النشطة",

@@ -120,10 +120,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSignIn => 'Sign in';
 
   @override
-  String get loginStaffOnlyNotice =>
-      'Staff and admin accounts only. Ask an admin to grant access via Staff Accounts.';
-
-  @override
   String get dashboardTitle => 'Dashboard';
 
   @override

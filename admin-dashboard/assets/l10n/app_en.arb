@@ -40,7 +40,6 @@
   "loginEmail": "Email",
   "loginPassword": "Password",
   "loginSignIn": "Sign in",
-  "loginStaffOnlyNotice": "Staff and admin accounts only. Ask an admin to grant access via Staff Accounts.",
 
   "dashboardTitle": "Dashboard",
   "dashboardActiveClasses": "Active classes",

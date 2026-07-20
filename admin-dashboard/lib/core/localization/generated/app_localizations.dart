@@ -320,12 +320,6 @@ abstract class AppLocalizations {
   /// **'Sign in'**
   String get loginSignIn;
 
-  /// No description provided for @loginStaffOnlyNotice.
-  ///
-  /// In en, this message translates to:
-  /// **'Staff and admin accounts only. Ask an admin to grant access via Staff Accounts.'**
-  String get loginStaffOnlyNotice;
-
   /// No description provided for @dashboardTitle.
   ///
   /// In en, this message translates to:

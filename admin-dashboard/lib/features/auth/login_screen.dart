@@ -94,11 +94,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : Text(l10n.loginSignIn),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      l10n.loginStaffOnlyNotice,
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                    ),
                   ],
                 ),
               ),
