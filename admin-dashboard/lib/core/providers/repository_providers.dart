@@ -51,7 +51,8 @@ final transactionsRepositoryProvider = Provider(
   (ref) =>
       TransactionsRepository(ref.watch(firestoreProvider), ref.watch(authProvider), ref.watch(functionsProvider)),
 );
-final notificationsRepositoryProvider = Provider((ref) => NotificationsRepository(ref.watch(firestoreProvider)));
+final notificationsRepositoryProvider =
+    Provider((ref) => NotificationsRepository(ref.watch(firestoreProvider), ref.watch(functionsProvider)));
 final bookingsRepositoryProvider = Provider((ref) => BookingsRepository(ref.watch(firestoreProvider)));
 final staffRepositoryProvider =
     Provider((ref) => StaffRepository(ref.watch(firestoreProvider), ref.watch(functionsProvider)));

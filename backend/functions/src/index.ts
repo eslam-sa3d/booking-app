@@ -10,6 +10,7 @@ export { purchasePackage } from "./payments/purchasePackage";
 export { onRefundResolved } from "./payments/onRefundResolved";
 
 export { onNotificationCreated, dispatchScheduledNotifications } from "./notifications/dispatch";
+export { getNotificationStats } from "./notifications/getStats";
 export { packageExpiryReminders } from "./scheduled/packageExpiryReminders";
 export { sessionReminders } from "./scheduled/sessionReminders";
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class NotificationDefinition {
   final String id;
@@ -79,8 +80,9 @@ class NotificationStats {
 /// a doc created with `status: 'scheduled'` and a `scheduledFor` timestamp is
 /// picked up by the scheduled function once that time arrives.
 class NotificationsRepository {
-  NotificationsRepository(this._db);
+  NotificationsRepository(this._db, this._functions);
   final FirebaseFirestore _db;
+  final FirebaseFunctions _functions;
 
   CollectionReference<Map<String, dynamic>> get _col => _db.collection('notifications');
 
@@ -101,13 +103,16 @@ class NotificationsRepository {
   }
 
   /// Counts delivered (fanned-out) and read inbox copies for [notificationId]
-  /// across every user's `inbox` subcollection.
+  /// across every user's `inbox` subcollection. Routed through the
+  /// `getNotificationStats` callable (Admin SDK, bypasses rules) rather than
+  /// a client-side collectionGroup query — Firestore's security rules can't
+  /// reliably authorize an OR of a wildcard-bound owner check and a
+  /// wildcard-independent staff check for collectionGroup list queries, and
+  /// granting staff broad client-side read access across every customer's
+  /// inbox is a bigger permission surface than this feature needs anyway.
   Future<NotificationStats> getStats(String notificationId) async {
-    final snap = await _db
-        .collectionGroup('inbox')
-        .where('sourceNotificationId', isEqualTo: notificationId)
-        .get();
-    final read = snap.docs.where((d) => d.data()['isRead'] == true).length;
-    return NotificationStats(delivered: snap.docs.length, read: read);
+    final result = await _functions.httpsCallable('getNotificationStats').call({'notificationId': notificationId});
+    final data = Map<String, dynamic>.from(result.data as Map);
+    return NotificationStats(delivered: data['delivered'] as int, read: data['read'] as int);
   }
 }

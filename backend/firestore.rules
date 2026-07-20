@@ -65,7 +65,10 @@ service cloud.firestore {
       // Per-user notification inbox: the owner may only toggle isRead;
       // delivery (create) is always server-side.
       match /inbox/{notificationId} {
-        allow read: if isOwner(uid) || isStaff();
+        // Staff read access for delivery stats goes through the
+        // getNotificationStats callable (Admin SDK, bypasses rules) instead
+        // of a broad client-side grant — see notifications/getStats.ts.
+        allow read: if isOwner(uid);
         allow update: if isOwner(uid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
         allow create, delete: if isStaff();

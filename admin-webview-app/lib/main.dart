@@ -74,6 +74,10 @@ class _AdminWebViewScreenState extends State<AdminWebViewScreen> {
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
+      ..setOnConsoleMessage((message) {
+        // ignore: avoid_print
+        print('[webview console] ${message.level}: ${message.message}');
+      })
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (progress) {
