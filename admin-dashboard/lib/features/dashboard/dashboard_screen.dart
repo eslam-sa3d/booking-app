@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -22,12 +23,13 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final classesAsync = ref.watch(classesRepositoryProvider).watchClasses();
     final waitlistAsync = ref.read(bookingsRepositoryProvider).watchByStatus(BookingStatus.waitlisted);
     final statsAsync = ref.watch(_dashboardStatsProvider);
 
     return AdminPageScaffold(
-      title: 'Dashboard',
+      title: l10n.dashboardTitle,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -39,14 +41,14 @@ class DashboardScreen extends ConsumerWidget {
                 stream: classesAsync,
                 builder: (context, snap) => _StatCard(
                   icon: Icons.pool_outlined,
-                  label: 'Active classes',
+                  label: l10n.dashboardActiveClasses,
                   value: '${snap.data?.length ?? '—'}',
                   route: '/classes',
                 ),
               ),
               _StatCard(
                 icon: Icons.people_outline,
-                label: 'Total members',
+                label: l10n.dashboardTotalMembers,
                 value: statsAsync.when(
                   data: (s) => '${s.membersCount}',
                   loading: () => '—',
@@ -58,7 +60,7 @@ class DashboardScreen extends ConsumerWidget {
                 stream: waitlistAsync,
                 builder: (context, snap) => _StatCard(
                   icon: Icons.hourglass_top_outlined,
-                  label: 'Waitlisted bookings',
+                  label: l10n.dashboardWaitlistedBookings,
                   value: '${snap.data?.length ?? '—'}',
                   highlight: (snap.data?.length ?? 0) > 0,
                   route: '/requests',
@@ -66,7 +68,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               _StatCard(
                 icon: Icons.event_available_outlined,
-                label: "Today's bookings",
+                label: l10n.dashboardTodaysBookings,
                 value: statsAsync.when(
                   data: (s) => '${s.todaysBookings}',
                   loading: () => '—',
@@ -76,7 +78,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               _StatCard(
                 icon: Icons.payments_outlined,
-                label: 'Revenue this month',
+                label: l10n.dashboardRevenueThisMonth,
                 value: statsAsync.when(
                   data: (s) => '${s.revenueThisMonth.toStringAsFixed(0)} EGP',
                   loading: () => '—',
@@ -86,7 +88,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               _StatCard(
                 icon: Icons.event_note_outlined,
-                label: 'Upcoming sessions (7d)',
+                label: l10n.dashboardUpcomingSessions,
                 value: statsAsync.when(
                   data: (s) => '${s.upcomingSessions}',
                   loading: () => '—',
@@ -96,7 +98,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               _StatCard(
                 icon: Icons.warning_amber_outlined,
-                label: 'Full / near-full classes',
+                label: l10n.dashboardFullNearFullClasses,
                 value: statsAsync.when(
                   data: (s) => '${s.fullOrNearFullSessions}',
                   loading: () => '—',
@@ -107,7 +109,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               _StatCard(
                 icon: Icons.schedule_outlined,
-                label: 'Packages expiring soon',
+                label: l10n.dashboardPackagesExpiringSoon,
                 value: statsAsync.when(
                   data: (s) => '${s.expiringPackages}',
                   loading: () => '—',
@@ -119,10 +121,9 @@ class DashboardScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 32),
-          const Text(
-            'Use the sidebar to manage classes, the booking calendar, banners, packages, and more. '
-            'Every change here is live in the mobile app immediately — no release needed.',
-            style: TextStyle(color: Colors.black54),
+          Text(
+            l10n.dashboardSidebarHint,
+            style: const TextStyle(color: Colors.black54),
           ),
         ],
       ),

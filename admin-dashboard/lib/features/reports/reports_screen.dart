@@ -2,15 +2,27 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../data/repositories/reports_repository.dart';
 
-const _monthNames = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', //
-];
+List<String> _monthNames(AppLocalizations l10n) => [
+      l10n.reportsMonthJan,
+      l10n.reportsMonthFeb,
+      l10n.reportsMonthMar,
+      l10n.reportsMonthApr,
+      l10n.reportsMonthMay,
+      l10n.reportsMonthJun,
+      l10n.reportsMonthJul,
+      l10n.reportsMonthAug,
+      l10n.reportsMonthSep,
+      l10n.reportsMonthOct,
+      l10n.reportsMonthNov,
+      l10n.reportsMonthDec,
+    ];
 
 // Each stat card scrolls to its matching chart section further down this
 // same page — the detail behind these numbers already lives here, so
@@ -38,13 +50,14 @@ class ReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final reportsAsync = ref.watch(_reportsDataProvider);
 
     return AdminPageScaffold(
-      title: 'Reports & Analytics',
+      title: l10n.navReports,
       actions: [
         IconButton(
-          tooltip: 'Refresh',
+          tooltip: l10n.reportsRefreshTooltip,
           icon: const Icon(Icons.refresh_rounded),
           onPressed: () => ref.invalidate(_reportsDataProvider),
         ),
@@ -56,7 +69,7 @@ class ReportsScreen extends ConsumerWidget {
         ),
         error: (err, _) => Padding(
           padding: const EdgeInsets.all(40),
-          child: Text('Failed to load reports: $err'),
+          child: Text(l10n.reportsFailedToLoad(err.toString())),
         ),
         data: (data) => _ReportsBody(data: data),
       ),
@@ -70,6 +83,7 @@ class _ReportsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final attendance = data.attendance;
     final totalRevenue = data.revenueTrend.fold<double>(0, (sum, m) => sum + m.amount);
     final newMembers = data.memberGrowth.fold<int>(0, (sum, m) => sum + m.count);
@@ -83,55 +97,54 @@ class _ReportsBody extends StatelessWidget {
           children: [
             _StatCard(
               icon: Icons.event_available_outlined,
-              label: 'Bookings (30d)',
+              label: l10n.reportsBookings30d,
               value: '${data.bookingsTrend.fold<int>(0, (sum, p) => sum + p.count)}',
               onTap: () => _scrollToSection(_bookingsTrendSectionKey),
             ),
             _StatCard(
               icon: Icons.fact_check_outlined,
-              label: 'Attendance rate',
+              label: l10n.reportsAttendanceRate,
               value: '${attendance.rate.toStringAsFixed(0)}%',
               onTap: () => _scrollToSection(_attendanceSectionKey),
             ),
             _StatCard(
               icon: Icons.payments_outlined,
-              label: 'Revenue (6mo)',
+              label: l10n.reportsRevenue6mo,
               value: '${totalRevenue.toStringAsFixed(0)} EGP',
               onTap: () => _scrollToSection(_revenueTrendSectionKey),
             ),
             _StatCard(
               icon: Icons.person_add_alt_1_outlined,
-              label: 'New members (6mo)',
+              label: l10n.reportsNewMembers6mo,
               value: '$newMembers',
               onTap: () => _scrollToSection(_memberGrowthSectionKey),
             ),
           ],
         ),
         const SizedBox(height: 28),
-        Text('Bookings trend (last 30 days)', key: _bookingsTrendSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text(l10n.reportsBookingsTrendTitle, key: _bookingsTrendSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
-        const Text(
-          'Count of bookings created per day.',
-          style: TextStyle(color: Colors.black54, fontSize: 12),
+        Text(
+          l10n.reportsBookingsTrendDescription,
+          style: const TextStyle(color: Colors.black54, fontSize: 12),
         ),
         const SizedBox(height: 12),
         _BookingsTrendCard(points: data.bookingsTrend),
         const SizedBox(height: 28),
-        Text('Attendance rate', key: _attendanceSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text(l10n.reportsAttendanceRate, key: _attendanceSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
-        const Text(
-          'Completed vs. cancelled bookings (all time). Cancellations are treated as non-attendance — this app '
-          "doesn't track a separate no-show flag, so it's an approximation.",
-          style: TextStyle(color: Colors.black54, fontSize: 12),
+        Text(
+          l10n.reportsAttendanceDescription,
+          style: const TextStyle(color: Colors.black54, fontSize: 12),
         ),
         const SizedBox(height: 12),
         _AttendanceCard(attendance: attendance),
         const SizedBox(height: 28),
-        const Text('Popular classes & times', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text(l10n.reportsPopularClassesAndTimesTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
-        const Text(
-          'Ranked by booking count over the last 30 days.',
-          style: TextStyle(color: Colors.black54, fontSize: 12),
+        Text(
+          l10n.reportsPopularClassesTimesDescription,
+          style: const TextStyle(color: Colors.black54, fontSize: 12),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -143,20 +156,20 @@ class _ReportsBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 28),
-        Text('Revenue trend (last 6 months)', key: _revenueTrendSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text(l10n.reportsRevenueTrendTitle, key: _revenueTrendSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
-        const Text(
-          'Sum of succeeded transactions, by month.',
-          style: TextStyle(color: Colors.black54, fontSize: 12),
+        Text(
+          l10n.reportsRevenueTrendDescription,
+          style: const TextStyle(color: Colors.black54, fontSize: 12),
         ),
         const SizedBox(height: 12),
         _RevenueTrendCard(points: data.revenueTrend),
         const SizedBox(height: 28),
-        Text('Member growth (last 6 months)', key: _memberGrowthSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text(l10n.reportsMemberGrowthTitle, key: _memberGrowthSectionKey, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 4),
-        const Text(
-          'New customer signups, by month.',
-          style: TextStyle(color: Colors.black54, fontSize: 12),
+        Text(
+          l10n.reportsMemberGrowthDescription,
+          style: const TextStyle(color: Colors.black54, fontSize: 12),
         ),
         const SizedBox(height: 12),
         _MemberGrowthCard(points: data.memberGrowth),
@@ -232,13 +245,14 @@ class _BookingsTrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final maxValue = points.fold<int>(0, (m, p) => p.count > m ? p.count : m);
 
     return _Card(
       child: SizedBox(
         height: 200,
         child: maxValue <= 0
-            ? const Center(child: Text('No bookings in this period.', style: TextStyle(color: Colors.black54)))
+            ? Center(child: Text(l10n.reportsNoBookingsInPeriod, style: const TextStyle(color: Colors.black54)))
             : BarChart(
                 BarChartData(
                   maxY: maxValue * 1.2,
@@ -305,6 +319,7 @@ class _AttendanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final total = attendance.completed + attendance.cancelled;
     final completedFraction = total == 0 ? 0.0 : attendance.completed / total;
 
@@ -316,7 +331,7 @@ class _AttendanceCard extends StatelessWidget {
             children: [
               Text('${attendance.rate.toStringAsFixed(1)}%', style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
               const SizedBox(width: 12),
-              const Text('completed', style: TextStyle(color: Colors.black54)),
+              Text(l10n.reportsCompletedLabel, style: const TextStyle(color: Colors.black54)),
             ],
           ),
           const SizedBox(height: 16),
@@ -340,9 +355,9 @@ class _AttendanceCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _LegendDot(color: AppColors.success, label: 'Completed: ${attendance.completed}'),
+              _LegendDot(color: AppColors.success, label: l10n.reportsCompletedCount(attendance.completed)),
               const SizedBox(width: 20),
-              _LegendDot(color: AppColors.error, label: 'Cancelled: ${attendance.cancelled}'),
+              _LegendDot(color: AppColors.error, label: l10n.reportsCancelledCount(attendance.cancelled)),
             ],
           ),
         ],
@@ -375,6 +390,7 @@ class _PopularClassesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final top = classes.take(8).toList();
     final maxCount = top.fold<int>(0, (m, c) => c.count > m ? c.count : m);
 
@@ -382,10 +398,10 @@ class _PopularClassesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Top classes', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          Text(l10n.reportsTopClasses, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 12),
           if (top.isEmpty)
-            const Text('No bookings in this period.', style: TextStyle(color: Colors.black54))
+            Text(l10n.reportsNoBookingsInPeriod, style: const TextStyle(color: Colors.black54))
           else
             for (final entry in top)
               Padding(
@@ -424,6 +440,7 @@ class _PopularTimesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final top = times.take(8).toList();
     final maxCount = top.fold<int>(0, (m, t) => t.count > m ? t.count : m);
 
@@ -431,10 +448,10 @@ class _PopularTimesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Popular times', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          Text(l10n.reportsPopularTimes, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 12),
           if (top.isEmpty)
-            const Text('No bookings in this period.', style: TextStyle(color: Colors.black54))
+            Text(l10n.reportsNoBookingsInPeriod, style: const TextStyle(color: Colors.black54))
           else
             for (final entry in top)
               Padding(
@@ -473,13 +490,15 @@ class _RevenueTrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final monthNames = _monthNames(l10n);
     final maxValue = points.fold<double>(0, (m, p) => p.amount > m ? p.amount : m);
 
     return _Card(
       child: SizedBox(
         height: 200,
         child: maxValue <= 0
-            ? const Center(child: Text('No revenue in this period.', style: TextStyle(color: Colors.black54)))
+            ? Center(child: Text(l10n.reportsNoRevenueInPeriod, style: const TextStyle(color: Colors.black54)))
             : BarChart(
                 BarChartData(
                   maxY: maxValue * 1.2,
@@ -498,7 +517,7 @@ class _RevenueTrendCard extends StatelessWidget {
                           final month = points[i].month;
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
-                            child: Text(_monthNames[month.month - 1], style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                            child: Text(monthNames[month.month - 1], style: const TextStyle(fontSize: 11, color: Colors.black54)),
                           );
                         },
                       ),
@@ -509,7 +528,7 @@ class _RevenueTrendCard extends StatelessWidget {
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final month = points[group.x.toInt()].month;
                         return BarTooltipItem(
-                          '${_monthNames[month.month - 1]}: ${rod.toY.toStringAsFixed(0)} EGP',
+                          l10n.reportsRevenueTooltip(monthNames[month.month - 1], rod.toY.toStringAsFixed(0)),
                           const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
                         );
                       },
@@ -542,13 +561,15 @@ class _MemberGrowthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final monthNames = _monthNames(l10n);
     final maxValue = points.fold<int>(0, (m, p) => p.count > m ? p.count : m);
 
     return _Card(
       child: SizedBox(
         height: 200,
         child: maxValue <= 0
-            ? const Center(child: Text('No new members in this period.', style: TextStyle(color: Colors.black54)))
+            ? Center(child: Text(l10n.reportsNoNewMembersInPeriod, style: const TextStyle(color: Colors.black54)))
             : BarChart(
                 BarChartData(
                   maxY: maxValue * 1.2,
@@ -567,7 +588,7 @@ class _MemberGrowthCard extends StatelessWidget {
                           final month = points[i].month;
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
-                            child: Text(_monthNames[month.month - 1], style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                            child: Text(monthNames[month.month - 1], style: const TextStyle(fontSize: 11, color: Colors.black54)),
                           );
                         },
                       ),
@@ -578,7 +599,7 @@ class _MemberGrowthCard extends StatelessWidget {
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final month = points[group.x.toInt()].month;
                         return BarTooltipItem(
-                          '${_monthNames[month.month - 1]}: ${rod.toY.toInt()}',
+                          l10n.reportsMemberGrowthTooltip(monthNames[month.month - 1], rod.toY.toInt()),
                           const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
                         );
                       },

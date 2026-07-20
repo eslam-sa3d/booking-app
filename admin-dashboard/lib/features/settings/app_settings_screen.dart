@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
 
@@ -51,11 +52,13 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
             contactEmail: _contactCtrl.text.trim().isEmpty ? null : _contactCtrl.text.trim(),
           ));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings saved')));
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settingsSavedMessage)));
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settingsSaveFailedMessage(error.toString()))));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -63,8 +66,9 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
   }
 
   void _addFaq(bool isArabic) {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
-      final entry = const FaqEntry(question: 'New question', answer: 'New answer');
+      final entry = FaqEntry(question: l10n.settingsFaqNewQuestion, answer: l10n.settingsFaqNewAnswer);
       if (isArabic) {
         _faqAr = [..._faqAr, entry];
       } else {
@@ -75,12 +79,13 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsStream = ref.watch(appSettingsRepositoryProvider).watch();
 
     return AdminPageScaffold(
-      title: 'App Content & Settings',
+      title: l10n.navSettings,
       actions: [
-        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save changes')),
+        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? l10n.commonSaving : l10n.settingsSaveChangesButton)),
       ],
       body: StreamBuilder<AppSettings>(
         stream: settingsStream,
@@ -92,34 +97,34 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Branding', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                Text(l10n.settingsBrandingSection, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                 const SizedBox(height: 12),
-                TextFormField(controller: _colorCtrl, decoration: const InputDecoration(labelText: 'Primary color (hex)')),
+                TextFormField(controller: _colorCtrl, decoration: InputDecoration(labelText: l10n.settingsPrimaryColorLabel)),
                 const SizedBox(height: 12),
-                TextFormField(controller: _logoCtrl, decoration: const InputDecoration(labelText: 'Logo URL')),
+                TextFormField(controller: _logoCtrl, decoration: InputDecoration(labelText: l10n.settingsLogoUrlLabel)),
                 const SizedBox(height: 28),
-                const Text('Contact & Support', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                Text(l10n.settingsContactSupportSection, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                 const SizedBox(height: 12),
-                TextFormField(controller: _whatsappCtrl, decoration: const InputDecoration(labelText: 'WhatsApp number (e.g. +966500000000)')),
+                TextFormField(controller: _whatsappCtrl, decoration: InputDecoration(labelText: l10n.settingsWhatsappNumberLabel)),
                 const SizedBox(height: 12),
-                TextFormField(controller: _contactCtrl, decoration: const InputDecoration(labelText: 'Contact email')),
+                TextFormField(controller: _contactCtrl, decoration: InputDecoration(labelText: l10n.settingsContactEmailLabel)),
                 const SizedBox(height: 12),
-                TextFormField(controller: _termsCtrl, decoration: const InputDecoration(labelText: 'Terms & conditions URL')),
+                TextFormField(controller: _termsCtrl, decoration: InputDecoration(labelText: l10n.settingsTermsUrlLabel)),
                 const SizedBox(height: 12),
-                TextFormField(controller: _privacyCtrl, decoration: const InputDecoration(labelText: 'Privacy policy URL')),
+                TextFormField(controller: _privacyCtrl, decoration: InputDecoration(labelText: l10n.settingsPrivacyUrlLabel)),
                 const SizedBox(height: 28),
                 Row(
                   children: [
-                    const Expanded(child: Text('FAQ (English)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
-                    TextButton.icon(onPressed: () => _addFaq(false), icon: const Icon(Icons.add), label: const Text('Add')),
+                    Expanded(child: Text(l10n.settingsFaqEnglishSection, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+                    TextButton.icon(onPressed: () => _addFaq(false), icon: const Icon(Icons.add), label: Text(l10n.commonAdd)),
                   ],
                 ),
                 for (var i = 0; i < _faqEn.length; i++) _FaqEditor(entry: _faqEn[i], onChanged: (e) => setState(() => _faqEn[i] = e), onDelete: () => setState(() => _faqEn.removeAt(i))),
                 const SizedBox(height: 28),
                 Row(
                   children: [
-                    const Expanded(child: Text('FAQ (Arabic)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
-                    TextButton.icon(onPressed: () => _addFaq(true), icon: const Icon(Icons.add), label: const Text('Add')),
+                    Expanded(child: Text(l10n.settingsFaqArabicSection, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+                    TextButton.icon(onPressed: () => _addFaq(true), icon: const Icon(Icons.add), label: Text(l10n.commonAdd)),
                   ],
                 ),
                 for (var i = 0; i < _faqAr.length; i++) _FaqEditor(entry: _faqAr[i], onChanged: (e) => setState(() => _faqAr[i] = e), onDelete: () => setState(() => _faqAr.removeAt(i))),
@@ -141,6 +146,7 @@ class _FaqEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.only(top: 8),
       child: Padding(
@@ -153,13 +159,13 @@ class _FaqEditor extends StatelessWidget {
                 children: [
                   TextFormField(
                     initialValue: entry.question,
-                    decoration: const InputDecoration(labelText: 'Question'),
+                    decoration: InputDecoration(labelText: l10n.settingsFaqQuestionLabel),
                     onChanged: (v) => onChanged(FaqEntry(question: v, answer: entry.answer)),
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
                     initialValue: entry.answer,
-                    decoration: const InputDecoration(labelText: 'Answer'),
+                    decoration: InputDecoration(labelText: l10n.settingsFaqAnswerLabel),
                     maxLines: 2,
                     onChanged: (v) => onChanged(FaqEntry(question: entry.question, answer: v)),
                   ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'category_form_dialog.dart';
@@ -10,14 +11,15 @@ class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, Category category) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete category?'),
-        content: Text('"${category.nameEn}" will no longer be available to tag classes.'),
+        title: Text(l10n.categoriesDeleteTitle),
+        content: Text(l10n.categoriesDeleteMessage(category.nameEn)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
         ],
       ),
     );
@@ -26,15 +28,16 @@ class CategoriesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final categoriesStream = ref.watch(categoriesRepositoryProvider).watchAll();
 
     return AdminPageScaffold(
-      title: 'Categories',
+      title: l10n.categoriesTitle,
       actions: [
         FilledButton.icon(
           onPressed: () => showCategoryFormDialog(context, ref),
           icon: const Icon(Icons.add),
-          label: const Text('Add category'),
+          label: Text(l10n.categoriesAddButton),
         ),
       ],
       body: StreamBuilder<List<Category>>(
@@ -42,7 +45,7 @@ class CategoriesScreen extends ConsumerWidget {
         builder: (context, snapshot) {
           final categories = snapshot.data ?? [];
           if (categories.isEmpty) {
-            return const Padding(padding: EdgeInsets.all(40), child: Text('No categories yet — add one to let members filter classes.'));
+            return Padding(padding: const EdgeInsets.all(40), child: Text(l10n.categoriesEmptyState));
           }
           return Card(
             child: ReorderableListView(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'class_form_dialog.dart';
@@ -11,15 +12,16 @@ class ClassesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final classesStream = ref.watch(classesRepositoryProvider).watchClasses();
 
     return AdminPageScaffold(
-      title: 'Classes',
+      title: l10n.classesTitle,
       actions: [
         FilledButton.icon(
           onPressed: () => showClassFormDialog(context, ref),
           icon: const Icon(Icons.add),
-          label: const Text('Add class'),
+          label: Text(l10n.classesAddButton),
         ),
       ],
       body: StreamBuilder<List<SwimClass>>(
@@ -28,7 +30,7 @@ class ClassesScreen extends ConsumerWidget {
           if (!snapshot.hasData) return const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()));
           final classes = snapshot.data!;
           if (classes.isEmpty) {
-            return const Padding(padding: EdgeInsets.all(40), child: Text('No classes yet — add one to get started.'));
+            return Padding(padding: const EdgeInsets.all(40), child: Text(l10n.classesEmptyState));
           }
           return Card(
             child: Column(
@@ -49,6 +51,7 @@ class _ClassRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final categoriesStream = ref.watch(categoriesRepositoryProvider).watchAll();
     return ListTile(
       title: Text(swimClass.title, style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -57,7 +60,7 @@ class _ClassRow extends ConsumerWidget {
         builder: (context, snap) {
           final byId = {for (final c in snap.data ?? const <Category>[]) c.id: c.nameEn};
           final names = swimClass.categories.map((id) => byId[id] ?? id).join(', ');
-          return Text('$names · ${swimClass.durationMinutes} min · ${swimClass.price.toStringAsFixed(0)} EGP');
+          return Text(l10n.classesRowSummary(names, swimClass.durationMinutes.toString(), swimClass.price.toStringAsFixed(0)));
         },
       ),
       trailing: Row(
@@ -70,11 +73,11 @@ class _ClassRow extends ConsumerWidget {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text('Delete class?'),
-                  content: Text('This does not delete existing sessions for "${swimClass.title}".'),
+                  title: Text(l10n.classesDeleteTitle),
+                  content: Text(l10n.classesDeleteContent(swimClass.title)),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
                   ],
                 ),
               );

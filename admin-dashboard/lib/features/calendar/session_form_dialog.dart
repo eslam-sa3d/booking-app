@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
@@ -79,18 +80,20 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
     } catch (error) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.sessionFormSaveFailed(error.toString()))));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final instructorsStream = ref.watch(instructorsRepositoryProvider).watchAll();
     final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
 
     return ResponsiveDialogShell(
-      title: widget.existing == null ? 'Add session' : 'Edit session',
+      title: widget.existing == null ? l10n.calendarAddSession : l10n.sessionFormEditTitle,
       desktopWidth: 420,
       content: SingleChildScrollView(
         child: Column(
@@ -101,7 +104,7 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _classId,
-              decoration: const InputDecoration(labelText: 'Class'),
+              decoration: InputDecoration(labelText: l10n.sessionFormClassLabel),
               items: widget.classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.title))).toList(),
               onChanged: (v) {
                 setState(() {
@@ -126,7 +129,7 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
                       final instructors = snap.data ?? const [];
                       return DropdownButtonFormField<String>(
                         initialValue: instructors.any((i) => i.id == _instructorId) ? _instructorId : null,
-                        decoration: const InputDecoration(labelText: 'Instructor'),
+                        decoration: InputDecoration(labelText: l10n.sessionFormInstructorLabel),
                         items: [
                           for (final i in instructors) DropdownMenuItem(value: i.id, child: Text(i.name)),
                         ],
@@ -143,7 +146,7 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
                       final branches = snap.data ?? const [];
                       return DropdownButtonFormField<String>(
                         initialValue: branches.any((b) => b.id == _branchId) ? _branchId : null,
-                        decoration: const InputDecoration(labelText: 'Branch / Pool'),
+                        decoration: InputDecoration(labelText: l10n.sessionFormBranchPoolLabel),
                         items: [
                           for (final b in branches) DropdownMenuItem(value: b.id, child: Text(b.name)),
                         ],
@@ -163,7 +166,7 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
                       final picked = await showTimePicker(context: context, initialTime: _start);
                       if (picked != null) setState(() => _start = picked);
                     },
-                    child: Text('Start: ${_start.format(context)}'),
+                    child: Text(l10n.sessionFormStartLabel(_start.format(context))),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -173,21 +176,21 @@ class _SessionFormDialogState extends ConsumerState<_SessionFormDialog> {
                       final picked = await showTimePicker(context: context, initialTime: _end);
                       if (picked != null) setState(() => _end = picked);
                     },
-                    child: Text('End: ${_end.format(context)}'),
+                    child: Text(l10n.sessionFormEndLabel(_end.format(context))),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _capacityCtrl, decoration: const InputDecoration(labelText: 'Capacity'), keyboardType: TextInputType.number),
+            TextFormField(controller: _capacityCtrl, decoration: InputDecoration(labelText: l10n.sessionFormCapacityLabel), keyboardType: TextInputType.number),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
         FilledButton(
           onPressed: _isSaving || _classId == null || _instructorId == null || _branchId == null ? null : _save,
-          child: Text(_isSaving ? 'Saving…' : 'Save'),
+          child: Text(_isSaving ? l10n.commonSaving : l10n.commonSave),
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'payment_method_form_dialog.dart';
@@ -11,15 +12,16 @@ class PaymentMethodsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final methodsStream = ref.watch(paymentMethodsRepositoryProvider).watchAll();
 
     return AdminPageScaffold(
-      title: 'Payment Methods',
+      title: l10n.navPaymentMethods,
       actions: [
         FilledButton.icon(
           onPressed: () => showPaymentMethodFormDialog(context, ref),
           icon: const Icon(Icons.add),
-          label: const Text('Add payment method'),
+          label: Text(l10n.paymentMethodFormAddTitle),
         ),
       ],
       body: StreamBuilder<List<PaymentMethodConfig>>(
@@ -27,9 +29,9 @@ class PaymentMethodsScreen extends ConsumerWidget {
         builder: (context, snapshot) {
           final methods = snapshot.data ?? [];
           if (methods.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.all(40),
-              child: Text('No payment methods yet — add one to offer it at checkout.'),
+            return Padding(
+              padding: const EdgeInsets.all(40),
+              child: Text(l10n.paymentMethodsEmptyState),
             );
           }
           return Card(
@@ -52,7 +54,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
                         Text(method.nameEn, style: const TextStyle(fontWeight: FontWeight.w700)),
                         if (!method.isActive) ...[
                           const SizedBox(width: 8),
-                          const Text('Inactive', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text(l10n.commonInactive, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                         ],
                       ],
                     ),

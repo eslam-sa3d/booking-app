@@ -43,6 +43,9 @@ dependencies:
   cached_network_image: ^3.4.1
   image_picker: ^1.1.2
 
+  # Persists the staff member's language choice locally
+  shared_preferences: ^2.3.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -52,3 +55,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true

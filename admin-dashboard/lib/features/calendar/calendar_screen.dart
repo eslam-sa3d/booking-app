@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/breakpoints.dart';
@@ -24,14 +25,15 @@ class CalendarScreen extends ConsumerWidget {
   const CalendarScreen({super.key});
 
   static Future<bool> _confirm(BuildContext context, {required String title, required String content}) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
         ],
       ),
     );
@@ -40,6 +42,7 @@ class CalendarScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedDay = ref.watch(_selectedDayProvider);
     final focusedMonth = ref.watch(_focusedMonthProvider);
     final classesStream = ref.watch(classesRepositoryProvider).watchClasses();
@@ -56,24 +59,24 @@ class CalendarScreen extends ConsumerWidget {
         final blockedDatesStream = ref.watch(blockedDatesRepositoryProvider).watchAll();
 
         return AdminPageScaffold(
-          title: 'Calendar & Sessions',
+          title: l10n.calendarTitle,
           actions: [
             OutlinedButton.icon(
               onPressed: () => showDialog(context: context, builder: (_) => const _BlockedDatesDialog()),
               icon: const Icon(Icons.block),
-              label: const Text('Manage blocked dates'),
+              label: Text(l10n.calendarManageBlockedDates),
             ),
             const SizedBox(width: 12),
             OutlinedButton.icon(
               onPressed: classes.isEmpty ? null : () => showRecurringSessionDialog(context, ref, classes: classes),
               icon: const Icon(Icons.repeat_rounded),
-              label: const Text('Bulk-create recurring'),
+              label: Text(l10n.calendarBulkCreateRecurring),
             ),
             const SizedBox(width: 12),
             FilledButton.icon(
               onPressed: classes.isEmpty ? null : () => showSessionFormDialog(context, ref, date: selectedDay, classes: classes),
               icon: const Icon(Icons.add),
-              label: const Text('Add session'),
+              label: Text(l10n.calendarAddSession),
             ),
           ],
           body: StreamBuilder<List<SwimSession>>(
@@ -144,16 +147,16 @@ class CalendarScreen extends ConsumerWidget {
                           ),
                           if (isSelectedDayBlocked) ...[
                             const SizedBox(height: 6),
-                            const Row(
+                            Row(
                               children: [
-                                Icon(Icons.block, size: 14, color: Colors.redAccent),
-                                SizedBox(width: 4),
-                                Text('Blocked date', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600, fontSize: 12)),
+                                const Icon(Icons.block, size: 14, color: Colors.redAccent),
+                                const SizedBox(width: 4),
+                                Text(l10n.calendarBlockedDateBadge, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600, fontSize: 12)),
                               ],
                             ),
                           ],
                           const SizedBox(height: 12),
-                          if (daySessions.isEmpty) const Text('No sessions on this day', style: TextStyle(color: Colors.black54)),
+                          if (daySessions.isEmpty) Text(l10n.calendarNoSessionsOnDay, style: const TextStyle(color: Colors.black54)),
                           for (final session in daySessions)
                             _SessionTile(
                               session: session,
@@ -162,8 +165,8 @@ class CalendarScreen extends ConsumerWidget {
                               onDelete: () async {
                                 final confirmed = await _confirm(
                                   context,
-                                  title: 'Delete session?',
-                                  content: 'This does not cancel or notify already-booked customers.',
+                                  title: l10n.calendarDeleteSessionTitle,
+                                  content: l10n.calendarDeleteSessionContent,
                                 );
                                 if (confirmed) await ref.read(sessionsRepositoryProvider).delete(session.id);
                               },
@@ -220,11 +223,12 @@ class _SessionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(swimClass?.title ?? session.classId, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-      subtitle: Text('${session.formattedTimeRange()} · ${session.bookedCount}/${session.capacity} booked'
-          '${session.waitlistCount > 0 ? ' · ${session.waitlistCount} waitlisted' : ''}'),
+      subtitle: Text('${session.formattedTimeRange()} · ${l10n.calendarSessionBookedCount(session.bookedCount, session.capacity)}'
+          '${session.waitlistCount > 0 ? ' · ${l10n.calendarSessionWaitlistedCount(session.waitlistCount)}' : ''}'),
       onTap: onTap,
       trailing: IconButton(icon: const Icon(Icons.delete_outline, size: 18), onPressed: onDelete),
       dense: true,
@@ -271,11 +275,12 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final blockedStream = ref.watch(blockedDatesRepositoryProvider).watchAll();
     final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
 
     return ResponsiveDialogShell(
-      title: 'Manage blocked dates',
+      title: l10n.calendarManageBlockedDates,
       desktopWidth: 480,
       content: SingleChildScrollView(
         child: Column(
@@ -284,7 +289,7 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
           children: [
             Row(
               children: [
-                Expanded(child: OutlinedButton(onPressed: _pickDate, child: Text('Date: ${_fmt(_date)}'))),
+                Expanded(child: OutlinedButton(onPressed: _pickDate, child: Text(l10n.calendarDateLabel(_fmt(_date))))),
                 const SizedBox(width: 12),
                 Expanded(
                   child: StreamBuilder<List<Branch>>(
@@ -293,9 +298,9 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
                       final branches = snap.data ?? const [];
                       return DropdownButtonFormField<String?>(
                         initialValue: _branchId,
-                        decoration: const InputDecoration(labelText: 'Branch'),
+                        decoration: InputDecoration(labelText: l10n.calendarBranchLabel),
                         items: [
-                          const DropdownMenuItem<String?>(value: null, child: Text('All branches')),
+                          DropdownMenuItem<String?>(value: null, child: Text(l10n.calendarAllBranchesOption)),
                           for (final b in branches) DropdownMenuItem<String?>(value: b.id, child: Text(b.name)),
                         ],
                         onChanged: (v) => setState(() => _branchId = v),
@@ -306,20 +311,20 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
               ],
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _reasonCtrl, decoration: const InputDecoration(labelText: 'Reason')),
+            TextFormField(controller: _reasonCtrl, decoration: InputDecoration(labelText: l10n.calendarReasonLabel)),
             const SizedBox(height: 12),
             Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerEnd,
               child: FilledButton.icon(
                 onPressed: _isSaving ? null : _add,
                 icon: const Icon(Icons.add),
-                label: Text(_isSaving ? 'Adding…' : 'Add blocked date'),
+                label: Text(_isSaving ? l10n.calendarAdding : l10n.calendarAddBlockedDate),
               ),
             ),
             const Divider(height: 28),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Currently blocked', style: TextStyle(fontWeight: FontWeight.w700)),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(l10n.calendarCurrentlyBlocked, style: const TextStyle(fontWeight: FontWeight.w700)),
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -329,7 +334,7 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
                 builder: (context, snap) {
                   final blocked = snap.data ?? const [];
                   if (blocked.isEmpty) {
-                    return const Center(child: Text('No blocked dates', style: TextStyle(color: Colors.black54)));
+                    return Center(child: Text(l10n.calendarNoBlockedDates, style: const TextStyle(color: Colors.black54)));
                   }
                   return StreamBuilder<List<Branch>>(
                     stream: branchesStream,
@@ -342,14 +347,14 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
                               dense: true,
                               leading: const Icon(Icons.block, color: Colors.redAccent),
                               title: Text(_fmt(bd.date)),
-                              subtitle: Text('${bd.branchId == null ? 'All branches' : (branchesById[bd.branchId] ?? bd.branchId!)} · ${bd.reason}'),
+                              subtitle: Text('${bd.branchId == null ? l10n.calendarAllBranchesOption : (branchesById[bd.branchId] ?? bd.branchId!)} · ${bd.reason}'),
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete_outline),
                                 onPressed: () async {
                                   final confirmed = await CalendarScreen._confirm(
                                     context,
-                                    title: 'Unblock this date?',
-                                    content: 'Staff will be able to create sessions on ${_fmt(bd.date)} again.',
+                                    title: l10n.calendarUnblockDateTitle,
+                                    content: l10n.calendarUnblockDateContent(_fmt(bd.date)),
                                   );
                                   if (confirmed) await ref.read(blockedDatesRepositoryProvider).delete(bd.id);
                                 },
@@ -366,7 +371,7 @@ class _BlockedDatesDialogState extends ConsumerState<_BlockedDatesDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonClose)),
       ],
     );
   }

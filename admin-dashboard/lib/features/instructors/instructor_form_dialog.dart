@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
@@ -46,35 +47,37 @@ class _InstructorFormDialogState extends ConsumerState<_InstructorFormDialog> {
     } catch (error) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.instructorFormSaveError(error.toString()))));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
-      title: widget.existing == null ? 'Add instructor' : 'Edit instructor',
+      title: widget.existing == null ? l10n.instructorsAddButton : l10n.instructorFormEditTitle,
       desktopWidth: 460,
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Name (EN)')),
+            TextFormField(controller: _nameCtrl, decoration: InputDecoration(labelText: l10n.instructorFormNameEnLabel)),
             const SizedBox(height: 12),
-            TextFormField(controller: _nameArCtrl, decoration: const InputDecoration(labelText: 'Name (AR)')),
+            TextFormField(controller: _nameArCtrl, decoration: InputDecoration(labelText: l10n.instructorFormNameArLabel)),
             const SizedBox(height: 12),
-            TextFormField(controller: _bioCtrl, decoration: const InputDecoration(labelText: 'Bio (EN)'), maxLines: 2),
+            TextFormField(controller: _bioCtrl, decoration: InputDecoration(labelText: l10n.instructorFormBioEnLabel), maxLines: 2),
             const SizedBox(height: 12),
-            TextFormField(controller: _bioArCtrl, decoration: const InputDecoration(labelText: 'Bio (AR)'), maxLines: 2),
+            TextFormField(controller: _bioArCtrl, decoration: InputDecoration(labelText: l10n.instructorFormBioArLabel), maxLines: 2),
             const SizedBox(height: 12),
-            TextFormField(controller: _specialtiesCtrl, decoration: const InputDecoration(labelText: 'Specialties (comma-separated)')),
+            TextFormField(controller: _specialtiesCtrl, decoration: InputDecoration(labelText: l10n.instructorFormSpecialtiesLabel)),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? l10n.commonSaving : l10n.commonSave)),
       ],
     );
   }

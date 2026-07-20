@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -15,18 +16,19 @@ class MembersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final membersStream = ref.watch(membersRepositoryProvider).watchAll();
     final query = ref.watch(_searchQueryProvider).toLowerCase();
 
     return AdminPageScaffold(
-      title: 'Members',
+      title: l10n.membersTitle,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: context.isMobile ? double.infinity : 320,
             child: TextField(
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search by name or email'),
+              decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: l10n.membersSearchHint),
               onChanged: (v) => ref.read(_searchQueryProvider.notifier).state = v,
             ),
           ),
@@ -39,7 +41,7 @@ class MembersScreen extends ConsumerWidget {
                 members = members.where((m) => m.name.toLowerCase().contains(query) || m.email.toLowerCase().contains(query)).toList();
               }
               if (members.isEmpty) {
-                return const Padding(padding: EdgeInsets.all(40), child: Text('No members found.'));
+                return Padding(padding: const EdgeInsets.all(40), child: Text(l10n.membersNoResults));
               }
               return Card(
                 child: Column(
@@ -62,6 +64,7 @@ class _MemberRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return ListTile(
       leading: CircleAvatar(child: Text(member.initials)),
       title: Text(member.name, style: TextStyle(fontWeight: FontWeight.w700, decoration: member.suspended ? TextDecoration.lineThrough : null)),
@@ -71,12 +74,12 @@ class _MemberRow extends ConsumerWidget {
         children: [
           if (member.role != 'customer')
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsetsDirectional.only(end: 8),
               child: Chip(label: Text(member.role), visualDensity: VisualDensity.compact),
             ),
           TextButton(
             onPressed: () => ref.read(membersRepositoryProvider).setSuspended(member.id, !member.suspended),
-            child: Text(member.suspended ? 'Reactivate' : 'Suspend'),
+            child: Text(member.suspended ? l10n.membersReactivate : l10n.membersSuspend),
           ),
           IconButton(
             icon: const Icon(Icons.info_outline),
@@ -130,6 +133,7 @@ class _MemberDetailDialogState extends ConsumerState<_MemberDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
       title: _member.name,
       desktopWidth: 480,
@@ -147,17 +151,17 @@ class _MemberDetailDialogState extends ConsumerState<_MemberDetailDialog> {
                 children: [
                   Text('${_member.email} · ${_member.phone}', style: const TextStyle(color: Colors.grey)),
                   const SizedBox(height: 16),
-                  Text('Family members (${family.length})', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(l10n.membersFamilyMembersCount(family.length), style: const TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   for (final f in family) _FamilyMemberTile(member: _member, familyMember: f, onChanged: _refresh),
                   const SizedBox(height: 16),
-                  Text('Bookings (${bookings.length})', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(l10n.membersBookingsCount(bookings.length), style: const TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   for (final b in bookings.take(10)) Text('• ${b.participantName} — ${b.status.name}'),
                   const SizedBox(height: 16),
-                  Text('Payment history (${payments.length})', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(l10n.membersPaymentHistoryCount(payments.length), style: const TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
-                  if (payments.isEmpty) const Text('No payments yet.', style: TextStyle(color: Colors.grey)),
+                  if (payments.isEmpty) Text(l10n.membersNoPayments, style: const TextStyle(color: Colors.grey)),
                   for (final p in payments) _PaymentTile(payment: p),
                 ],
               ),
@@ -165,8 +169,8 @@ class _MemberDetailDialogState extends ConsumerState<_MemberDetailDialog> {
           },
         ),
       actions: [
-        TextButton(onPressed: _editProfile, child: const Text('Edit profile')),
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(onPressed: _editProfile, child: Text(l10n.membersEditProfile)),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonClose)),
       ],
     );
   }
@@ -193,6 +197,7 @@ class _PaymentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -202,7 +207,7 @@ class _PaymentTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(payment.description.isEmpty ? '(no description)' : payment.description),
+                Text(payment.description.isEmpty ? l10n.membersNoDescription : payment.description),
                 Text(_dateFmt.format(payment.createdAt), style: const TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
@@ -248,6 +253,7 @@ class _FamilyMemberTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -257,22 +263,22 @@ class _FamilyMemberTile extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${familyMember.name} (${familyMember.age}y)'),
+                Text(l10n.membersFamilyMemberAge(familyMember.name, familyMember.age)),
                 if (familyMember.badges.isNotEmpty)
-                  Text('Badges: ${familyMember.badges.map((b) => b.title).join(', ')}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(l10n.membersBadgesLabel(familyMember.badges.map((b) => b.title).join(', ')), style: const TextStyle(fontSize: 11, color: Colors.grey)),
                 if (familyMember.progressNotes.isNotEmpty)
-                  Text('${familyMember.progressNotes.length} progress note(s)', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(l10n.membersProgressNotesCount(familyMember.progressNotes.length), style: const TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
           ),
           IconButton(
             icon: const Icon(Icons.emoji_events_outlined, size: 18),
-            tooltip: 'Award badge',
+            tooltip: l10n.membersAwardBadge,
             onPressed: () => _awardBadge(context, ref),
           ),
           IconButton(
             icon: const Icon(Icons.note_add_outlined, size: 18),
-            tooltip: 'Add progress note',
+            tooltip: l10n.membersAddProgressNoteAction,
             onPressed: () => _addProgressNote(context, ref),
           ),
         ],
@@ -303,30 +309,32 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
       if (mounted) Navigator.of(context).pop(widget.member.copyWith(name: name, phone: phone));
     } catch (error) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.membersFailedToSave(error.toString()))));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
-      title: 'Edit profile',
+      title: l10n.membersEditProfile,
       desktopWidth: 360,
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Name')),
+            TextFormField(controller: _nameCtrl, decoration: InputDecoration(labelText: l10n.membersNameLabel)),
             const SizedBox(height: 12),
-            TextFormField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'Phone')),
+            TextFormField(controller: _phoneCtrl, decoration: InputDecoration(labelText: l10n.membersPhoneLabel)),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? l10n.commonSaving : l10n.commonSave)),
       ],
     );
   }
@@ -345,7 +353,7 @@ class _AwardBadgeDialogState extends State<_AwardBadgeDialog> {
   final _titleArCtrl = TextEditingController();
   final _iconCtrl = TextEditingController(text: 'emoji_events');
 
-  String? _req(String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null;
+  String? _req(String? v) => (v == null || v.trim().isEmpty) ? AppLocalizations.of(context)!.commonRequired : null;
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
@@ -361,8 +369,9 @@ class _AwardBadgeDialogState extends State<_AwardBadgeDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
-      title: 'Award badge',
+      title: l10n.membersAwardBadge,
       desktopWidth: 360,
       content: Form(
         key: _formKey,
@@ -370,18 +379,18 @@ class _AwardBadgeDialogState extends State<_AwardBadgeDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title (EN)'), validator: _req),
+              TextFormField(controller: _titleCtrl, decoration: InputDecoration(labelText: l10n.membersTitleEnLabel), validator: _req),
               const SizedBox(height: 12),
-              TextFormField(controller: _titleArCtrl, decoration: const InputDecoration(labelText: 'Title (AR)'), validator: _req),
+              TextFormField(controller: _titleArCtrl, decoration: InputDecoration(labelText: l10n.membersTitleArLabel), validator: _req),
               const SizedBox(height: 12),
-              TextFormField(controller: _iconCtrl, decoration: const InputDecoration(labelText: 'Icon name (Material, e.g. emoji_events)')),
+              TextFormField(controller: _iconCtrl, decoration: InputDecoration(labelText: l10n.membersIconNameLabel)),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _save, child: const Text('Award')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: _save, child: Text(l10n.membersAward)),
       ],
     );
   }
@@ -400,7 +409,7 @@ class _AddProgressNoteDialogState extends State<_AddProgressNoteDialog> {
   final _noteArCtrl = TextEditingController();
   final _instructorCtrl = TextEditingController();
 
-  String? _req(String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null;
+  String? _req(String? v) => (v == null || v.trim().isEmpty) ? AppLocalizations.of(context)!.commonRequired : null;
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
@@ -416,8 +425,9 @@ class _AddProgressNoteDialogState extends State<_AddProgressNoteDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
-      title: 'Add progress note',
+      title: l10n.membersAddProgressNoteAction,
       desktopWidth: 360,
       content: Form(
         key: _formKey,
@@ -425,18 +435,18 @@ class _AddProgressNoteDialogState extends State<_AddProgressNoteDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(controller: _noteCtrl, decoration: const InputDecoration(labelText: 'Note (EN)'), maxLines: 2, validator: _req),
+              TextFormField(controller: _noteCtrl, decoration: InputDecoration(labelText: l10n.membersNoteEnLabel), maxLines: 2, validator: _req),
               const SizedBox(height: 12),
-              TextFormField(controller: _noteArCtrl, decoration: const InputDecoration(labelText: 'Note (AR)'), maxLines: 2, validator: _req),
+              TextFormField(controller: _noteArCtrl, decoration: InputDecoration(labelText: l10n.membersNoteArLabel), maxLines: 2, validator: _req),
               const SizedBox(height: 12),
-              TextFormField(controller: _instructorCtrl, decoration: const InputDecoration(labelText: 'Instructor name'), validator: _req),
+              TextFormField(controller: _instructorCtrl, decoration: InputDecoration(labelText: l10n.membersInstructorNameLabel), validator: _req),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _save, child: const Text('Add')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: _save, child: Text(l10n.commonAdd)),
       ],
     );
   }

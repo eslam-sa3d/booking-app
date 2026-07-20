@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
@@ -75,26 +76,33 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
     } catch (error) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.packageFormSaveFailed(error.toString()))),
+        );
       }
     }
   }
 
-  String? _req(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'Required' : null;
+  String? _req(String? v) => (v == null || v.trim().isEmpty)
+      ? AppLocalizations.of(context)!.commonRequired
+      : null;
 
   String? _positiveNumber(String? v) {
     final parsed = double.tryParse(v ?? '');
-    if (parsed == null || parsed <= 0) return 'Must be greater than 0';
+    if (parsed == null || parsed <= 0) {
+      return AppLocalizations.of(context)!.packageFormMustBePositive;
+    }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
-      title: widget.existing == null ? 'Add package' : 'Edit package',
+      title: widget.existing == null
+          ? l10n.packagesAddPackageTitle
+          : l10n.packagesEditPackageTitle,
       desktopWidth: 460,
       content: Form(
         key: _formKey,
@@ -104,35 +112,35 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
             children: [
               TextFormField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Name (EN)'),
+                decoration: InputDecoration(labelText: l10n.packageFormNameEnLabel),
                 validator: _req,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _nameArCtrl,
-                decoration: const InputDecoration(labelText: 'Name (AR)'),
+                decoration: InputDecoration(labelText: l10n.packageFormNameArLabel),
                 validator: _req,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _descCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Description (EN)',
+                decoration: InputDecoration(
+                  labelText: l10n.packageFormDescriptionEnLabel,
                 ),
                 maxLines: 2,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _descArCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Description (AR)',
+                decoration: InputDecoration(
+                  labelText: l10n.packageFormDescriptionArLabel,
                 ),
                 maxLines: 2,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<PackageType>(
                 initialValue: _type,
-                decoration: const InputDecoration(labelText: 'Type'),
+                decoration: InputDecoration(labelText: l10n.packageFormTypeLabel),
                 items: PackageType.values
                     .map((t) => DropdownMenuItem(value: t, child: Text(t.name)))
                     .toList(),
@@ -145,8 +153,8 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
                     Expanded(
                       child: TextFormField(
                         controller: _sessionCountCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Session count',
+                        decoration: InputDecoration(
+                          labelText: l10n.packageFormSessionCountLabel,
                         ),
                         keyboardType: TextInputType.number,
                         validator: _positiveNumber,
@@ -157,8 +165,8 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
                   Expanded(
                     child: TextFormField(
                       controller: _validityCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Validity (days)',
+                      decoration: InputDecoration(
+                        labelText: l10n.packageFormValidityDaysLabel,
                       ),
                       keyboardType: TextInputType.number,
                       validator: _positiveNumber,
@@ -169,14 +177,14 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _priceCtrl,
-                decoration: const InputDecoration(labelText: 'Price (EGP)'),
+                decoration: InputDecoration(labelText: l10n.packageFormPriceLabel),
                 keyboardType: TextInputType.number,
                 validator: _positiveNumber,
               ),
               const SizedBox(height: 12),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Mark as popular'),
+                title: Text(l10n.packageFormMarkAsPopularLabel),
                 value: _isPopular,
                 onChanged: (v) => setState(() => _isPopular = v),
               ),
@@ -187,11 +195,11 @@ class _PackageFormDialogState extends ConsumerState<_PackageFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: _isSaving ? null : _save,
-          child: Text(_isSaving ? 'Saving…' : 'Save'),
+          child: Text(_isSaving ? l10n.commonSaving : l10n.commonSave),
         ),
       ],
     );

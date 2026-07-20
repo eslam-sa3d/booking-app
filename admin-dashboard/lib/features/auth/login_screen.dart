@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import 'auth_controller.dart';
 
@@ -37,6 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.sidebar,
       body: Center(
@@ -67,15 +69,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 28),
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                      decoration: InputDecoration(labelText: l10n.loginEmail),
+                      validator: (v) => (v == null || v.isEmpty) ? l10n.commonRequired : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Password'),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                      decoration: InputDecoration(labelText: l10n.loginPassword),
+                      validator: (v) => (v == null || v.isEmpty) ? l10n.commonRequired : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     if (_error != null) ...[
@@ -89,12 +91,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: _isLoading ? null : _submit,
                         child: _isLoading
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('Sign in'),
+                            : Text(l10n.loginSignIn),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Staff and admin accounts only. Ask an admin to grant access via Staff Accounts.',
+                      l10n.loginStaffOnlyNotice,
                       style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                     ),
                   ],

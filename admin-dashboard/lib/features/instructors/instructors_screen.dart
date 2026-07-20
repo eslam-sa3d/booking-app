@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/responsive_dialog.dart';
@@ -24,14 +25,15 @@ class InstructorsScreen extends ConsumerWidget {
   const InstructorsScreen({super.key});
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, Instructor instructor) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete instructor?'),
-        content: Text('"${instructor.name}" will no longer be assignable to classes or sessions.'),
+        title: Text(l10n.instructorsDeleteTitle),
+        content: Text(l10n.instructorsDeleteContent(instructor.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
         ],
       ),
     );
@@ -40,15 +42,16 @@ class InstructorsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final instructorsStream = ref.watch(instructorsRepositoryProvider).watchAll();
 
     return AdminPageScaffold(
-      title: 'Instructors',
+      title: l10n.instructorsTitle,
       actions: [
         FilledButton.icon(
           onPressed: () => showInstructorFormDialog(context, ref),
           icon: const Icon(Icons.add),
-          label: const Text('Add instructor'),
+          label: Text(l10n.instructorsAddButton),
         ),
       ],
       body: StreamBuilder<List<Instructor>>(
@@ -56,7 +59,7 @@ class InstructorsScreen extends ConsumerWidget {
         builder: (context, snapshot) {
           final instructors = snapshot.data ?? [];
           if (instructors.isEmpty) {
-            return const Padding(padding: EdgeInsets.all(40), child: Text('No instructors yet.'));
+            return Padding(padding: const EdgeInsets.all(40), child: Text(l10n.instructorsEmptyState));
           }
           return Card(
             child: Column(
@@ -86,7 +89,7 @@ class InstructorsScreen extends ConsumerWidget {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.calendar_month_outlined),
-                          tooltip: 'View schedule',
+                          tooltip: l10n.instructorsViewScheduleTooltip,
                           onPressed: () => _showSchedule(context, ref, instructor),
                         ),
                         IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => showInstructorFormDialog(context, ref, existing: instructor)),
@@ -115,10 +118,11 @@ class _InstructorScheduleDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final sessionsStream = ref.watch(sessionsRepositoryProvider).watchForInstructor(instructor.id);
 
     return ResponsiveDialogShell(
-      title: '${instructor.name} — upcoming sessions',
+      title: l10n.instructorScheduleTitle(instructor.name),
       desktopWidth: 460,
       desktopHeight: 480,
       content: StreamBuilder<List<SwimSession>>(
@@ -127,7 +131,7 @@ class _InstructorScheduleDialog extends ConsumerWidget {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
             final sessions = snapshot.data!;
             if (sessions.isEmpty) {
-              return const Center(child: Text('No upcoming sessions.'));
+              return Center(child: Text(l10n.instructorScheduleEmptyState));
             }
             return ListView.separated(
               itemCount: sessions.length,
@@ -150,7 +154,7 @@ class _InstructorScheduleDialog extends ConsumerWidget {
             );
           },
         ),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonClose))],
     );
   }
 }

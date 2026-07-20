@@ -2,31 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/responsive_dialog.dart';
 import '../auth/auth_controller.dart';
 import '../../data/repositories/notifications_repository.dart';
 
-const _segmentLabels = {
-  'expiringPackageThisWeek': 'Expiring package this week',
-  'noBookingInLast30Days': 'No booking in last 30 days',
-};
+const _segmentKeys = ['expiringPackageThisWeek', 'noBookingInLast30Days'];
+
+String _segmentLabel(AppLocalizations l10n, String key) {
+  switch (key) {
+    case 'expiringPackageThisWeek':
+      return l10n.notificationsSegmentExpiringPackage;
+    case 'noBookingInLast30Days':
+      return l10n.notificationsSegmentNoBooking;
+    default:
+      return key;
+  }
+}
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final notificationsStream = ref.watch(notificationsRepositoryProvider).watchAll();
 
     return AdminPageScaffold(
-      title: 'Notification Center',
+      title: l10n.notificationsTitle,
       actions: [
         FilledButton.icon(
           onPressed: () => _showComposeDialog(context, ref),
           icon: const Icon(Icons.campaign_outlined),
-          label: const Text('Compose broadcast'),
+          label: Text(l10n.notificationsComposeBroadcast),
         ),
       ],
       body: Column(
@@ -42,12 +52,12 @@ class NotificationsScreen extends ConsumerWidget {
                 // actually been sent but couldn't be read back.
                 return Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text('Failed to load broadcasts: ${snapshot.error}'),
+                  child: Text(l10n.notificationsFailedToLoad(snapshot.error.toString())),
                 );
               }
               final items = snapshot.data ?? [];
               if (items.isEmpty) {
-                return const Padding(padding: EdgeInsets.all(24), child: Text('No broadcasts sent yet.'));
+                return Padding(padding: const EdgeInsets.all(24), child: Text(l10n.notificationsEmptyState));
               }
               return Card(
                 child: Column(
@@ -72,14 +82,25 @@ class _NotificationTile extends ConsumerWidget {
   const _NotificationTile({required this.item});
   final NotificationDefinition item;
 
-  String _targetLabel() {
+  String _targetLabel(AppLocalizations l10n) {
     switch (item.target) {
       case 'segment':
-        return 'segment: ${_segmentLabels[item.targetSegment] ?? item.targetSegment}';
+        return l10n.notificationsTargetSegmentDesc(_segmentLabel(l10n, item.targetSegment ?? ''));
       case 'user':
-        return 'single user';
+        return l10n.notificationsTargetSingleUser;
       default:
-        return 'all users';
+        return l10n.notificationsTargetAllUsers;
+    }
+  }
+
+  String _statusLabel(AppLocalizations l10n) {
+    switch (item.status) {
+      case 'scheduled':
+        return l10n.notificationsStatusScheduled;
+      case 'draft':
+        return l10n.notificationsStatusDraft;
+      default:
+        return l10n.notificationsStatusSent;
     }
   }
 
@@ -96,29 +117,30 @@ class _NotificationTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return ListTile(
       title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.w700)),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('${item.body} · target: ${_targetLabel()}'),
+          Text(l10n.notificationsBodyTargetLine(item.body, _targetLabel(l10n))),
           if (item.status == 'scheduled' && item.scheduledFor != null)
-            Text('Scheduled for ${item.scheduledFor}', style: const TextStyle(fontSize: 12)),
+            Text(l10n.notificationsScheduledFor(item.scheduledFor.toString()), style: const TextStyle(fontSize: 12)),
           if (item.status == 'sent')
             FutureBuilder<NotificationStats>(
               future: ref.read(notificationsRepositoryProvider).getStats(item.id),
               builder: (context, snap) {
                 if (!snap.hasData) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 4),
-                    child: Text('Loading delivery stats…', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(l10n.notificationsLoadingStats, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   );
                 }
                 final stats = snap.data!;
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    'Delivered: ${stats.delivered} · Read: ${stats.read}',
+                    l10n.notificationsDeliveryStats(stats.delivered, stats.read),
                     style: const TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                 );
@@ -137,7 +159,7 @@ class _NotificationTile extends ConsumerWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              item.status,
+              _statusLabel(l10n),
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor(context)),
             ),
           ),
@@ -187,17 +209,18 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
   }
 
   Future<void> _send() async {
+    final l10n = AppLocalizations.of(context)!;
     final session = ref.read(authStateProvider).value;
     if (session == null) return;
     if (_titleCtrl.text.trim().isEmpty || _bodyCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title (EN) and Message (EN) are required.')),
+        SnackBar(content: Text(l10n.notificationsRequiredFieldsError)),
       );
       return;
     }
     if (_target == 'user' && _selectedUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pick a member to target.')),
+        SnackBar(content: Text(l10n.notificationsPickMemberError)),
       );
       return;
     }
@@ -233,9 +256,10 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
       // dialog stuck on "Sending…" forever with no feedback — indistinguishable
       // from the notification silently not being saved.
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() => _isSending = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send: $error')),
+          SnackBar(content: Text(l10n.notificationsFailedToSend(error.toString()))),
         );
       }
     }
@@ -243,31 +267,32 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final membersAsync = ref.watch(membersRepositoryProvider).watchAll();
 
     return ResponsiveDialogShell(
-      title: 'Compose broadcast',
+      title: l10n.notificationsComposeBroadcast,
       desktopWidth: 480,
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-              TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title (EN)')),
+              TextFormField(controller: _titleCtrl, decoration: InputDecoration(labelText: l10n.notificationsTitleEnLabel)),
               const SizedBox(height: 12),
-              TextFormField(controller: _titleArCtrl, decoration: const InputDecoration(labelText: 'Title (AR)')),
+              TextFormField(controller: _titleArCtrl, decoration: InputDecoration(labelText: l10n.notificationsTitleArLabel)),
               const SizedBox(height: 12),
-              TextFormField(controller: _bodyCtrl, decoration: const InputDecoration(labelText: 'Message (EN)'), maxLines: 2),
+              TextFormField(controller: _bodyCtrl, decoration: InputDecoration(labelText: l10n.notificationsMessageEnLabel), maxLines: 2),
               const SizedBox(height: 12),
-              TextFormField(controller: _bodyArCtrl, decoration: const InputDecoration(labelText: 'Message (AR)'), maxLines: 2),
+              TextFormField(controller: _bodyArCtrl, decoration: InputDecoration(labelText: l10n.notificationsMessageArLabel), maxLines: 2),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _target,
-                decoration: const InputDecoration(labelText: 'Target'),
-                items: const [
-                  DropdownMenuItem(value: 'all', child: Text('All users')),
-                  DropdownMenuItem(value: 'segment', child: Text('Segment')),
-                  DropdownMenuItem(value: 'user', child: Text('Single user')),
+                decoration: InputDecoration(labelText: l10n.notificationsTargetLabel),
+                items: [
+                  DropdownMenuItem(value: 'all', child: Text(l10n.notificationsTargetAllUsers)),
+                  DropdownMenuItem(value: 'segment', child: Text(l10n.notificationsTargetSegmentOption)),
+                  DropdownMenuItem(value: 'user', child: Text(l10n.notificationsTargetSingleUser)),
                 ],
                 onChanged: (v) => setState(() => _target = v!),
               ),
@@ -275,10 +300,10 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: _segment,
-                  decoration: const InputDecoration(labelText: 'Segment'),
+                  decoration: InputDecoration(labelText: l10n.notificationsTargetSegmentOption),
                   items: [
-                    for (final entry in _segmentLabels.entries)
-                      DropdownMenuItem(value: entry.key, child: Text(entry.value)),
+                    for (final key in _segmentKeys)
+                      DropdownMenuItem(value: key, child: Text(_segmentLabel(l10n, key))),
                   ],
                   onChanged: (v) => setState(() => _segment = v!),
                 ),
@@ -304,8 +329,8 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
                           controller: controller,
                           focusNode: focusNode,
                           decoration: InputDecoration(
-                            labelText: 'Search member by name or email',
-                            helperText: _selectedUser != null ? 'Selected: ${_selectedUser!.name}' : null,
+                            labelText: l10n.notificationsSearchMemberLabel,
+                            helperText: _selectedUser != null ? l10n.notificationsSelectedMember(_selectedUser!.name) : null,
                           ),
                         );
                       },
@@ -316,8 +341,8 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
               const SizedBox(height: 16),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Schedule for later'),
-                subtitle: const Text('Off = send immediately'),
+                title: Text(l10n.notificationsScheduleForLater),
+                subtitle: Text(l10n.notificationsScheduleOffHint),
                 value: _isScheduled,
                 onChanged: (v) => setState(() => _isScheduled = v),
               ),
@@ -345,10 +370,10 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
           ),
         ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
         FilledButton(
           onPressed: _isSending ? null : _send,
-          child: Text(_isSending ? 'Sending…' : (_isScheduled ? 'Schedule' : 'Send')),
+          child: Text(_isSending ? l10n.notificationsSending : (_isScheduled ? l10n.notificationsScheduleButton : l10n.notificationsSendButton)),
         ),
       ],
     );

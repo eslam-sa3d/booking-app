@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
@@ -79,15 +80,20 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
     } catch (error) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.bannersSaveFailed('$error'),
+            ),
+          ),
+        );
       }
     }
   }
 
-  String? _req(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'Required' : null;
+  String? _req(String? v) => (v == null || v.trim().isEmpty)
+      ? AppLocalizations.of(context)!.commonRequired
+      : null;
 
   Future<void> _pickDate({required bool isStart}) async {
     final now = DateTime.now();
@@ -109,10 +115,11 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
   }
 
   void _openPreview() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Preview'),
+        title: Text(l10n.bannersPreviewLabel),
         content: SizedBox(
           width: 360,
           child: _BannerPreviewCard(banner: _buildBanner()),
@@ -120,7 +127,7 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(l10n.commonClose),
           ),
         ],
       ),
@@ -132,6 +139,7 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
     required DateTime? value,
     required bool isStart,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -139,13 +147,13 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
             onTap: () => _pickDate(isStart: isStart),
             child: InputDecorator(
               decoration: InputDecoration(labelText: label),
-              child: Text(value == null ? 'No limit' : _dateFmt.format(value)),
+              child: Text(value == null ? l10n.bannersNoLimitLabel : _dateFmt.format(value)),
             ),
           ),
         ),
         if (value != null)
           IconButton(
-            tooltip: 'Clear',
+            tooltip: l10n.bannersClearDateTooltip,
             icon: const Icon(Icons.clear, size: 18),
             onPressed: () => setState(() {
               if (isStart) {
@@ -161,8 +169,9 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
-      title: widget.existing == null ? 'Add banner' : 'Edit banner',
+      title: widget.existing == null ? l10n.bannersAddTitle : l10n.bannersEditTitle,
       desktopWidth: 460,
       content: Form(
         key: _formKey,
@@ -172,52 +181,52 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
             children: [
               TextFormField(
                 controller: _titleCtrl,
-                decoration: const InputDecoration(labelText: 'Title (EN)'),
+                decoration: InputDecoration(labelText: l10n.bannersTitleEnLabel),
                 validator: _req,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _titleArCtrl,
-                decoration: const InputDecoration(labelText: 'Title (AR)'),
+                decoration: InputDecoration(labelText: l10n.bannersTitleArLabel),
                 validator: _req,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _subtitleCtrl,
-                decoration: const InputDecoration(labelText: 'Subtitle (EN)'),
+                decoration: InputDecoration(labelText: l10n.bannersSubtitleEnLabel),
                 validator: _req,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _subtitleArCtrl,
-                decoration: const InputDecoration(labelText: 'Subtitle (AR)'),
+                decoration: InputDecoration(labelText: l10n.bannersSubtitleArLabel),
                 validator: _req,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _imageUrlCtrl,
-                decoration: const InputDecoration(labelText: 'Image URL'),
+                decoration: InputDecoration(labelText: l10n.bannersImageUrlLabel),
                 validator: _req,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _linkCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Link action (e.g. class:c1, packages)',
+                decoration: InputDecoration(
+                  labelText: l10n.bannersLinkActionLabel,
                 ),
               ),
               const SizedBox(height: 12),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Active'),
+                title: Text(l10n.commonActive),
                 value: _isActive,
                 onChanged: (v) => setState(() => _isActive = v),
               ),
-              const Align(
-                alignment: Alignment.centerLeft,
+              Align(
+                alignment: AlignmentDirectional.centerStart,
                 child: Text(
-                  'Active date range (optional)',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                  l10n.bannersActiveDateRangeLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
                 ),
               ),
               const SizedBox(height: 6),
@@ -225,7 +234,7 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
                 children: [
                   Expanded(
                     child: _dateField(
-                      label: 'Active from',
+                      label: l10n.bannersActiveFromLabel,
                       value: _startDate,
                       isStart: true,
                     ),
@@ -233,7 +242,7 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _dateField(
-                      label: 'Active until',
+                      label: l10n.bannersActiveUntilLabel,
                       value: _endDate,
                       isStart: false,
                     ),
@@ -242,11 +251,11 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
               ),
               const SizedBox(height: 8),
               Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: OutlinedButton.icon(
                   onPressed: _openPreview,
                   icon: const Icon(Icons.visibility_outlined),
-                  label: const Text('Preview'),
+                  label: Text(l10n.bannersPreviewLabel),
                 ),
               ),
             ],
@@ -256,11 +265,11 @@ class _BannerFormDialogState extends ConsumerState<_BannerFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: _isSaving ? null : _save,
-          child: Text(_isSaving ? 'Saving…' : 'Save'),
+          child: Text(_isSaving ? l10n.commonSaving : l10n.commonSave),
         ),
       ],
     );
@@ -278,6 +287,7 @@ class _BannerPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -324,7 +334,7 @@ class _BannerPreviewCard extends StatelessWidget {
                           children: [
                             Text(
                               banner.title.isEmpty
-                                  ? 'Banner title'
+                                  ? l10n.bannersPreviewTitlePlaceholder
                                   : banner.title,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -337,7 +347,7 @@ class _BannerPreviewCard extends StatelessWidget {
                             const SizedBox(height: 6),
                             Text(
                               banner.subtitle.isEmpty
-                                  ? 'Banner subtitle'
+                                  ? l10n.bannersPreviewSubtitlePlaceholder
                                   : banner.subtitle,
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.9),
@@ -364,8 +374,8 @@ class _BannerPreviewCard extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           banner.isCurrentlyActive
-              ? 'Would show now on the mobile home screen'
-              : 'Would NOT show right now (inactive or outside date range)',
+              ? l10n.bannersPreviewActiveNote
+              : l10n.bannersPreviewInactiveNote,
           style: TextStyle(
             fontSize: 12,
             color: banner.isCurrentlyActive

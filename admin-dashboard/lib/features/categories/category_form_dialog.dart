@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
@@ -43,15 +44,22 @@ class _CategoryFormDialogState extends ConsumerState<_CategoryFormDialog> {
     } catch (error) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.categoriesSaveFailed('$error'),
+            ),
+          ),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
-      title: widget.existing == null ? 'Add category' : 'Edit category',
+      title: widget.existing == null ? l10n.categoriesAddTitle : l10n.categoriesEditTitle,
       desktopWidth: 420,
       content: Form(
         key: _formKey,
@@ -59,19 +67,21 @@ class _CategoryFormDialogState extends ConsumerState<_CategoryFormDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(controller: _nameEnCtrl, decoration: const InputDecoration(labelText: 'Name (EN)'), validator: _req),
+              TextFormField(controller: _nameEnCtrl, decoration: InputDecoration(labelText: l10n.categoriesNameEnLabel), validator: _req),
               const SizedBox(height: 12),
-              TextFormField(controller: _nameArCtrl, decoration: const InputDecoration(labelText: 'Name (AR)'), validator: _req),
+              TextFormField(controller: _nameArCtrl, decoration: InputDecoration(labelText: l10n.categoriesNameArLabel), validator: _req),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? l10n.commonSaving : l10n.commonSave)),
       ],
     );
   }
 
-  String? _req(String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null;
+  String? _req(String? v) => (v == null || v.trim().isEmpty)
+      ? AppLocalizations.of(context)!.commonRequired
+      : null;
 }

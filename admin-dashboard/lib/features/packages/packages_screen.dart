@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'package_form_dialog.dart';
@@ -10,14 +11,15 @@ class PackagesScreen extends ConsumerWidget {
   const PackagesScreen({super.key});
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, SwimPackage pkg) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete package?'),
-        content: Text('"${pkg.name}" will no longer be purchasable. Existing owned packages are unaffected.'),
+        title: Text(l10n.packagesDeleteConfirmTitle),
+        content: Text(l10n.packagesDeleteConfirmMessage(pkg.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
         ],
       ),
     );
@@ -26,15 +28,16 @@ class PackagesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final packagesStream = ref.watch(packagesRepositoryProvider).watchAll();
 
     return AdminPageScaffold(
-      title: 'Packages & Pricing',
+      title: l10n.packagesTitle,
       actions: [
         FilledButton.icon(
           onPressed: () => showPackageFormDialog(context, ref),
           icon: const Icon(Icons.add),
-          label: const Text('Add package'),
+          label: Text(l10n.packagesAddPackageTitle),
         ),
       ],
       body: StreamBuilder<List<SwimPackage>>(
@@ -42,7 +45,7 @@ class PackagesScreen extends ConsumerWidget {
         builder: (context, snapshot) {
           final packages = snapshot.data ?? [];
           if (packages.isEmpty) {
-            return const Padding(padding: EdgeInsets.all(40), child: Text('No packages yet.'));
+            return Padding(padding: const EdgeInsets.all(40), child: Text(l10n.packagesEmptyState));
           }
           return Card(
             child: Column(
@@ -56,13 +59,15 @@ class PackagesScreen extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(20)),
-                          child: const Text('Popular', style: TextStyle(fontSize: 11, color: Colors.teal)),
+                          child: Text(l10n.packagesPopularBadge, style: const TextStyle(fontSize: 11, color: Colors.teal)),
                         ),
                       ],
                     ]),
                     subtitle: Text(
-                      '${pkg.type.name} · ${pkg.sessionCount != null ? '${pkg.sessionCount} sessions' : 'unlimited'} · '
-                      '${pkg.validityDays} days · ${pkg.price.toStringAsFixed(0)} EGP',
+                      '${pkg.type.name} · '
+                      '${pkg.sessionCount != null ? l10n.packagesSessionsCount(pkg.sessionCount!) : l10n.packagesUnlimitedLabel} · '
+                      '${l10n.packagesDaysCount(pkg.validityDays)} · '
+                      '${l10n.packagesPriceEgp(pkg.price.toStringAsFixed(0))}',
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,

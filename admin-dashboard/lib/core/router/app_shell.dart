@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_controller.dart';
+import '../localization/generated/app_localizations.dart';
+import '../providers/locale_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/breakpoints.dart';
 import 'access.dart';
@@ -14,23 +16,23 @@ class _NavItem {
   const _NavItem(this.icon, this.label, this.path);
 }
 
-const _navItems = [
-  _NavItem(Icons.dashboard_outlined, 'Dashboard', '/dashboard'),
-  _NavItem(Icons.inbox_outlined, 'Requests', '/requests'),
-  _NavItem(Icons.pool_outlined, 'Classes', '/classes'),
-  _NavItem(Icons.calendar_month_outlined, 'Calendar', '/calendar'),
-  _NavItem(Icons.sell_outlined, 'Categories', '/categories'),
-  _NavItem(Icons.local_offer_outlined, 'Banners', '/banners'),
-  _NavItem(Icons.card_membership_outlined, 'Packages', '/packages'),
-  _NavItem(Icons.payments_outlined, 'Payments', '/payments'),
-  _NavItem(Icons.credit_card_outlined, 'Payment Methods', '/payment-methods'),
-  _NavItem(Icons.bar_chart_outlined, 'Reports & Analytics', '/reports'),
-  _NavItem(Icons.people_outline, 'Members', '/members'),
-  _NavItem(Icons.badge_outlined, 'Instructors', '/instructors'),
-  _NavItem(Icons.notifications_outlined, 'Notifications', '/notifications'),
-  _NavItem(Icons.settings_outlined, 'App Content & Settings', '/settings'),
-  _NavItem(Icons.admin_panel_settings_outlined, 'Staff Accounts', '/staff'),
-];
+List<_NavItem> _navItems(AppLocalizations l10n) => [
+      _NavItem(Icons.dashboard_outlined, l10n.navDashboard, '/dashboard'),
+      _NavItem(Icons.inbox_outlined, l10n.navRequests, '/requests'),
+      _NavItem(Icons.pool_outlined, l10n.navClasses, '/classes'),
+      _NavItem(Icons.calendar_month_outlined, l10n.navCalendar, '/calendar'),
+      _NavItem(Icons.sell_outlined, l10n.navCategories, '/categories'),
+      _NavItem(Icons.local_offer_outlined, l10n.navBanners, '/banners'),
+      _NavItem(Icons.card_membership_outlined, l10n.navPackages, '/packages'),
+      _NavItem(Icons.payments_outlined, l10n.navPayments, '/payments'),
+      _NavItem(Icons.credit_card_outlined, l10n.navPaymentMethods, '/payment-methods'),
+      _NavItem(Icons.bar_chart_outlined, l10n.navReports, '/reports'),
+      _NavItem(Icons.people_outline, l10n.navMembers, '/members'),
+      _NavItem(Icons.badge_outlined, l10n.navInstructors, '/instructors'),
+      _NavItem(Icons.notifications_outlined, l10n.navNotifications, '/notifications'),
+      _NavItem(Icons.settings_outlined, l10n.navSettings, '/settings'),
+      _NavItem(Icons.admin_panel_settings_outlined, l10n.navStaff, '/staff'),
+    ];
 
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.child});
@@ -51,10 +53,12 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final location = GoRouterState.of(context).matchedLocation;
     final session = ref.watch(authStateProvider).value;
     final isAdmin = session?.isAdmin ?? false;
-    final visibleNavItems = isAdmin ? _navItems : _navItems.where((item) => !isPathAdminOnly(item.path));
+    final navItems = _navItems(l10n);
+    final visibleNavItems = isAdmin ? navItems : navItems.where((item) => !isPathAdminOnly(item.path));
 
     String currentLabel = 'Swim Academy';
     for (final item in visibleNavItems) {
@@ -99,7 +103,7 @@ class _AppShellState extends ConsumerState<AppShell> {
         title: Text(currentLabel),
         leading: IconButton(
           icon: Icon(_sidebarExpanded ? Icons.menu_open : Icons.menu),
-          tooltip: _sidebarExpanded ? 'Collapse menu' : 'Expand menu',
+          tooltip: _sidebarExpanded ? l10n.navCollapseMenu : l10n.navExpandMenu,
           onPressed: () => setState(() => _sidebarExpanded = !_sidebarExpanded),
         ),
       ),
@@ -111,7 +115,7 @@ class _AppShellState extends ConsumerState<AppShell> {
               curve: Curves.easeInOut,
               width: _sidebarExpanded ? _sidebarWidth : 0,
               child: OverflowBox(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 minWidth: _sidebarWidth,
                 maxWidth: _sidebarWidth,
                 child: _SidebarContent(
@@ -152,6 +156,7 @@ class _SidebarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       color: AppColors.sidebar,
       child: SafeArea(
@@ -159,7 +164,7 @@ class _SidebarContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 12, 24),
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 24, 12, 24),
               child: Row(
                 children: [
                   const Icon(Icons.pool_rounded, color: AppColors.primary, size: 26),
@@ -173,7 +178,7 @@ class _SidebarContent extends StatelessWidget {
                   if (onClose != null)
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white70),
-                      tooltip: 'Close menu',
+                      tooltip: l10n.navCloseMenu,
                       onPressed: onClose,
                     ),
                 ],
@@ -194,10 +199,21 @@ class _SidebarContent extends StatelessWidget {
               ),
             ),
             const Divider(color: Colors.white24, height: 1),
+            Consumer(
+              builder: (context, ref, _) {
+                final isArabic = ref.watch(isArabicProvider);
+                return _SidebarTile(
+                  icon: Icons.translate_rounded,
+                  label: isArabic ? l10n.navSwitchToEnglish : l10n.navSwitchToArabic,
+                  isSelected: false,
+                  onTap: () => ref.read(localeProvider.notifier).toggle(),
+                );
+              },
+            ),
             if (session != null)
               _SidebarTile(
                 icon: Icons.logout_rounded,
-                label: 'Sign out',
+                label: l10n.navSignOut,
                 isSelected: false,
                 onTap: onSignOut,
               ),

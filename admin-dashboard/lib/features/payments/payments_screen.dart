@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/breakpoints.dart';
 import '../../core/widgets/page_scaffold.dart';
-
-const _otherClassLabel = 'Other / Unlinked';
 
 class PaymentsScreen extends ConsumerStatefulWidget {
   const PaymentsScreen({super.key});
@@ -22,6 +21,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   Future<List<Payment>>? _rangedFuture;
   String? _classFilter;
   late Future<_RevenueReport> _reportFuture;
+
+  String get _otherClassLabel => AppLocalizations.of(context)!.paymentsOtherClassLabel;
 
   @override
   void initState() {
@@ -94,10 +95,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final transactionsStream = ref.watch(transactionsRepositoryProvider).watchAll();
 
     return AdminPageScaffold(
-      title: 'Payments & Reports',
+      title: l10n.paymentsTitle,
       body: StreamBuilder<List<Payment>>(
         stream: transactionsStream,
         builder: (context, snapshot) {
@@ -113,18 +115,17 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 spacing: 16,
                 runSpacing: 16,
                 children: [
-                  _ReportStat(label: 'Total revenue', value: '${totalRevenue.toStringAsFixed(0)} EGP'),
-                  _ReportStat(label: 'Successful transactions', value: '${succeeded.length}'),
-                  _ReportStat(label: 'Refunded', value: '$refunded'),
+                  _ReportStat(label: l10n.paymentsTotalRevenue, value: '${totalRevenue.toStringAsFixed(0)} EGP'),
+                  _ReportStat(label: l10n.paymentsSuccessfulTransactions, value: '${succeeded.length}'),
+                  _ReportStat(label: l10n.paymentsStatusRefunded, value: '$refunded'),
                 ],
               ),
               const SizedBox(height: 28),
-              const Text('Revenue report', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              Text(l10n.paymentsRevenueReportTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
               const SizedBox(height: 4),
-              const Text(
-                'Last 6 months, succeeded transactions only. Class breakdown is best-effort — transactions without a '
-                'linked booking (e.g. older ones) are grouped under "$_otherClassLabel".',
-                style: TextStyle(color: Colors.black54, fontSize: 12),
+              Text(
+                l10n.paymentsRevenueReportDescription(_otherClassLabel),
+                style: const TextStyle(color: Colors.black54, fontSize: 12),
               ),
               const SizedBox(height: 12),
               FutureBuilder<_RevenueReport>(
@@ -140,11 +141,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 },
               ),
               const SizedBox(height: 28),
-              const Text('Filters', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              Text(l10n.paymentsFiltersTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
               const SizedBox(height: 12),
               _buildFilterBar(),
               const SizedBox(height: 20),
-              const Text('Transactions', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              Text(l10n.paymentsTransactionsTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
               const SizedBox(height: 12),
               _buildTransactionList(payments),
             ],
@@ -155,6 +156,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   }
 
   Widget _buildFilterBar() {
+    final l10n = AppLocalizations.of(context)!;
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -163,13 +165,17 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         OutlinedButton.icon(
           onPressed: _pickRange,
           icon: const Icon(Icons.date_range_rounded, size: 18),
-          label: Text(_range == null ? 'Filter by date range' : '${_fmtDate(_range!.start)} to ${_fmtDate(_range!.end)}'),
+          label: Text(
+            _range == null
+                ? l10n.paymentsFilterByDateRange
+                : l10n.paymentsDateRangeLabel(_fmtDate(_range!.start), _fmtDate(_range!.end)),
+          ),
         ),
         if (_range != null)
           TextButton.icon(
             onPressed: _clearRange,
             icon: const Icon(Icons.close_rounded, size: 16),
-            label: const Text('Clear date filter'),
+            label: Text(l10n.paymentsClearDateFilter),
           ),
         SizedBox(
           width: context.isMobile ? double.infinity : 240,
@@ -182,11 +188,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               final value = titles.contains(_classFilter) || _classFilter == _otherClassLabel ? _classFilter : null;
               return DropdownButtonFormField<String?>(
                 initialValue: value,
-                decoration: const InputDecoration(labelText: 'Class', isDense: true),
+                decoration: InputDecoration(labelText: l10n.paymentsClassLabel, isDense: true),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('All classes')),
+                  DropdownMenuItem(value: null, child: Text(l10n.paymentsAllClasses)),
                   for (final title in titles) DropdownMenuItem(value: title, child: Text(title, overflow: TextOverflow.ellipsis)),
-                  const DropdownMenuItem(value: _otherClassLabel, child: Text(_otherClassLabel)),
+                  DropdownMenuItem(value: _otherClassLabel, child: Text(_otherClassLabel)),
                 ],
                 onChanged: (v) => setState(() => _classFilter = v),
               );
@@ -244,16 +250,17 @@ class _PaymentsList extends ConsumerWidget {
   final List<Payment> payments;
 
   Future<void> _refund(BuildContext context, WidgetRef ref, Payment payment) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Refund this transaction?'),
+        title: Text(l10n.paymentsRefundConfirmTitle),
         content: Text(
-          'Refunds ${payment.amount.toStringAsFixed(0)} ${payment.currency} for "${payment.description}". This cannot be undone from here.',
+          l10n.paymentsRefundConfirmContent(payment.amount.toStringAsFixed(0), payment.currency, payment.description),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Refund')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.paymentsRefund)),
         ],
       ),
     );
@@ -269,8 +276,9 @@ class _PaymentsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     if (payments.isEmpty) {
-      return const Padding(padding: EdgeInsets.all(24), child: Text('No transactions match the current filters.'));
+      return Padding(padding: const EdgeInsets.all(24), child: Text(l10n.paymentsNoTransactions));
     }
     return Card(
       child: Column(
@@ -288,7 +296,7 @@ class _PaymentsList extends ConsumerWidget {
                   if (payment.status == PaymentStatus.succeeded)
                     IconButton(
                       icon: const Icon(Icons.undo_rounded, size: 18),
-                      tooltip: 'Refund',
+                      tooltip: l10n.paymentsRefund,
                       onPressed: () => _refund(context, ref, payment),
                     ),
                 ],
@@ -331,6 +339,7 @@ class _MonthlyRevenueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final keys = report.monthlyRevenue.keys.toList();
     final maxValue = report.monthlyRevenue.values.fold<double>(0, (m, v) => v > m ? v : m);
 
@@ -340,12 +349,12 @@ class _MonthlyRevenueCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Revenue by month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          Text(l10n.paymentsRevenueByMonth, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 16),
           SizedBox(
             height: 180,
             child: maxValue <= 0
-                ? const Center(child: Text('No revenue in this period.', style: TextStyle(color: Colors.black54)))
+                ? Center(child: Text(l10n.paymentsNoRevenuePeriod, style: const TextStyle(color: Colors.black54)))
                 : BarChart(
                     BarChartData(
                       maxY: maxValue * 1.2,
@@ -399,6 +408,7 @@ class _ClassRevenueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final entries = report.revenueByClass.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
     return Container(
@@ -407,10 +417,10 @@ class _ClassRevenueCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Revenue by class', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          Text(l10n.paymentsRevenueByClass, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 12),
           if (entries.isEmpty)
-            const Text('No revenue in this period.', style: TextStyle(color: Colors.black54))
+            Text(l10n.paymentsNoRevenuePeriod, style: const TextStyle(color: Colors.black54))
           else
             for (final entry in entries)
               Padding(
@@ -468,12 +478,26 @@ class _StatusChip extends StatelessWidget {
     }
   }
 
+  String _label(AppLocalizations l10n) {
+    switch (status) {
+      case PaymentStatus.succeeded:
+        return l10n.paymentsStatusSucceeded;
+      case PaymentStatus.pending:
+        return l10n.paymentsStatusPending;
+      case PaymentStatus.failed:
+        return l10n.paymentsStatusFailed;
+      case PaymentStatus.refunded:
+        return l10n.paymentsStatusRefunded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: _color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
-      child: Text(status.name, style: TextStyle(color: _color, fontSize: 11, fontWeight: FontWeight.w700)),
+      child: Text(_label(l10n), style: TextStyle(color: _color, fontSize: 11, fontWeight: FontWeight.w700)),
     );
   }
 }

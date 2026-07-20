@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'banner_form_dialog.dart';
@@ -10,14 +11,15 @@ class BannersScreen extends ConsumerWidget {
   const BannersScreen({super.key});
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, PromoBanner banner) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete banner?'),
-        content: Text('"${banner.title}" will be removed from the mobile home screen.'),
+        title: Text(l10n.bannersDeleteTitle),
+        content: Text(l10n.bannersDeleteMessage(banner.title)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
         ],
       ),
     );
@@ -26,15 +28,16 @@ class BannersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final bannersStream = ref.watch(bannersRepositoryProvider).watchAll();
 
     return AdminPageScaffold(
-      title: 'Banners',
+      title: l10n.bannersTitle,
       actions: [
         FilledButton.icon(
           onPressed: () => showBannerFormDialog(context, ref),
           icon: const Icon(Icons.add),
-          label: const Text('Add banner'),
+          label: Text(l10n.bannersAddButton),
         ),
       ],
       body: StreamBuilder<List<PromoBanner>>(
@@ -42,7 +45,7 @@ class BannersScreen extends ConsumerWidget {
         builder: (context, snapshot) {
           final banners = snapshot.data ?? [];
           if (banners.isEmpty) {
-            return const Padding(padding: EdgeInsets.all(40), child: Text('No banners yet — the mobile home screen will show none until you add one.'));
+            return Padding(padding: const EdgeInsets.all(40), child: Text(l10n.bannersEmptyState));
           }
           return Card(
             child: ReorderableListView(
@@ -64,7 +67,7 @@ class BannersScreen extends ConsumerWidget {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (!banner.isActive) const Padding(padding: EdgeInsets.only(right: 8), child: Text('Inactive', style: TextStyle(color: Colors.grey))),
+                        if (!banner.isActive) Padding(padding: const EdgeInsetsDirectional.only(end: 8), child: Text(l10n.commonInactive, style: const TextStyle(color: Colors.grey))),
                         IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => showBannerFormDialog(context, ref, existing: banner)),
                         IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _confirmDelete(context, ref, banner)),
                       ],

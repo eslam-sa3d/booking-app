@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
@@ -9,7 +10,15 @@ Future<void> showRecurringSessionDialog(BuildContext context, WidgetRef ref, {re
   return showDialog(context: context, builder: (_) => _RecurringSessionDialog(classes: classes));
 }
 
-const _weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+List<String> _weekdayLabels(AppLocalizations l10n) => [
+      l10n.recurringSessionMon,
+      l10n.recurringSessionTue,
+      l10n.recurringSessionWed,
+      l10n.recurringSessionThu,
+      l10n.recurringSessionFri,
+      l10n.recurringSessionSat,
+      l10n.recurringSessionSun,
+    ];
 
 class _RecurringSessionDialog extends ConsumerStatefulWidget {
   const _RecurringSessionDialog({required this.classes});
@@ -72,21 +81,25 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
             blockedDates: blockedKeys,
           );
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Created $count sessions')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.recurringSessionCreatedSnackbar(count))));
       }
     } catch (error) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create sessions: $error')));
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.recurringSessionCreateFailed(error.toString()))));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final weekdayLabels = _weekdayLabels(l10n);
     return ResponsiveDialogShell(
-      title: 'Bulk-create recurring sessions',
+      title: l10n.recurringSessionTitle,
       desktopWidth: 460,
       content: SingleChildScrollView(
         child: Column(
@@ -95,7 +108,7 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
           children: [
             DropdownButtonFormField<String>(
               initialValue: _classId,
-              decoration: const InputDecoration(labelText: 'Class'),
+              decoration: InputDecoration(labelText: l10n.sessionFormClassLabel),
               items: widget.classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.title))).toList(),
               onChanged: (v) => setState(() => _classId = v),
             ),
@@ -106,7 +119,7 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
                 final weekday = i + 1;
                 final selected = _weekdays.contains(weekday);
                 return FilterChip(
-                  label: Text(_weekdayLabels[i]),
+                  label: Text(weekdayLabels[i]),
                   selected: selected,
                   onSelected: (v) => setState(() => v ? _weekdays.add(weekday) : _weekdays.remove(weekday)),
                 );
@@ -121,7 +134,7 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
                       final picked = await showTimePicker(context: context, initialTime: _start);
                       if (picked != null) setState(() => _start = picked);
                     },
-                    child: Text('Start: ${_start.format(context)}'),
+                    child: Text(l10n.sessionFormStartLabel(_start.format(context))),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -131,29 +144,29 @@ class _RecurringSessionDialogState extends ConsumerState<_RecurringSessionDialog
                       final picked = await showTimePicker(context: context, initialTime: _end);
                       if (picked != null) setState(() => _end = picked);
                     },
-                    child: Text('End: ${_end.format(context)}'),
+                    child: Text(l10n.sessionFormEndLabel(_end.format(context))),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _capacityCtrl, decoration: const InputDecoration(labelText: 'Capacity'), keyboardType: TextInputType.number),
+            TextFormField(controller: _capacityCtrl, decoration: InputDecoration(labelText: l10n.sessionFormCapacityLabel), keyboardType: TextInputType.number),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: OutlinedButton(onPressed: () => _pickDate(true), child: Text('From: ${_rangeStart.toString().split(' ').first}'))),
+                Expanded(child: OutlinedButton(onPressed: () => _pickDate(true), child: Text(l10n.recurringSessionFromLabel(_rangeStart.toString().split(' ').first)))),
                 const SizedBox(width: 12),
-                Expanded(child: OutlinedButton(onPressed: () => _pickDate(false), child: Text('To: ${_rangeEnd.toString().split(' ').first}'))),
+                Expanded(child: OutlinedButton(onPressed: () => _pickDate(false), child: Text(l10n.recurringSessionToLabel(_rangeEnd.toString().split(' ').first)))),
               ],
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
         FilledButton(
           onPressed: _isSaving || _classId == null || _weekdays.isEmpty ? null : _create,
-          child: Text(_isSaving ? 'Creating…' : 'Create sessions'),
+          child: Text(_isSaving ? l10n.recurringSessionCreating : l10n.recurringSessionCreateButton),
         ),
       ],
     );

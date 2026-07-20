@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
@@ -49,8 +50,9 @@ class _PaymentMethodFormDialogState extends ConsumerState<_PaymentMethodFormDial
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveDialogShell(
-      title: widget.existing == null ? 'Add payment method' : 'Edit payment method',
+      title: widget.existing == null ? l10n.paymentMethodFormAddTitle : l10n.paymentMethodFormEditTitle,
       desktopWidth: 420,
       content: Form(
         key: _formKey,
@@ -58,30 +60,30 @@ class _PaymentMethodFormDialogState extends ConsumerState<_PaymentMethodFormDial
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(controller: _nameEnCtrl, decoration: const InputDecoration(labelText: 'Name (EN)'), validator: _req),
+              TextFormField(controller: _nameEnCtrl, decoration: InputDecoration(labelText: l10n.paymentMethodFormNameEnLabel), validator: _req),
               const SizedBox(height: 12),
-              TextFormField(controller: _nameArCtrl, decoration: const InputDecoration(labelText: 'Name (AR)'), validator: _req),
+              TextFormField(controller: _nameArCtrl, decoration: InputDecoration(labelText: l10n.paymentMethodFormNameArLabel), validator: _req),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _logoUrlCtrl,
-                decoration: const InputDecoration(labelText: 'Logo URL', hintText: 'https://...'),
+                decoration: InputDecoration(labelText: l10n.paymentMethodFormLogoUrlLabel, hintText: l10n.paymentMethodFormUrlHint),
                 keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _paymentLinkCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Payment link URL',
-                  hintText: 'https://...',
-                  helperText: 'Opened when the customer taps "Pay Now" at checkout',
+                decoration: InputDecoration(
+                  labelText: l10n.paymentMethodFormPaymentLinkLabel,
+                  hintText: l10n.paymentMethodFormUrlHint,
+                  helperText: l10n.paymentMethodFormPaymentLinkHelper,
                 ),
                 keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 12),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Active'),
-                subtitle: const Text('Shown to customers at checkout'),
+                title: Text(l10n.commonActive),
+                subtitle: Text(l10n.paymentMethodFormActiveSubtitle),
                 value: _isActive,
                 onChanged: (v) => setState(() => _isActive = v),
               ),
@@ -90,11 +92,12 @@ class _PaymentMethodFormDialogState extends ConsumerState<_PaymentMethodFormDial
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? l10n.commonSaving : l10n.commonSave)),
       ],
     );
   }
 
-  String? _req(String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null;
+  String? _req(String? v) =>
+      (v == null || v.trim().isEmpty) ? AppLocalizations.of(context)!.commonRequired : null;
 }

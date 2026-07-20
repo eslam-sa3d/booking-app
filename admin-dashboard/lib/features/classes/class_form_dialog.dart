@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../../core/localization/generated/app_localizations.dart';
 import '../../core/providers/repository_providers.dart';
 import '../../core/widgets/responsive_dialog.dart';
 
@@ -42,11 +43,12 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate() || _categories.isEmpty || _instructorId == null || _branchId == null) {
       if (_categories.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select at least one category')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.classFormSelectCategoryError)));
       } else if (_instructorId == null || _branchId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select an instructor and branch')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.classFormSelectInstructorBranchError)));
       }
       return;
     }
@@ -74,19 +76,21 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
     } catch (error) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.classFormSaveError(error.toString()))));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final categoriesStream = ref.watch(categoriesRepositoryProvider).watchAll();
     final instructorsStream = ref.watch(instructorsRepositoryProvider).watchAll();
     final branchesStream = ref.watch(branchesRepositoryProvider).watchAll();
 
     return ResponsiveDialogShell(
-      title: widget.existing == null ? 'Add class' : 'Edit class',
+      title: widget.existing == null ? l10n.classesAddButton : l10n.classFormEditTitle,
       desktopWidth: 480,
       content: Form(
         key: _formKey,
@@ -96,17 +100,17 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title (EN)'), validator: _req)),
+                    Expanded(child: TextFormField(controller: _titleCtrl, decoration: InputDecoration(labelText: l10n.classFormTitleEnLabel), validator: _req)),
                     const SizedBox(width: 12),
-                    Expanded(child: TextFormField(controller: _titleArCtrl, decoration: const InputDecoration(labelText: 'Title (AR)'), validator: _req)),
+                    Expanded(child: TextFormField(controller: _titleArCtrl, decoration: InputDecoration(labelText: l10n.classFormTitleArLabel), validator: _req)),
                   ],
                 ),
                 const SizedBox(height: 12),
-                TextFormField(controller: _descCtrl, decoration: const InputDecoration(labelText: 'Description (EN)'), maxLines: 2),
+                TextFormField(controller: _descCtrl, decoration: InputDecoration(labelText: l10n.classFormDescriptionEnLabel), maxLines: 2),
                 const SizedBox(height: 12),
-                TextFormField(controller: _descArCtrl, decoration: const InputDecoration(labelText: 'Description (AR)'), maxLines: 2),
+                TextFormField(controller: _descArCtrl, decoration: InputDecoration(labelText: l10n.classFormDescriptionArLabel), maxLines: 2),
                 const SizedBox(height: 12),
-                const Text('Categories', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                Text(l10n.classFormCategoriesLabel, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
                 const SizedBox(height: 6),
                 StreamBuilder<List<Category>>(
                   stream: categoriesStream,
@@ -128,9 +132,9 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: TextFormField(controller: _priceCtrl, decoration: const InputDecoration(labelText: 'Price (EGP)'), keyboardType: TextInputType.number, validator: _req)),
+                    Expanded(child: TextFormField(controller: _priceCtrl, decoration: InputDecoration(labelText: l10n.classFormPriceLabel), keyboardType: TextInputType.number, validator: _req)),
                     const SizedBox(width: 12),
-                    Expanded(child: TextFormField(controller: _durationCtrl, decoration: const InputDecoration(labelText: 'Duration (min)'), keyboardType: TextInputType.number, validator: _req)),
+                    Expanded(child: TextFormField(controller: _durationCtrl, decoration: InputDecoration(labelText: l10n.classFormDurationLabel), keyboardType: TextInputType.number, validator: _req)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -143,7 +147,7 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
                           final instructors = snap.data ?? const [];
                           return DropdownButtonFormField<String>(
                             initialValue: instructors.any((i) => i.id == _instructorId) ? _instructorId : null,
-                            decoration: const InputDecoration(labelText: 'Instructor'),
+                            decoration: InputDecoration(labelText: l10n.classFormInstructorLabel),
                             items: [
                               for (final i in instructors) DropdownMenuItem(value: i.id, child: Text(i.name)),
                             ],
@@ -160,7 +164,7 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
                           final branches = snap.data ?? const [];
                           return DropdownButtonFormField<String>(
                             initialValue: branches.any((b) => b.id == _branchId) ? _branchId : null,
-                            decoration: const InputDecoration(labelText: 'Branch / Pool'),
+                            decoration: InputDecoration(labelText: l10n.classFormBranchLabel),
                             items: [
                               for (final b in branches) DropdownMenuItem(value: b.id, child: Text(b.name)),
                             ],
@@ -176,11 +180,11 @@ class _ClassFormDialogState extends ConsumerState<_ClassFormDialog> {
           ),
         ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Saving…' : 'Save')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? l10n.commonSaving : l10n.commonSave)),
       ],
     );
   }
 
-  String? _req(String? v) => (v == null || v.isEmpty) ? 'Required' : null;
+  String? _req(String? v) => (v == null || v.isEmpty) ? AppLocalizations.of(context)!.commonRequired : null;
 }
